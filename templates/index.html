@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CIS Automation Input</title>
+
+  <!-- Fonts and your theme CSS (keep as you had them) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+  <!-- Keep your compact overrides + add minimal grid CSS -->
+  <style>
+    /* ---- Layout: use full width, reduce side gutters ---- */
+    :root {
+      --base-font: 11.5px;
+      --th-font: 11px;
+      --h2-font: 18px;
+      --h3-font: 15px;
+      --cell-pad-y: 5px;
+      --cell-pad-x: 6px;
+    }
+    html { font-size: 14px; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .app-shell, .layout, .main { max-width: 100%; width: 100%; }
+    .main { padding: 8px 12px; }
+
+    /* ---- Typography ---- */
+    h2 { font-size: var(--h2-font); margin: 8px 0 6px; }
+    h3 { font-size: var(--h3-font); margin: 8px 0 6px; }
+
+    /* Keep author's compact table rules (safe to keep even though grids replace tables) */
+    .table-shell { width: 100%; }
+    .table-container { width: 100%; overflow: visible; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    thead th, tbody td { border: 1px solid #E5E9EF; vertical-align: top; padding: var(--cell-pad-y) var(--cell-pad-x); }
+    thead th { white-space: normal; word-break: break-word; font-weight: 600; font-size: var(--th-font); line-height: 1.25; background: #F4F7FB; }
+    tbody td { font-size: var(--base-font); line-height: 1.25; }
+    td > input, td > select, td > textarea { width: 100%; box-sizing: border-box; font-size: var(--base-font); line-height: 1.25; padding: 6px 6px; border: 1px solid #D8DEE9; border-radius: 4px; background: #fff; }
+    td.serial, th.serial { width: 28px; text-align: center; white-space: nowrap; }
+    .toolbar { margin: 6px 0; }
+    .badge { font-size: 11px; padding: 2px 6px; background: #e9f2ff; border-radius: 999px; display: inline-block; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px 10px; }
+    .btn-primary, .btn-secondary, .btn-danger { font-size: 12px; padding: 6px 10px; }
+    .section-head, .subsection-head { overflow: visible; }
+    @media (max-width: 1366px) { html { font-size: 13px; } thead th, tbody td { padding: 6px 6px; } }
+
+    /* ====== Minimal spreadsheet-like grid (typing + paste only) ====== */
+    .simple-grid {
+      --cell-h: 28px; --pad: 6px;
+      --grid-border:#e0e0e0; --cell-border:#e6e6e6;
+      border:1px solid var(--grid-border);
+      background:#fff; overflow:auto; border-radius:12px;
+      font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .sg-head, .sg-row { display:grid; grid-auto-rows: var(--cell-h); }
+    .sg-head { position:sticky; top:0; background:#f7f9fb; z-index:1; }
+    .sg-cell, .sg-hcell {
+      border-right:1px solid var(--cell-border);
+      border-bottom:1px solid var(--cell-border);
+      padding:0 var(--pad);
+      display:flex; align-items:center;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .sg-hcell { font-weight:600; color:#334; }
+    .sg-cell { outline:none; }
+    .sg-cell[contenteditable="true"]:focus { outline:2px solid #4c9ffe; outline-offset:-2px; }
+    .sg-toolbar { margin:.5rem 0 .25rem; display:flex; gap:.5rem; align-items:center; }
+    .sg-toolbar .btn { padding:.35rem .6rem; border:1px solid #ccd; background:#f7f9fb; cursor:pointer; border-radius:4px; }
+    .sg-toolbar .btn:hover { background:#eef4ff; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div class="brand-copy">
+          <p class="brand-title">Automation de Instrumentation</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <main class="main">
+        <form id="cisForm">
+
+          <!-- Header -->
+          <section class="section" id="header-section">
+            <div class="section-head">
+              <div class="section-head-left">
+                <h2>Document Header</h2>
+              </div>
+            </div>
+            <div class="grid">
+              <div class="field field--span-12">
+                <label for="projectName">Project Name</label>
+                <textarea id="projectName" name="projectName"></textarea>
+              </div>
+              <div class="field field--span-12">
+                <label for="documentName">Document Name</label>
+                <input id="documentName" name="documentName" />
+              </div>
+              <div class="field field--span-4">
+                <label for="client">Client</label>
+                <input id="client" name="client" />
+              </div>
+              <div class="field field--span-4">
+                <label for="consultant">Consultant</label>
+                <input id="consultant" name="consultant" />
+              </div>
+              <div class="field field--span-4">
+                <label for="documentNumber">Document Number</label>
+                <input id="documentNumber" name="documentNumber" />
+              </div>
+              <div class="field field--span-3">
+                <label for="date">Date</label>
+                <input id="date" type="date" name="date" />
+              </div>
+              <div class="field field--span-3">
+                <label for="preparedBy">Prepared By</label>
+                <input id="preparedBy" name="preparedBy" />
+              </div>
+              <div class="field field--span-3">
+                <label for="checkedBy">Checked By</label>
+                <input id="checkedBy" name="checkedBy" />
+              </div>
+              <div class="field field--span-3">
+                <label for="approvedBy">Approved By</label>
+                <input id="approvedBy" name="approvedBy" />
+              </div>
+              <div class="field field--span-3">
+                <label for="revision">Revision</label>
+                <input id="revision" name="revision" />
+              </div>
+            </div>
+          </section>
+
+          <!-- Stage 1 -->
+          <section class="section" id="stage1-section">
+            <div class="section-head">
+              <div class="section-head-left">
+                <h2>Stage 1 — Instruments/Equipment Entry</h2>
+              </div>
+            </div>
+
+            <!-- Field Instruments grid -->
+            <div class="subsection">
+              <div class="subsection-head">
+                <div>
+                  <div class="badge">Section 1</div>
+                  <h3>Field Instruments</h3>
+                </div>
+              </div>
+              <div class="sg-toolbar">
+                <button type="button" class="btn" id="fiAdd5">+5 rows</button>
+              </div>
+              <div id="fiGrid" class="simple-grid" aria-label="Field Instruments grid"></div>
+            </div>
+
+            <!-- Electrical grid -->
+            <div class="subsection">
+              <div class="subsection-head">
+                <div>
+                  <div class="badge">Section 2</div>
+                  <h3>Agitators, Drives, Incomers, Bus Couplers, Transformers and UPS</h3>
+                </div>
+              </div>
+              <div class="sg-toolbar">
+                <button type="button" class="btn" id="elAdd5">+5 rows</button>
+              </div>
+              <div id="elGrid" class="simple-grid" aria-label="Electrical equipment grid"></div>
+            </div>
+
+            <!-- MOV grid -->
+            <div class="subsection">
+              <div class="subsection-head">
+                <div>
+                  <div class="badge">Section 3</div>
+                  <h3>Motor Operated Valves</h3>
+                </div>
+              </div>
+              <div class="sg-toolbar">
+                <button type="button" class="btn" id="movAdd5">+5 rows</button>
+              </div>
+              <div id="movGrid" class="simple-grid" aria-label="MOV equipment grid"></div>
+            </div>
+          </section>
+
+          <!-- Submit -->
+          <section class="section" id="submit-section">
+            <div class="footer">
+              <div class="footer-left">
+                <button type="button" class="btn-secondary" onclick="previewData()">Preview Data</button>
+                <button type="reset" class="btn-secondary">Reset Form</button>
+              </div>
+              <div class="footer-right">
+                <button type="submit" class="btn-primary">Submit</button>
+              </div>
+            </div>
+          </section>
+
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // -------- Minimal spreadsheet-like grid (typing + paste + +5 rows) --------
+    class SimpleGrid {
+      constructor(host, columns, initialRows=5) {
+        this.host = host;
+        this.columns = columns; // [{key, header, width}]
+        this.rows = 0;
+
+        // layout
+        this.head = document.createElement('div'); this.head.className = 'sg-head';
+        this.body = document.createElement('div'); this.body.className = 'sg-body';
+        this.host.innerHTML = '';
+        this.host.appendChild(this.head); this.host.appendChild(this.body);
+
+        // ✅ Use explicit per-column widths so header/body align perfectly
+        const template = columns.map(col => col.width || '140px').join(' ');
+        this.head.style.gridTemplateColumns = template;
+        this.body.style.display = 'grid';
+        this.body.style.gridTemplateColumns = template;
+
+        // header
+        for (const col of columns) {
+          const h = document.createElement('div');
+          h.className = 'sg-hcell';
+          h.textContent = col.header;
+          this.head.appendChild(h);
+        }
+
+        // initial rows
+        this.addRows(initialRows);
+
+        // paste handler (TSV/CSV)
+        this.body.addEventListener('paste', (e) => {
+          const cell = e.target.closest('.sg-cell');
+          if (!cell) return;
+          const startR = +cell.dataset.r;
+          const startC = +cell.dataset.c;
+          const text = (e.clipboardData || window.clipboardData).getData('text');
+          if (!text) return;
+          e.preventDefault();
+
+          const lines = text.split(/\r?\n/);
+          if (lines.length && lines[lines.length-1].trim()==='') lines.pop();
+          const matrix = lines.map(line => line.includes('\t') ? line.split('\t') : line.split(','));
+
+          const needRows = startR + matrix.length - this.rows;
+          if (needRows > 0) this.addRows(needRows);
+
+          for (let i=0; i<matrix.length; i++) {
+            const row = matrix[i];
+            for (let j=0; j<row.length && (startC+j)<this.columns.length; j++) {
+              const dest = this._cell(startR+i, startC+j);
+              if (dest) dest.textContent = row[j];
+            }
+          }
+        });
+
+        // basic arrow-key navigation
+        this.body.addEventListener('keydown', (e) => {
+          const a = document.activeElement;
+          if (!a || !a.classList.contains('sg-cell')) return;
+          const r = +a.dataset.r, c = +a.dataset.c;
+          let nr = r, nc = c;
+          if (e.key === 'ArrowRight') nc++;
+          else if (e.key === 'ArrowLeft') nc--;
+          else if (e.key === 'ArrowDown') nr++;
+          else if (e.key === 'ArrowUp') nr--;
+          else return;
+          if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.columns.length) return;
+          const next = this._cell(nr, nc);
+          if (next) { next.focus(); e.preventDefault(); }
+        });
+      }
+
+      addRows(n=5) {
+        for (let i=0; i<n; i++) {
+          const r = this.rows;
+          for (let c=0; c<this.columns.length; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'sg-cell';
+            cell.contentEditable = 'true';
+            cell.dataset.r = r; cell.dataset.c = c;
+            // NOTE: do not set per-cell widths; the grid tracks already set exact widths
+            this.body.appendChild(cell);
+          }
+          this.rows++;
+        }
+      }
+
+      _cell(r,c) { return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`); }
+
+      // Returns array of row objects (trims trailing all-empty rows)
+      getData() {
+        const out = [];
+        for (let r=0; r<this.rows; r++) {
+          const obj = {}; let nonEmpty = false;
+          for (let c=0; c<this.columns.length; c++) {
+            const key = this.columns[c].key;
+            const v = (this._cell(r,c)?.textContent || '').trim();
+            obj[key] = v; if (v) nonEmpty = true;
+          }
+          if (nonEmpty) out.push(obj);
+        }
+        return out;
+      }
+    }
+
+    // Column model (aligned to your backend form keys)
+    // Split Working and Design into 3 columns each (P/F/L)
+    const commonCols = [
+      { key:'tag',        header:'Tag No',                   width:'130px' },
+      { key:'instrument', header:'Instrument / Equipment',   width:'200px' },
+      { key:'service',    header:'Service Description',      width:'260px' },
+      { key:'lineSize',   header:'Line Size (mm)',           width:'110px' },
+      { key:'medium',     header:'Medium',                   width:'140px' },
+      { key:'typeSpec',   header:'Type & Specification',     width:'220px' },
+      { key:'processConn',header:'Process Connection',       width:'160px' },
+
+      /* --- Working (P/F/L) --- */
+      { key:'workP',      header:'Working Pressure',         width:'140px' },
+      { key:'workF',      header:'Working Flow',             width:'140px' },
+      { key:'workL',      header:'Working Level',            width:'140px' },
+
+      /* --- Design (P/F/L) --- */
+      { key:'desP',       header:'Design Pressure',          width:'140px' },
+      { key:'desF',       header:'Design Flow',              width:'140px' },
+      { key:'desL',       header:'Design Level',             width:'140px' },
+
+      { key:'setPoint',   header:'Set-point',                width:'120px' },
+      { key:'range',      header:'Instrument Range',         width:'160px' },
+      { key:'uom',        header:'UOM',                      width:'90px'  },
+    ];
+
+    const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  commonCols, 5);
+    const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  commonCols, 5);
+    const movGrid = new SimpleGrid(document.getElementById('movGrid'), commonCols, 5);
+
+    // +5 buttons
+    document.getElementById('fiAdd5').addEventListener('click', () => fiGrid.addRows(5));
+    document.getElementById('elAdd5').addEventListener('click', () => elGrid.addRows(5));
+    document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
+
+    // Serialize to existing field names expected by server
+    async function postWithGrids(url, formEl){
+      const data = new FormData(formEl);
+
+      // Helper to pack P/F/L triplets
+      const packPFL = (p, f, l) => [p||'', f||'', l||''].join('/');
+
+      // Field Instruments
+      for (const r of fiGrid.getData()) {
+        data.append('fiTagNo[]', r.tag || '');
+        data.append('fiInstrument[]', r.instrument || '');
+        data.append('fiServiceDescription[]', r.service || '');
+        data.append('fiLineSize[]', r.lineSize || '');
+        data.append('fiMedium[]', r.medium || '');
+        data.append('fiTypeSpec[]', r.typeSpec || '');
+        data.append('fiProcessConnection[]', r.processConn || '');
+
+        data.append('fiWorkingValues[]', packPFL(r.workP, r.workF, r.workL)); // P/F/L
+        data.append('fiDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));  // P/F/L
+
+        data.append('fiSetPoint[]', r.setPoint || '');
+        data.append('fiInstrumentRange[]', r.range || '');
+        data.append('fiUom[]', r.uom || '');
+      }
+
+      // Electrical Equipment (flat)
+      for (const r of elGrid.getData()) {
+        data.append('elTagNo[]', r.tag || '');
+        data.append('elInstrument[]', r.instrument || '');
+        data.append('elServiceDescription[]', r.service || '');
+        data.append('elLineSize[]', r.lineSize || '');
+        data.append('elMedium[]', r.medium || '');
+        data.append('elTypeSpec[]', r.typeSpec || '');
+        data.append('elProcessConnection[]', r.processConn || '');
+
+        data.append('elWorkingValues[]', packPFL(r.workP, r.workF, r.workL));
+        data.append('elDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));
+
+        data.append('elSetPoint[]', r.setPoint || '');
+        data.append('elInstrumentRange[]', r.range || '');
+        data.append('elUom[]', r.uom || '');
+      }
+
+      // MOV Equipment (flat)
+      for (const r of movGrid.getData()) {
+        data.append('movTagNo[]', r.tag || '');
+        data.append('movInstrument[]', r.instrument || '');
+        data.append('movServiceDescription[]', r.service || '');
+        data.append('movLineSize[]', r.lineSize || '');
+        data.append('movMedium[]', r.medium || '');
+        data.append('movTypeSpec[]', r.typeSpec || '');
+        data.append('movProcessConnection[]', r.processConn || '');
+
+        data.append('movWorkingValues[]', packPFL(r.workP, r.workF, r.workL));
+        data.append('movDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));
+
+        data.append('movSetPoint[]', r.setPoint || '');
+        data.append('movInstrumentRange[]', r.range || '');
+        data.append('movUom[]', r.uom || '');
+      }
+
+      const res = await fetch(url, { method:'POST', body:data });
+      const json = await res.json();
+      return { ok: res.ok, json };
+    }
+
+    // Hook Preview + Submit
+    window.previewData = async function(){
+      const form = document.getElementById('cisForm');
+      try {
+        const { ok, json } = await postWithGrids('/preview', form);
+        console.log('Preview Response:', json);
+        if (!ok) { alert(json.message || 'Preview failed.'); return; }
+        if (json.errors && json.errors.length) {
+          alert(json.errors.join('\n'));
+        } else {
+          alert('Preview response has been printed in the browser console.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network or server error during preview.');
+      }
+    };
+
+    document.getElementById('cisForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      try {
+        const { ok, json } = await postWithGrids('/submit', this);
+        console.log('Submit Response:', json);
+        if (!ok) {
+          if (json.errors && Array.isArray(json.errors)) {
+            alert(json.errors.join('\n'));
+          } else {
+            alert(json.message || 'Submission failed.');
+          }
+          return;
+        }
+        alert('Workbook generated successfully.');
+        if (json.download_url) window.location.href = json.download_url;
+      } catch (err) {
+        console.error(err);
+        alert('Network or server error during submission.');
+      }
+    });
+  </script>
+</body>
+</html>
