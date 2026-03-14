@@ -190,14 +190,14 @@
           </section>
 
           <!-- Submit -->
-          <section class="section" id="submit-section">
-            <div class="footer">
-              <div class="footer-left">
-                <button type="button" class="btn-secondary" onclick="previewData()">Preview Data</button>
-                <button type="reset" class="btn-secondary">Reset Form</button>
+          <section class="section submit-footer">
+            <div class="footer-container">
+              <div class="footer-info">
+                <p class="text-faint">Review your entries in the grid before generating the workbook.</p>
               </div>
-              <div class="footer-right">
-                <button type="submit" class="btn-primary">Submit</button>
+              <div class="footer-actions">
+                <button type="button" class="btn-secondary" onclick="previewData()">Validate Data</button>
+                <button type="submit" class="btn-primary">Generate Excel (.xlsx)</button>
               </div>
             </div>
           </section>
@@ -314,31 +314,27 @@
       }
     }
 
-    // Column model (aligned to your backend form keys)
-    // Split Working and Design into 3 columns each (P/F/L)
     const commonCols = [
-      { key:'tag',        header:'Tag No',                   width:'130px' },
-      { key:'instrument', header:'Instrument / Equipment',   width:'200px' },
-      { key:'service',    header:'Service Description',      width:'260px' },
-      { key:'lineSize',   header:'Line Size (mm)',           width:'110px' },
-      { key:'medium',     header:'Medium',                   width:'140px' },
-      { key:'typeSpec',   header:'Type & Specification',     width:'220px' },
-      { key:'processConn',header:'Process Connection',       width:'160px' },
+          { key:'tag',        header:'Tag No',                width:'140px' }, // Frozen
+          { key:'instrument', header:'Instrument Name',       width:'180px' },
+          { key:'service',    header:'Service Description',   width:'220px' },
+          { key:'lineSize',   header:'Line Size',             width:'90px'  },
+          { key:'medium',     header:'Medium',                width:'110px' },
+          
+          /* --- Compacted P/F/L Columns (85px is enough for numeric values) --- */
+          { key:'workP',      header:'W. Press',              width:'85px'  },
+          { key:'workF',      header:'W. Flow',               width:'85px'  },
+          { key:'workL',      header:'W. Level',              width:'85px'  },
+          { key:'desP',       header:'D. Press',              width:'85px'  },
+          { key:'desF',       header:'D. Flow',               width:'85px'  },
+          { key:'desL',       header:'D. Level',              width:'85px'  },
 
-      /* --- Working (P/F/L) --- */
-      { key:'workP',      header:'Working Pressure',         width:'140px' },
-      { key:'workF',      header:'Working Flow',             width:'140px' },
-      { key:'workL',      header:'Working Level',            width:'140px' },
-
-      /* --- Design (P/F/L) --- */
-      { key:'desP',       header:'Design Pressure',          width:'140px' },
-      { key:'desF',       header:'Design Flow',              width:'140px' },
-      { key:'desL',       header:'Design Level',             width:'140px' },
-
-      { key:'setPoint',   header:'Set-point',                width:'120px' },
-      { key:'range',      header:'Instrument Range',         width:'160px' },
-      { key:'uom',        header:'UOM',                      width:'90px'  },
-    ];
+          { key:'typeSpec',   header:'Specification',         width:'200px' },
+          { key:'processConn',header:'Process Conn',          width:'140px' },
+          { key:'setPoint',   header:'Set-point',             width:'110px' },
+          { key:'range',      header:'Range',                 width:'130px' },
+          { key:'uom',        header:'UOM',                   width:'70px'  },
+        ];
 
     const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  commonCols, 5);
     const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  commonCols, 5);
@@ -350,69 +346,54 @@
     document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
 
     // Serialize to existing field names expected by server
+    // Update the postWithGrids function in your <script> tag:
     async function postWithGrids(url, formEl){
       const data = new FormData(formEl);
+      const packPFL = (p, f, l) => `${p || ''}/${f || ''}/${l || ''}`;
 
-      // Helper to pack P/F/L triplets
-      const packPFL = (p, f, l) => [p||'', f||'', l||''].join('/');
+      const sections = [
+        { grid: fiGrid, prefix: 'fi' },
+        { grid: elGrid, prefix: 'el' },
+        { grid: movGrid, prefix: 'mov' }
+      ];
 
-      // Field Instruments
-      for (const r of fiGrid.getData()) {
-        data.append('fiTagNo[]', r.tag || '');
-        data.append('fiInstrument[]', r.instrument || '');
-        data.append('fiServiceDescription[]', r.service || '');
-        data.append('fiLineSize[]', r.lineSize || '');
-        data.append('fiMedium[]', r.medium || '');
-        data.append('fiTypeSpec[]', r.typeSpec || '');
-        data.append('fiProcessConnection[]', r.processConn || '');
+      sections.forEach(({grid, prefix}) => {
+        grid.getData().forEach(r => {
+          data.append(`${prefix}TagNo[]`, r.tag || '');
+          data.append(`${prefix}Instrument[]`, r.instrument || '');
+          data.append(`${prefix}ServiceDescription[]`, r.service || '');
+          data.append(`${prefix}LineSize[]`, r.lineSize || '');
+          data.append(`${prefix}Medium[]`, r.medium || '');
+          data.append(`${prefix}TypeSpec[]`, r.typeSpec || '');
+          data.append(`${prefix}ProcessConnection[]`, r.processConn || '');
+          data.append(`${prefix}WorkingValues[]`, packPFL(r.workP, r.workF, r.workL));
+          data.append(`${prefix}DesignValues[]`,  packPFL(r.desP,  r.desF,  r.desL));
+          data.append(`${prefix}SetPoint[]`, r.setPoint || '');
+          data.append(`${prefix}InstrumentRange[]`, r.range || '');
+          data.append(`${prefix}Uom[]`, r.uom || '');
+        });
+      });
 
-        data.append('fiWorkingValues[]', packPFL(r.workP, r.workF, r.workL)); // P/F/L
-        data.append('fiDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));  // P/F/L
-
-        data.append('fiSetPoint[]', r.setPoint || '');
-        data.append('fiInstrumentRange[]', r.range || '');
-        data.append('fiUom[]', r.uom || '');
-      }
-
-      // Electrical Equipment (flat)
-      for (const r of elGrid.getData()) {
-        data.append('elTagNo[]', r.tag || '');
-        data.append('elInstrument[]', r.instrument || '');
-        data.append('elServiceDescription[]', r.service || '');
-        data.append('elLineSize[]', r.lineSize || '');
-        data.append('elMedium[]', r.medium || '');
-        data.append('elTypeSpec[]', r.typeSpec || '');
-        data.append('elProcessConnection[]', r.processConn || '');
-
-        data.append('elWorkingValues[]', packPFL(r.workP, r.workF, r.workL));
-        data.append('elDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));
-
-        data.append('elSetPoint[]', r.setPoint || '');
-        data.append('elInstrumentRange[]', r.range || '');
-        data.append('elUom[]', r.uom || '');
-      }
-
-      // MOV Equipment (flat)
-      for (const r of movGrid.getData()) {
-        data.append('movTagNo[]', r.tag || '');
-        data.append('movInstrument[]', r.instrument || '');
-        data.append('movServiceDescription[]', r.service || '');
-        data.append('movLineSize[]', r.lineSize || '');
-        data.append('movMedium[]', r.medium || '');
-        data.append('movTypeSpec[]', r.typeSpec || '');
-        data.append('movProcessConnection[]', r.processConn || '');
-
-        data.append('movWorkingValues[]', packPFL(r.workP, r.workF, r.workL));
-        data.append('movDesignValues[]',  packPFL(r.desP,  r.desF,  r.desL));
-
-        data.append('movSetPoint[]', r.setPoint || '');
-        data.append('movInstrumentRange[]', r.range || '');
-        data.append('movUom[]', r.uom || '');
+      // Handle the file download directly for /submit
+      if (url === '/submit') {
+          const res = await fetch(url, { method: 'POST', body: data });
+          if (res.ok) {
+              const blob = await res.blob();
+              const downloadUrl = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = "Instrument_List.xlsx";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+          } else {
+              alert("Submission failed.");
+          }
+          return;
       }
 
       const res = await fetch(url, { method:'POST', body:data });
-      const json = await res.json();
-      return { ok: res.ok, json };
+      return { ok: res.ok, json: await res.json() };
     }
 
     // Hook Preview + Submit
