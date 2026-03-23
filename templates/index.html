@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CIS Automation Input</title>
 
-  <!-- Fonts and your theme CSS (keep as you had them) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 
-  <!-- Keep your compact overrides + add minimal grid CSS -->
   <style>
     /* ---- Layout: use full width, reduce side gutters ---- */
     :root {
@@ -31,7 +29,6 @@
     h2 { font-size: var(--h2-font); margin: 8px 0 6px; }
     h3 { font-size: var(--h3-font); margin: 8px 0 6px; }
 
-    /* Keep author's compact table rules (safe to keep even though grids replace tables) */
     .table-shell { width: 100%; }
     .table-container { width: 100%; overflow: visible; }
     table { width: 100%; border-collapse: separate; border-spacing: 0; }
@@ -47,7 +44,7 @@
     .section-head, .subsection-head { overflow: visible; }
     @media (max-width: 1366px) { html { font-size: 13px; } thead th, tbody td { padding: 6px 6px; } }
 
-    /* ====== Minimal spreadsheet-like grid (typing + paste only) ====== */
+    /* ====== Minimal spreadsheet-like grid ====== */
     .simple-grid {
       --cell-h: 28px; --pad: 6px;
       --grid-border:#e0e0e0; --cell-border:#e6e6e6;
@@ -70,6 +67,12 @@
     .sg-toolbar { margin:.5rem 0 .25rem; display:flex; gap:.5rem; align-items:center; }
     .sg-toolbar .btn { padding:.35rem .6rem; border:1px solid #ccd; background:#f7f9fb; cursor:pointer; border-radius:4px; }
     .sg-toolbar .btn:hover { background:#eef4ff; }
+    
+    /* Dropdown inside grid styling */
+    .sg-select {
+      width: 100%; border: none; outline: none; background: transparent; 
+      font: inherit; padding: 0; margin: 0; color: inherit; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -87,7 +90,6 @@
       <main class="main">
         <form id="cisForm">
 
-          <!-- Header -->
           <section class="section" id="header-section">
             <div class="section-head">
               <div class="section-head-left">
@@ -97,11 +99,11 @@
             <div class="grid">
               <div class="field field--span-12">
                 <label for="projectName">Project Name</label>
-                <textarea id="projectName" name="projectName"></textarea>
+                <textarea id="projectName" name="projectName" required></textarea>
               </div>
               <div class="field field--span-12">
                 <label for="documentName">Document Name</label>
-                <input id="documentName" name="documentName" />
+                <input id="documentName" name="documentName" required />
               </div>
               <div class="field field--span-4">
                 <label for="client">Client</label>
@@ -138,7 +140,6 @@
             </div>
           </section>
 
-          <!-- Stage 1 -->
           <section class="section" id="stage1-section">
             <div class="section-head">
               <div class="section-head-left">
@@ -146,7 +147,6 @@
               </div>
             </div>
 
-            <!-- Field Instruments grid -->
             <div class="subsection">
               <div class="subsection-head">
                 <div>
@@ -160,7 +160,6 @@
               <div id="fiGrid" class="simple-grid" aria-label="Field Instruments grid"></div>
             </div>
 
-            <!-- Electrical grid -->
             <div class="subsection">
               <div class="subsection-head">
                 <div>
@@ -174,7 +173,6 @@
               <div id="elGrid" class="simple-grid" aria-label="Electrical equipment grid"></div>
             </div>
 
-            <!-- MOV grid -->
             <div class="subsection">
               <div class="subsection-head">
                 <div>
@@ -189,7 +187,6 @@
             </div>
           </section>
 
-          <!-- Submit -->
           <section class="section submit-footer">
             <div class="footer-container">
               <div class="footer-info">
@@ -208,26 +205,23 @@
   </div>
 
   <script>
-    // -------- Minimal spreadsheet-like grid (typing + paste + +5 rows) --------
+    // -------- Upgraded SimpleGrid (Supports Dropdowns & Paste) --------
     class SimpleGrid {
       constructor(host, columns, initialRows=5) {
         this.host = host;
-        this.columns = columns; // [{key, header, width}]
+        this.columns = columns; // [{key, header, width, options?}]
         this.rows = 0;
 
-        // layout
         this.head = document.createElement('div'); this.head.className = 'sg-head';
         this.body = document.createElement('div'); this.body.className = 'sg-body';
         this.host.innerHTML = '';
         this.host.appendChild(this.head); this.host.appendChild(this.body);
 
-        // ✅ Use explicit per-column widths so header/body align perfectly
         const template = columns.map(col => col.width || '140px').join(' ');
         this.head.style.gridTemplateColumns = template;
         this.body.style.display = 'grid';
         this.body.style.gridTemplateColumns = template;
 
-        // header
         for (const col of columns) {
           const h = document.createElement('div');
           h.className = 'sg-hcell';
@@ -235,10 +229,8 @@
           this.head.appendChild(h);
         }
 
-        // initial rows
         this.addRows(initialRows);
 
-        // paste handler (TSV/CSV)
         this.body.addEventListener('paste', (e) => {
           const cell = e.target.closest('.sg-cell');
           if (!cell) return;
@@ -259,15 +251,23 @@
             const row = matrix[i];
             for (let j=0; j<row.length && (startC+j)<this.columns.length; j++) {
               const dest = this._cell(startR+i, startC+j);
-              if (dest) dest.textContent = row[j];
+              if (dest) {
+                const select = dest.querySelector('select');
+                if (select) {
+                  const val = row[j].trim();
+                  const opts = Array.from(select.options).map(o => o.value);
+                  if(opts.includes(val)) select.value = val;
+                } else {
+                  dest.textContent = row[j];
+                }
+              }
             }
           }
         });
 
-        // basic arrow-key navigation
         this.body.addEventListener('keydown', (e) => {
           const a = document.activeElement;
-          if (!a || !a.classList.contains('sg-cell')) return;
+          if (!a || !a.classList.contains('sg-cell')) return; 
           const r = +a.dataset.r, c = +a.dataset.c;
           let nr = r, nc = c;
           if (e.key === 'ArrowRight') nc++;
@@ -287,9 +287,20 @@
           for (let c=0; c<this.columns.length; c++) {
             const cell = document.createElement('div');
             cell.className = 'sg-cell';
-            cell.contentEditable = 'true';
             cell.dataset.r = r; cell.dataset.c = c;
-            // NOTE: do not set per-cell widths; the grid tracks already set exact widths
+            
+            const colDef = this.columns[c];
+            
+            if (colDef.options) {
+               const select = document.createElement('select');
+               select.className = 'sg-select';
+               select.appendChild(new Option('', '')); // Blank default
+               colDef.options.forEach(opt => select.appendChild(new Option(opt, opt)));
+               cell.appendChild(select);
+            } else {
+               cell.contentEditable = 'true';
+            }
+
             this.body.appendChild(cell);
           }
           this.rows++;
@@ -298,14 +309,23 @@
 
       _cell(r,c) { return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`); }
 
-      // Returns array of row objects (trims trailing all-empty rows)
       getData() {
         const out = [];
         for (let r=0; r<this.rows; r++) {
           const obj = {}; let nonEmpty = false;
           for (let c=0; c<this.columns.length; c++) {
             const key = this.columns[c].key;
-            const v = (this._cell(r,c)?.textContent || '').trim();
+            const cell = this._cell(r,c);
+            if (!cell) continue;
+
+            let v = '';
+            const select = cell.querySelector('select');
+            if (select) {
+              v = select.value.trim();
+            } else {
+              v = (cell.textContent || '').trim();
+            }
+
             obj[key] = v; if (v) nonEmpty = true;
           }
           if (nonEmpty) out.push(obj);
@@ -314,40 +334,72 @@
       }
     }
 
-    const commonCols = [
-          { key:'tag',        header:'Tag No',                width:'140px' }, // Frozen
-          { key:'instrument', header:'Instrument Name',       width:'180px' },
-          { key:'service',    header:'Service Description',   width:'220px' },
-          { key:'lineSize',   header:'Line Size',             width:'90px'  },
-          { key:'medium',     header:'Medium',                width:'110px' },
-          
-          /* --- Compacted P/F/L Columns (85px is enough for numeric values) --- */
-          { key:'workP',      header:'W. Press',              width:'85px'  },
-          { key:'workF',      header:'W. Flow',               width:'85px'  },
-          { key:'workL',      header:'W. Level',              width:'85px'  },
-          { key:'desP',       header:'D. Press',              width:'85px'  },
-          { key:'desF',       header:'D. Flow',               width:'85px'  },
-          { key:'desL',       header:'D. Level',              width:'85px'  },
+    // --- Column Definitions ---
+    const sigTypeOptions = ["4-20mA", "Potential Free Contact", "24V DC"];
+    const sigOptions = ["DI", "DO", "AI", "AO"];
 
-          { key:'typeSpec',   header:'Specification',         width:'200px' },
-          { key:'processConn',header:'Process Conn',          width:'140px' },
-          { key:'setPoint',   header:'Set-point',             width:'110px' },
-          { key:'range',      header:'Range',                 width:'130px' },
-          { key:'uom',        header:'UOM',                   width:'70px'  },
-        ];
+    const fiCols = [
+      { key:'tag',        header:'Tag No',              width:'140px' },
+      { key:'instrument', header:'Instrument Name',     width:'180px' },
+      { key:'service',    header:'Service Description', width:'220px' },
+      { key:'lineSize',   header:'Line Size',           width:'90px'  },
+      { key:'medium',     header:'Medium',              width:'110px' },
+      { key:'workP',      header:'W. Press',            width:'85px'  },
+      { key:'workF',      header:'W. Flow',             width:'85px'  },
+      { key:'workL',      header:'W. Level',            width:'85px'  },
+      { key:'desP',       header:'D. Press',            width:'85px'  },
+      { key:'desF',       header:'D. Flow',             width:'85px'  },
+      { key:'desL',       header:'D. Level',            width:'85px'  },
+      { key:'typeSpec',   header:'Specification',       width:'200px' },
+      { key:'processConn',header:'Process Conn',        width:'140px' },
+      { key:'setPoint',   header:'Set-point',           width:'110px' },
+      { key:'range',      header:'Range',               width:'130px' },
+      { key:'uom',        header:'UOM',                 width:'70px'  },
+      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
+      { key:'source',     header:'Source',              width:'120px' },
+      { key:'destination',header:'Destination',         width:'120px' },
+      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
+    ];
 
-    const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  commonCols, 5);
-    const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  commonCols, 5);
-    const movGrid = new SimpleGrid(document.getElementById('movGrid'), commonCols, 5);
+    const elCols = [
+      { key:'tag',        header:'Tag No',              width:'140px' },
+      { key:'instrument', header:'Instrument Name',     width:'180px' },
+      { key:'service',    header:'Service Description', width:'220px' },
+      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
+      { key:'source',     header:'Source',              width:'120px' },
+      { key:'destination',header:'Destination',         width:'120px' },
+      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
+    ];
 
-    // +5 buttons
+    const movCols = [
+      { key:'tag',        header:'Tag No',              width:'140px' },
+      { key:'instrument', header:'Instrument Name',     width:'180px' },
+      { key:'service',    header:'Service Description', width:'220px' },
+      { key:'lineSize',   header:'Line Size',           width:'90px'  },
+      { key:'medium',     header:'Medium',              width:'110px' },
+      { key:'workP',      header:'W. Press',            width:'85px'  },
+      { key:'workF',      header:'W. Flow',             width:'85px'  },
+      { key:'workL',      header:'W. Level',            width:'85px'  },
+      { key:'desP',       header:'D. Press',            width:'85px'  },
+      { key:'desF',       header:'D. Flow',             width:'85px'  },
+      { key:'desL',       header:'D. Level',            width:'85px'  },
+      { key:'typeSpec',   header:'Specification',       width:'200px' },
+      { key:'processConn',header:'Process Conn',        width:'140px' },
+      { key:'setPoint',   header:'Set-point',           width:'110px' },
+      { key:'range',      header:'Range',               width:'130px' },
+      { key:'uom',        header:'UOM',                 width:'70px'  }
+    ];
+
+    const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols, 5);
+    const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols, 5);
+    const movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
+
     document.getElementById('fiAdd5').addEventListener('click', () => fiGrid.addRows(5));
     document.getElementById('elAdd5').addEventListener('click', () => elGrid.addRows(5));
     document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
 
-    // Serialize to existing field names expected by server
-    // Update the postWithGrids function in your <script> tag:
-    async function postWithGrids(url, formEl){
+    // --- Form Data Serialization ---
+    function getFormDataWithGrids(formEl) {
       const data = new FormData(formEl);
       const packPFL = (p, f, l) => `${p || ''}/${f || ''}/${l || ''}`;
 
@@ -371,42 +423,41 @@
           data.append(`${prefix}SetPoint[]`, r.setPoint || '');
           data.append(`${prefix}InstrumentRange[]`, r.range || '');
           data.append(`${prefix}Uom[]`, r.uom || '');
+          
+          data.append(`${prefix}SignalType[]`, r.signalType || '');
+          data.append(`${prefix}Source[]`, r.source || '');
+          data.append(`${prefix}Destination[]`, r.destination || '');
+          data.append(`${prefix}Signal[]`, r.signal || '');
         });
       });
 
-      // Handle the file download directly for /submit
-      if (url === '/submit') {
-          const res = await fetch(url, { method: 'POST', body: data });
-          if (res.ok) {
-              const blob = await res.blob();
-              const downloadUrl = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = downloadUrl;
-              a.download = "Instrument_List.xlsx";
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-          } else {
-              alert("Submission failed.");
-          }
-          return;
-      }
-
-      const res = await fetch(url, { method:'POST', body:data });
-      return { ok: res.ok, json: await res.json() };
+      return data;
     }
 
-    // Hook Preview + Submit
-    window.previewData = async function(){
+    // --- Preview Hook ---
+    window.previewData = async function() {
       const form = document.getElementById('cisForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      const data = getFormDataWithGrids(form);
+      
       try {
-        const { ok, json } = await postWithGrids('/preview', form);
+        const res = await fetch('/preview', { method: 'POST', body: data });
+        const json = await res.json();
+        
         console.log('Preview Response:', json);
-        if (!ok) { alert(json.message || 'Preview failed.'); return; }
+        if (!res.ok) { 
+          alert(json.message || 'Preview failed.'); 
+          return; 
+        }
+        
         if (json.errors && json.errors.length) {
           alert(json.errors.join('\n'));
         } else {
-          alert('Preview response has been printed in the browser console.');
+          alert('Preview successful! Response printed in the browser console.');
         }
       } catch (err) {
         console.error(err);
@@ -414,12 +465,30 @@
       }
     };
 
-    document.getElementById('cisForm').addEventListener('submit', async function(e){
+    // --- Submit Hook ---
+    document.getElementById('cisForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const data = getFormDataWithGrids(this);
+
       try {
-        const { ok, json } = await postWithGrids('/submit', this);
-        console.log('Submit Response:', json);
-        if (!ok) {
+        const res = await fetch('/submit', { method: 'POST', body: data });
+        
+        if (res.ok && res.headers.get('content-type')?.includes('spreadsheetml')) {
+          const blob = await res.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = "Instrument_List.xlsx";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(downloadUrl);
+          alert('Workbook generated successfully.');
+          return;
+        }
+
+        const json = await res.json();
+        if (!res.ok) {
           if (json.errors && Array.isArray(json.errors)) {
             alert(json.errors.join('\n'));
           } else {
@@ -427,8 +496,11 @@
           }
           return;
         }
-        alert('Workbook generated successfully.');
-        if (json.download_url) window.location.href = json.download_url;
+
+        if (json.download_url) {
+          window.location.href = json.download_url;
+        }
+        
       } catch (err) {
         console.error(err);
         alert('Network or server error during submission.');

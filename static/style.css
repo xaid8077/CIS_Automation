@@ -114,6 +114,11 @@ body {
   font-size: var(--font-size-200);
 }
 
+.sg-select {
+      width: 100%; border: none; outline: none; background: transparent; 
+      font: inherit; padding: 0; margin: 0; color: inherit; cursor: pointer;
+    }
+    
 /* --- THE STICKY HYBRID COLUMNS --- */
 /* Sticky Tag No Column */
 .sg-hcell:first-child, 
