@@ -51,7 +51,7 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
     # --- 4. Validate MOV (Section 3) ---
     for idx, row in enumerate(payload.get("mov", []), start=1):
         tag = row.get("Tag No", "").strip()
-        # Note: Your current frontend MOV section does not have an I/O signal dropdown
+        signal = row.get("Signal", "").strip()
 
         if not tag:
             errors.append(f"Section 3 (Row {idx}): Tag No is required.")
@@ -59,5 +59,8 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
             errors.append(f"Duplicate Tag No found: {tag}")
         else:
             tag_set.add(tag)
-
+            
+        if signal and signal not in VALID_IO_TYPES:
+            errors.append(f"Section 3 (Tag '{tag}'): Invalid Signal '{signal}'. Expected one of {VALID_IO_TYPES}.")
+    
     return errors

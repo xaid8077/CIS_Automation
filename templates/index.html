@@ -89,7 +89,7 @@
     <div class="layout">
       <main class="main">
         <form id="cisForm">
-
+          
           <section class="section" id="header-section">
             <div class="section-head">
               <div class="section-head-left">
@@ -115,7 +115,7 @@
               </div>
               <div class="field field--span-4">
                 <label for="documentNumber">Document Number</label>
-                <input id="documentNumber" name="documentNumber" />
+                <input id="documentNumber" name="documentNumber" required />
               </div>
               <div class="field field--span-3">
                 <label for="date">Date</label>
@@ -371,23 +371,15 @@
       { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
     ];
 
+    // UPDATED: Now matches elCols exactly
     const movCols = [
       { key:'tag',        header:'Tag No',              width:'140px' },
       { key:'instrument', header:'Instrument Name',     width:'180px' },
       { key:'service',    header:'Service Description', width:'220px' },
-      { key:'lineSize',   header:'Line Size',           width:'90px'  },
-      { key:'medium',     header:'Medium',              width:'110px' },
-      { key:'workP',      header:'W. Press',            width:'85px'  },
-      { key:'workF',      header:'W. Flow',             width:'85px'  },
-      { key:'workL',      header:'W. Level',            width:'85px'  },
-      { key:'desP',       header:'D. Press',            width:'85px'  },
-      { key:'desF',       header:'D. Flow',             width:'85px'  },
-      { key:'desL',       header:'D. Level',            width:'85px'  },
-      { key:'typeSpec',   header:'Specification',       width:'200px' },
-      { key:'processConn',header:'Process Conn',        width:'140px' },
-      { key:'setPoint',   header:'Set-point',           width:'110px' },
-      { key:'range',      header:'Range',               width:'130px' },
-      { key:'uom',        header:'UOM',                 width:'70px'  }
+      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
+      { key:'source',     header:'Source',              width:'120px' },
+      { key:'destination',header:'Destination',         width:'120px' },
+      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
     ];
 
     const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols, 5);
@@ -450,18 +442,20 @@
         
         console.log('Preview Response:', json);
         if (!res.ok) { 
-          alert(json.message || 'Preview failed.'); 
+          // Check if the backend sent back the 'errors' array from the validator
+          if (json.errors && json.errors.length) {
+            alert("Validation Failed:\n\n" + json.errors.join('\n'));
+          } else {
+            alert(json.message || 'Preview failed.');
+          }
           return; 
         }
         
-        if (json.errors && json.errors.length) {
-          alert(json.errors.join('\n'));
-        } else {
-          alert('Preview successful! Response printed in the browser console.');
-        }
+        // Success case
+        alert(json.message || 'Preview successful! Data is clean.');
       } catch (err) {
         console.error(err);
-        alert('Network or server error during preview.');
+        alert('Network or server error during validation.');
       }
     };
 
@@ -483,16 +477,15 @@
           a.click();
           a.remove();
           window.URL.revokeObjectURL(downloadUrl);
-          alert('Workbook generated successfully.');
           return;
         }
 
         const json = await res.json();
         if (!res.ok) {
           if (json.errors && Array.isArray(json.errors)) {
-            alert(json.errors.join('\n'));
+            alert("Validation Failed:\n\n" + json.errors.join('\n'));
           } else {
-            alert(json.message || 'Submission failed.');
+            alert(json.error || json.message || 'Submission failed.');
           }
           return;
         }

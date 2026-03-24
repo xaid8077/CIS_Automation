@@ -1,0 +1,17 @@
+﻿column,min,max,width,hidden,best_fit,outline_level,collapsed,style_id,custom_width
+A,1,1,2.77734375,False,False,0,False,2,True
+B,2,2,12.88671875,False,True,0,False,2,True
+C,3,3,36.77734375,False,False,0,False,2,True
+D,4,4,38.88671875,False,False,0,False,2,True
+E,5,5,10.6640625,False,True,0,False,2,True
+F,6,6,20.109375,False,False,0,False,3,True
+G,7,7,20.109375,False,True,0,False,2,True
+H,8,8,32.109375,False,True,0,False,2,True
+I,9,9,19.109375,False,False,0,False,2,True
+J,10,10,17.88671875,False,True,0,False,2,True
+K,11,11,32.109375,False,True,0,False,2,True
+L,12,12,27.6640625,False,True,0,False,4,True
+M,13,13,56.21875,False,False,0,False,2,True
+N,14,14,36.77734375,False,True,0,False,2,True
+O,15,15,82.33203125,False,False,0,False,2,True
+P,16,16384,9.21875,False,False,0,False,2,True

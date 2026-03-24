@@ -1,0 +1,725 @@
+﻿sheet,cell,row,column,column_letter,data_type,is_date,value,formula,style_id,number_format,font_name,font_size,bold,italic,underline,font_color_rgb,fill_type,fill_fg_rgb,align_h,align_v,wrap_text,text_rotation,border_left,border_right,border_top,border_bottom,locked,hidden_formula,hyperlink_target,comment_author,comment_text,merged_range,row_height,column_width
+FIELD DIGITAL INST - PLC,B2,2,2,B,s,False,"L&T CONSTRUCTION
+WATER & EFFLUENT TREATMENT",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,B2:G2,60.0,14.88671875
+FIELD DIGITAL INST - PLC,H2,2,8,H,s,False,"PROJECT: PROVIDING OF 24 X 7 DRINKING WATER SUPPLY INCLUDING 115 MLD WATER TREATMENT PLANT & ITS ALLIED WORKS INCLUDING O & M OF 10 YEARS AT PATIALA, PUNJAB",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,H2:N2,60.0,44.88671875
+FIELD DIGITAL INST - PLC,O2,2,15,O,s,False,LTCD-WET-EDRC-C&I,,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,O2:R2,60.0,32.109375
+FIELD DIGITAL INST - PLC,B3,3,2,B,s,False,CLIENT: ,,64,General,Aptos,18.0,True,False,,,,00000000,,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,14.88671875
+FIELD DIGITAL INST - PLC,C3,3,3,C,s,False,PUNJAB WATER SUPPLY & SEWERAGE BOARD (PWSSB),,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,C3:G3,60.0,26.5546875
+FIELD DIGITAL INST - PLC,H3,3,8,H,s,False,DOCUMENT NAME: INSTRUMENTATION CABLE INTERCONNECTION SCHEDULE FOR WTP,,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,H3:N3,60.0,44.88671875
+FIELD DIGITAL INST - PLC,O3,3,15,O,s,False,REV : A,,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,O3:R3,60.0,32.109375
+FIELD DIGITAL INST - PLC,B4,4,2,B,s,False,CONSULTANT: -,,162,General,Aptos,18.0,True,False,,,,00000000,left,center,True,0,thin,thin,thin,thin,True,False,,,,B4:G4,60.0,14.88671875
+FIELD DIGITAL INST - PLC,H4,4,8,H,s,False,DOCUMENT NO: LE20M034-I-WS-CW-CI-5034,,161,General,Aptos,18.0,True,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,H4:N4,60.0,44.88671875
+FIELD DIGITAL INST - PLC,O4,4,15,O,s,False,DATE: ,,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,32.109375
+FIELD DIGITAL INST - PLC,P4,4,16,P,f,False,=Cover!H61,=Cover!H61,158,d-mmm-yy,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,P4:R4,60.0,17.88671875
+FIELD DIGITAL INST - PLC,B5,5,2,B,s,False,S.NO,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,B5:B6,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C5,5,3,C,s,False,TERMINATING AT PLC END,,161,General,Aptos,18.0,True,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C5:G5,30.0,26.5546875
+FIELD DIGITAL INST - PLC,H5,5,8,H,s,False,"FERRULE:
+PLC END",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,H5:H6,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I5,5,9,I,s,False,"FERRULE:
+PLC-JB END",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,I5:I6,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J5,5,10,J,s,False,JB DETAILS,,161,General,Aptos,18.0,True,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,J5:K5,30.0,21.0
+FIELD DIGITAL INST - PLC,L5,5,12,L,s,False,"FERRULE:
+JB-FIELD END",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,L5:L6,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M5,5,13,M,s,False,CABLE TYPE,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M5:M6,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N5,5,14,N,s,False,"FERRULE:
+FIELD END",,159,General,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,N5:N6,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O5,5,15,O,s,False,ORIGINATING FROM FIELD END,,161,General,Aptos,18.0,True,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,O5:Q5,30.0,32.109375
+FIELD DIGITAL INST - PLC,R5,5,18,R,s,False,REMARKS,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,R5:R6,30.0,81.0
+FIELD DIGITAL INST - PLC,C6,6,3,C,s,False,CABLE TAG,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,26.5546875
+FIELD DIGITAL INST - PLC,D6,6,4,D,s,False,CABLE TYPE,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,24.33203125
+FIELD DIGITAL INST - PLC,E6,6,5,E,s,False,CORE NUMBERS,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,17.5546875
+FIELD DIGITAL INST - PLC,F6,6,6,F,s,False,TERMINAL BLOCK,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,20.109375
+FIELD DIGITAL INST - PLC,G6,6,7,G,s,False,TERMINALS,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,20.109375
+FIELD DIGITAL INST - PLC,J6,6,10,J,s,False,EQUIPMENT,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,21.0
+FIELD DIGITAL INST - PLC,K6,6,11,K,s,False,TERMINAL,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,17.88671875
+FIELD DIGITAL INST - PLC,O6,6,15,O,s,False,CABLE/DEVICE TAG,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,32.109375
+FIELD DIGITAL INST - PLC,P6,6,16,P,s,False,TERMINAL,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,17.88671875
+FIELD DIGITAL INST - PLC,Q6,6,17,Q,s,False,DESCRIPTION,,160,0,Aptos,18.0,True,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,60.0,56.77734375
+FIELD DIGITAL INST - PLC,B7,7,2,B,s,False,DIGITAL-FIELD INSTRUMENTS TO CONTROL PANEL(PLC),,163,0,Aptos,18.0,True,False,,,solid,Values must be of type <class 'str'>,center,center,True,0,thin,thin,thin,thin,True,False,,,,B7:R7,30.0,14.88671875
+FIELD DIGITAL INST - PLC,B8,8,2,B,s,False,1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B8:B10,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C8,8,3,C,s,False,20GDK092PS001,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C8:C10,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D8,8,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D8:D10,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E8,8,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F8,8,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G8,8,7,G,n,False,2,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H8,8,8,H,f,False,"=CONCATENATE(F8,""-"",G8,""/"",O8,""-"",P8)","=CONCATENATE(F8,""-"",G8,""/"",O8,""-"",P8)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I8,8,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J8,8,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K8,8,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L8,8,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M8,8,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M8:M10,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N8,8,14,N,f,False,"=CONCATENATE(O8,P8,""/"",F8,""-"",G8)","=CONCATENATE(O8,P8,""/"",F8,""-"",G8)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O8,8,15,O,f,False,=C8,=C8,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P8,8,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q8,8,17,Q,s,False,Backwash Pumps Common discharge - Pressure measurement,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q8:Q10,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R8,8,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E9,9,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F9,9,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G9,9,7,G,n,False,1,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H9,9,8,H,f,False,"=CONCATENATE(F9,""-"",G9,""/"",O9,""-"",P9)","=CONCATENATE(F9,""-"",G9,""/"",O9,""-"",P9)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I9,9,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J9,9,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K9,9,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L9,9,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N9,9,14,N,f,False,"=CONCATENATE(O9,P9,""/"",F9,""-"",G9)","=CONCATENATE(O9,P9,""/"",F9,""-"",G9)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O9,9,15,O,f,False,=O8,=O8,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P9,9,16,P,s,False,C,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R9,9,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E10,10,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F10,10,6,F,s,False,-,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G10,10,7,G,s,False,-,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H10,10,8,H,f,False,"=CONCATENATE(F10,""-"",G10,""/"",O10,""-"",P10)","=CONCATENATE(F10,""-"",G10,""/"",O10,""-"",P10)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I10,10,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J10,10,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K10,10,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L10,10,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N10,10,14,N,f,False,"=CONCATENATE(O10,P10,""/"",F10,""-"",G10)","=CONCATENATE(O10,P10,""/"",F10,""-"",G10)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O10,10,15,O,s,False,-,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P10,10,16,P,s,False,-,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R10,10,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B11,11,2,B,f,False,=B8+1,=B8+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B11:B13,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C11,11,3,C,s,False,20GDK097PS002,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C11:C13,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D11,11,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D11:D13,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E11,11,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F11,11,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G11,11,7,G,n,False,4,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H11,11,8,H,f,False,"=CONCATENATE(F11,""-"",G11,""/"",O11,""-"",P11)","=CONCATENATE(F11,""-"",G11,""/"",O11,""-"",P11)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I11,11,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J11,11,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K11,11,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L11,11,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M11,11,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M11:M13,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N11,11,14,N,f,False,"=CONCATENATE(O11,P11,""/"",F11,""-"",G11)","=CONCATENATE(O11,P11,""/"",F11,""-"",G11)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O11,11,15,O,f,False,=C11,=C11,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P11,11,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q11,11,17,Q,s,False,Service Water Pumps Common discharge - Pressure measurement,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q11:Q13,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R11,11,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E12,12,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F12,12,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G12,12,7,G,n,False,3,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H12,12,8,H,f,False,"=CONCATENATE(F12,""-"",G12,""/"",O12,""-"",P12)","=CONCATENATE(F12,""-"",G12,""/"",O12,""-"",P12)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I12,12,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J12,12,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K12,12,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L12,12,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N12,12,14,N,f,False,"=CONCATENATE(O12,P12,""/"",F12,""-"",G12)","=CONCATENATE(O12,P12,""/"",F12,""-"",G12)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O12,12,15,O,f,False,=O11,=O11,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P12,12,16,P,s,False,C,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R12,12,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E13,13,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F13,13,6,F,s,False,-,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G13,13,7,G,s,False,-,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H13,13,8,H,f,False,"=CONCATENATE(F13,""-"",G13,""/"",O13,""-"",P13)","=CONCATENATE(F13,""-"",G13,""/"",O13,""-"",P13)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I13,13,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J13,13,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K13,13,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L13,13,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N13,13,14,N,f,False,"=CONCATENATE(O13,P13,""/"",F13,""-"",G13)","=CONCATENATE(O13,P13,""/"",F13,""-"",G13)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O13,13,15,O,s,False,-,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P13,13,16,P,s,False,-,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R13,13,18,R,n,False,,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B14,14,2,B,f,False,=B11+1,=B11+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B14:B16,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C14,14,3,C,s,False,20GDN000LS001,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C14:C16,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D14,14,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D14:D16,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E14,14,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F14,14,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G14,14,7,G,n,False,2,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H14,14,8,H,f,False,"=CONCATENATE(F14,""-"",G14,""/"",O14,""-"",P14)","=CONCATENATE(F14,""-"",G14,""/"",O14,""-"",P14)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I14,14,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J14,14,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K14,14,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L14,14,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M14,14,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M14:M16,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N14,14,14,N,f,False,"=CONCATENATE(O14,P14,""/"",F14,""-"",G14)","=CONCATENATE(O14,P14,""/"",F14,""-"",G14)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O14,14,15,O,f,False,=C14,=C14,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P14,14,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q14,14,17,Q,s,False,"Liquid Alum Storage Tank 1 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q14:Q16,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R14,14,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E15,15,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F15,15,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G15,15,7,G,n,False,4,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H15,15,8,H,f,False,"=CONCATENATE(F15,""-"",G15,""/"",O15,""-"",P15)","=CONCATENATE(F15,""-"",G15,""/"",O15,""-"",P15)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I15,15,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J15,15,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K15,15,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L15,15,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N15,15,14,N,f,False,"=CONCATENATE(O15,P15,""/"",F15,""-"",G15)","=CONCATENATE(O15,P15,""/"",F15,""-"",G15)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O15,15,15,O,f,False,=O14,=O14,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P15,15,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R15,15,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E16,16,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F16,16,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G16,16,7,G,n,False,1,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H16,16,8,H,f,False,"=CONCATENATE(F16,""-"",G16,""/"",O16,""-"",P16)","=CONCATENATE(F16,""-"",G16,""/"",O16,""-"",P16)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I16,16,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J16,16,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K16,16,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L16,16,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N16,16,14,N,f,False,"=CONCATENATE(O16,P16,""/"",F16,""-"",G16)","=CONCATENATE(O16,P16,""/"",F16,""-"",G16)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O16,16,15,O,f,False,=O15,=O15,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P16,16,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R16,16,18,R,s,False,IN PLC SIDE TB:DX1:1&DX1:3  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B17,17,2,B,f,False,=B14+1,=B14+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B17:B19,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C17,17,3,C,s,False,20GDN000LS002,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C17:C19,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D17,17,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D17:D19,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E17,17,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F17,17,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G17,17,7,G,n,False,6,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H17,17,8,H,f,False,"=CONCATENATE(F17,""-"",G17,""/"",O17,""-"",P17)","=CONCATENATE(F17,""-"",G17,""/"",O17,""-"",P17)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I17,17,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J17,17,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K17,17,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L17,17,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M17,17,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M17:M19,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N17,17,14,N,f,False,"=CONCATENATE(O17,P17,""/"",F17,""-"",G17)","=CONCATENATE(O17,P17,""/"",F17,""-"",G17)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O17,17,15,O,f,False,=C17,=C17,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P17,17,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q17,17,17,Q,s,False,"Liquid Alum Storage Tank 2 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q17:Q19,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R17,17,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E18,18,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F18,18,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G18,18,7,G,n,False,8,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H18,18,8,H,f,False,"=CONCATENATE(F18,""-"",G18,""/"",O18,""-"",P18)","=CONCATENATE(F18,""-"",G18,""/"",O18,""-"",P18)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I18,18,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J18,18,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K18,18,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L18,18,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N18,18,14,N,f,False,"=CONCATENATE(O18,P18,""/"",F18,""-"",G18)","=CONCATENATE(O18,P18,""/"",F18,""-"",G18)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O18,18,15,O,f,False,=O17,=O17,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P18,18,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R18,18,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E19,19,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F19,19,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G19,19,7,G,n,False,5,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H19,19,8,H,f,False,"=CONCATENATE(F19,""-"",G19,""/"",O19,""-"",P19)","=CONCATENATE(F19,""-"",G19,""/"",O19,""-"",P19)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I19,19,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J19,19,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K19,19,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L19,19,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N19,19,14,N,f,False,"=CONCATENATE(O19,P19,""/"",F19,""-"",G19)","=CONCATENATE(O19,P19,""/"",F19,""-"",G19)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O19,19,15,O,f,False,=O18,=O18,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P19,19,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R19,19,18,R,s,False,IN PLC SIDE TB:DX1:5&DX1:7  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B20,20,2,B,f,False,=B17+1,=B17+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B20:B22,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C20,20,3,C,s,False,20GDN000LS003,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C20:C22,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D20,20,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D20:D22,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E20,20,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F20,20,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G20,20,7,G,n,False,10,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H20,20,8,H,f,False,"=CONCATENATE(F20,""-"",G20,""/"",O20,""-"",P20)","=CONCATENATE(F20,""-"",G20,""/"",O20,""-"",P20)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I20,20,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J20,20,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K20,20,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L20,20,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M20,20,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M20:M22,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N20,20,14,N,f,False,"=CONCATENATE(O20,P20,""/"",F20,""-"",G20)","=CONCATENATE(O20,P20,""/"",F20,""-"",G20)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O20,20,15,O,f,False,=C20,=C20,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P20,20,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q20,20,17,Q,s,False,"Service Water Tank - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q20:Q22,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R20,20,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E21,21,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F21,21,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G21,21,7,G,n,False,12,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H21,21,8,H,f,False,"=CONCATENATE(F21,""-"",G21,""/"",O21,""-"",P21)","=CONCATENATE(F21,""-"",G21,""/"",O21,""-"",P21)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I21,21,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J21,21,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K21,21,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L21,21,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N21,21,14,N,f,False,"=CONCATENATE(O21,P21,""/"",F21,""-"",G21)","=CONCATENATE(O21,P21,""/"",F21,""-"",G21)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O21,21,15,O,f,False,=O20,=O20,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P21,21,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R21,21,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E22,22,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F22,22,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G22,22,7,G,n,False,9,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H22,22,8,H,f,False,"=CONCATENATE(F22,""-"",G22,""/"",O22,""-"",P22)","=CONCATENATE(F22,""-"",G22,""/"",O22,""-"",P22)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I22,22,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J22,22,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K22,22,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L22,22,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N22,22,14,N,f,False,"=CONCATENATE(O22,P22,""/"",F22,""-"",G22)","=CONCATENATE(O22,P22,""/"",F22,""-"",G22)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O22,22,15,O,f,False,=O21,=O21,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P22,22,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R22,22,18,R,s,False,IN PLC SIDE TB:DX1:9&DX1:11  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B23,23,2,B,f,False,=B20+1,=B20+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B23:B25,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C23,23,3,C,s,False,20GDN000LS004,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C23:C25,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D23,23,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D23:D25,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E23,23,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F23,23,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G23,23,7,G,n,False,14,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H23,23,8,H,f,False,"=CONCATENATE(F23,""-"",G23,""/"",O23,""-"",P23)","=CONCATENATE(F23,""-"",G23,""/"",O23,""-"",P23)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I23,23,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J23,23,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K23,23,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L23,23,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M23,23,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M23:M25,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N23,23,14,N,f,False,"=CONCATENATE(O23,P23,""/"",F23,""-"",G23)","=CONCATENATE(O23,P23,""/"",F23,""-"",G23)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O23,23,15,O,f,False,=C23,=C23,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P23,23,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q23,23,17,Q,s,False,"Alum Dosing Tank 1 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q23:Q25,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R23,23,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E24,24,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F24,24,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G24,24,7,G,n,False,16,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H24,24,8,H,f,False,"=CONCATENATE(F24,""-"",G24,""/"",O24,""-"",P24)","=CONCATENATE(F24,""-"",G24,""/"",O24,""-"",P24)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I24,24,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J24,24,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K24,24,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L24,24,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N24,24,14,N,f,False,"=CONCATENATE(O24,P24,""/"",F24,""-"",G24)","=CONCATENATE(O24,P24,""/"",F24,""-"",G24)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O24,24,15,O,f,False,=O23,=O23,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P24,24,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R24,24,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E25,25,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F25,25,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G25,25,7,G,n,False,13,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H25,25,8,H,f,False,"=CONCATENATE(F25,""-"",G25,""/"",O25,""-"",P25)","=CONCATENATE(F25,""-"",G25,""/"",O25,""-"",P25)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I25,25,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J25,25,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K25,25,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L25,25,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N25,25,14,N,f,False,"=CONCATENATE(O25,P25,""/"",F25,""-"",G25)","=CONCATENATE(O25,P25,""/"",F25,""-"",G25)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O25,25,15,O,f,False,=O24,=O24,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P25,25,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R25,25,18,R,s,False,IN PLC SIDE TB:DX1:13&DX1:15  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B26,26,2,B,f,False,=B23+1,=B23+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B26:B28,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C26,26,3,C,s,False,20GDN000LS005,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C26:C28,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D26,26,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D26:D28,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E26,26,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F26,26,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G26,26,7,G,n,False,18,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H26,26,8,H,f,False,"=CONCATENATE(F26,""-"",G26,""/"",O26,""-"",P26)","=CONCATENATE(F26,""-"",G26,""/"",O26,""-"",P26)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I26,26,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J26,26,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K26,26,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L26,26,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M26,26,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M26:M28,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N26,26,14,N,f,False,"=CONCATENATE(O26,P26,""/"",F26,""-"",G26)","=CONCATENATE(O26,P26,""/"",F26,""-"",G26)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O26,26,15,O,f,False,=C26,=C26,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P26,26,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q26,26,17,Q,s,False,"Alum Dosing Tank 2 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q26:Q28,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R26,26,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E27,27,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F27,27,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G27,27,7,G,n,False,20,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H27,27,8,H,f,False,"=CONCATENATE(F27,""-"",G27,""/"",O27,""-"",P27)","=CONCATENATE(F27,""-"",G27,""/"",O27,""-"",P27)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I27,27,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J27,27,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K27,27,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L27,27,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N27,27,14,N,f,False,"=CONCATENATE(O27,P27,""/"",F27,""-"",G27)","=CONCATENATE(O27,P27,""/"",F27,""-"",G27)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O27,27,15,O,f,False,=O26,=O26,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P27,27,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R27,27,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E28,28,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F28,28,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G28,28,7,G,n,False,17,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H28,28,8,H,f,False,"=CONCATENATE(F28,""-"",G28,""/"",O28,""-"",P28)","=CONCATENATE(F28,""-"",G28,""/"",O28,""-"",P28)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I28,28,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J28,28,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K28,28,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L28,28,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N28,28,14,N,f,False,"=CONCATENATE(O28,P28,""/"",F28,""-"",G28)","=CONCATENATE(O28,P28,""/"",F28,""-"",G28)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O28,28,15,O,f,False,=O27,=O27,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P28,28,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R28,28,18,R,s,False,IN PLC SIDE TB:DX1:17&DX1:19  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B29,29,2,B,f,False,=B26+1,=B26+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B29:B31,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C29,29,3,C,s,False,20GDN000LS006,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C29:C31,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D29,29,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D29:D31,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E29,29,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F29,29,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G29,29,7,G,n,False,22,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H29,29,8,H,f,False,"=CONCATENATE(F29,""-"",G29,""/"",O29,""-"",P29)","=CONCATENATE(F29,""-"",G29,""/"",O29,""-"",P29)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I29,29,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J29,29,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K29,29,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L29,29,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M29,29,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M29:M31,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N29,29,14,N,f,False,"=CONCATENATE(O29,P29,""/"",F29,""-"",G29)","=CONCATENATE(O29,P29,""/"",F29,""-"",G29)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O29,29,15,O,f,False,=C29,=C29,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P29,29,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q29,29,17,Q,s,False,"Alum Dosing Tank 3 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q29:Q31,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R29,29,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E30,30,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F30,30,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G30,30,7,G,n,False,24,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H30,30,8,H,f,False,"=CONCATENATE(F30,""-"",G30,""/"",O30,""-"",P30)","=CONCATENATE(F30,""-"",G30,""/"",O30,""-"",P30)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I30,30,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J30,30,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K30,30,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L30,30,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N30,30,14,N,f,False,"=CONCATENATE(O30,P30,""/"",F30,""-"",G30)","=CONCATENATE(O30,P30,""/"",F30,""-"",G30)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O30,30,15,O,f,False,=O29,=O29,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P30,30,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R30,30,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E31,31,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F31,31,6,F,s,False,DX1,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G31,31,7,G,n,False,21,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H31,31,8,H,f,False,"=CONCATENATE(F31,""-"",G31,""/"",O31,""-"",P31)","=CONCATENATE(F31,""-"",G31,""/"",O31,""-"",P31)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I31,31,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J31,31,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K31,31,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L31,31,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N31,31,14,N,f,False,"=CONCATENATE(O31,P31,""/"",F31,""-"",G31)","=CONCATENATE(O31,P31,""/"",F31,""-"",G31)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O31,31,15,O,f,False,=O30,=O30,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P31,31,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R31,31,18,R,s,False,IN PLC SIDE TB:DX1:21&DX1:23  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B32,32,2,B,n,False,9,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B32:B34,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C32,32,3,C,s,False,20GDN000LS007,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C32:C34,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D32,32,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D32:D34,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E32,32,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F32,32,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G32,32,7,G,n,False,2,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H32,32,8,H,f,False,"=CONCATENATE(F32,""-"",G32,""/"",O32,""-"",P32)","=CONCATENATE(F32,""-"",G32,""/"",O32,""-"",P32)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I32,32,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J32,32,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K32,32,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L32,32,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M32,32,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M32:M34,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N32,32,14,N,f,False,"=CONCATENATE(O32,P32,""/"",F32,""-"",G32)","=CONCATENATE(O32,P32,""/"",F32,""-"",G32)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O32,32,15,O,f,False,=C32,=C32,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P32,32,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q32,32,17,Q,s,False,"Lime Dosing Tank 1 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q32:Q34,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R32,32,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E33,33,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F33,33,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G33,33,7,G,n,False,4,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H33,33,8,H,f,False,"=CONCATENATE(F33,""-"",G33,""/"",O33,""-"",P33)","=CONCATENATE(F33,""-"",G33,""/"",O33,""-"",P33)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I33,33,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J33,33,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K33,33,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L33,33,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N33,33,14,N,f,False,"=CONCATENATE(O33,P33,""/"",F33,""-"",G33)","=CONCATENATE(O33,P33,""/"",F33,""-"",G33)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O33,33,15,O,f,False,=O32,=O32,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P33,33,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R33,33,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E34,34,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F34,34,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G34,34,7,G,n,False,1,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H34,34,8,H,f,False,"=CONCATENATE(F34,""-"",G34,""/"",O34,""-"",P34)","=CONCATENATE(F34,""-"",G34,""/"",O34,""-"",P34)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I34,34,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J34,34,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K34,34,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L34,34,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N34,34,14,N,f,False,"=CONCATENATE(O34,P34,""/"",F34,""-"",G34)","=CONCATENATE(O34,P34,""/"",F34,""-"",G34)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O34,34,15,O,f,False,=O33,=O33,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P34,34,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R34,34,18,R,s,False,IN PLC SIDE TB:DX2:1&DX2:3  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B35,35,2,B,f,False,=B32+1,=B32+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B35:B37,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C35,35,3,C,s,False,20GDN000LS008,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C35:C37,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D35,35,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D35:D37,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E35,35,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F35,35,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G35,35,7,G,n,False,6,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H35,35,8,H,f,False,"=CONCATENATE(F35,""-"",G35,""/"",O35,""-"",P35)","=CONCATENATE(F35,""-"",G35,""/"",O35,""-"",P35)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I35,35,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J35,35,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K35,35,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L35,35,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M35,35,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M35:M37,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N35,35,14,N,f,False,"=CONCATENATE(O35,P35,""/"",F35,""-"",G35)","=CONCATENATE(O35,P35,""/"",F35,""-"",G35)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O35,35,15,O,f,False,=C35,=C35,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P35,35,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q35,35,17,Q,s,False,"Lime Dosing Tank 2 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q35:Q37,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R35,35,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E36,36,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F36,36,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G36,36,7,G,n,False,8,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H36,36,8,H,f,False,"=CONCATENATE(F36,""-"",G36,""/"",O36,""-"",P36)","=CONCATENATE(F36,""-"",G36,""/"",O36,""-"",P36)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I36,36,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J36,36,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K36,36,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L36,36,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N36,36,14,N,f,False,"=CONCATENATE(O36,P36,""/"",F36,""-"",G36)","=CONCATENATE(O36,P36,""/"",F36,""-"",G36)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O36,36,15,O,f,False,=O35,=O35,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P36,36,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R36,36,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E37,37,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F37,37,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G37,37,7,G,n,False,5,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H37,37,8,H,f,False,"=CONCATENATE(F37,""-"",G37,""/"",O37,""-"",P37)","=CONCATENATE(F37,""-"",G37,""/"",O37,""-"",P37)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I37,37,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J37,37,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K37,37,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L37,37,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N37,37,14,N,f,False,"=CONCATENATE(O37,P37,""/"",F37,""-"",G37)","=CONCATENATE(O37,P37,""/"",F37,""-"",G37)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O37,37,15,O,f,False,=O36,=O36,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P37,37,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R37,37,18,R,s,False,IN PLC SIDE TB:DX2:5&DX2:7  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B38,38,2,B,f,False,=B35+1,=B35+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B38:B40,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C38,38,3,C,s,False,20GDN000LS009,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C38:C40,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D38,38,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D38:D40,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E38,38,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F38,38,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G38,38,7,G,n,False,10,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H38,38,8,H,f,False,"=CONCATENATE(F38,""-"",G38,""/"",O38,""-"",P38)","=CONCATENATE(F38,""-"",G38,""/"",O38,""-"",P38)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I38,38,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J38,38,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K38,38,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L38,38,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M38,38,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M38:M40,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N38,38,14,N,f,False,"=CONCATENATE(O38,P38,""/"",F38,""-"",G38)","=CONCATENATE(O38,P38,""/"",F38,""-"",G38)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O38,38,15,O,f,False,=C38,=C38,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P38,38,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q38,38,17,Q,s,False,"Lime Dosing Tank 3 - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q38:Q40,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R38,38,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E39,39,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F39,39,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G39,39,7,G,n,False,12,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H39,39,8,H,f,False,"=CONCATENATE(F39,""-"",G39,""/"",O39,""-"",P39)","=CONCATENATE(F39,""-"",G39,""/"",O39,""-"",P39)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I39,39,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J39,39,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K39,39,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L39,39,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N39,39,14,N,f,False,"=CONCATENATE(O39,P39,""/"",F39,""-"",G39)","=CONCATENATE(O39,P39,""/"",F39,""-"",G39)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O39,39,15,O,f,False,=O38,=O38,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P39,39,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R39,39,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E40,40,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F40,40,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G40,40,7,G,n,False,9,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H40,40,8,H,f,False,"=CONCATENATE(F40,""-"",G40,""/"",O40,""-"",P40)","=CONCATENATE(F40,""-"",G40,""/"",O40,""-"",P40)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I40,40,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J40,40,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K40,40,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L40,40,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N40,40,14,N,f,False,"=CONCATENATE(O40,P40,""/"",F40,""-"",G40)","=CONCATENATE(O40,P40,""/"",F40,""-"",G40)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O40,40,15,O,f,False,=O39,=O39,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P40,40,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R40,40,18,R,s,False,IN PLC SIDE TB:DX2:9&DX2:11  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B41,41,2,B,f,False,=B38+1,=B38+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B41:B43,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C41,41,3,C,s,False,20GDN000LS010,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C41:C43,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D41,41,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D41:D43,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E41,41,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F41,41,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G41,41,7,G,n,False,14,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H41,41,8,H,f,False,"=CONCATENATE(F41,""-"",G41,""/"",O41,""-"",P41)","=CONCATENATE(F41,""-"",G41,""/"",O41,""-"",P41)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I41,41,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J41,41,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K41,41,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L41,41,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M41,41,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M41:M43,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N41,41,14,N,f,False,"=CONCATENATE(O41,P41,""/"",F41,""-"",G41)","=CONCATENATE(O41,P41,""/"",F41,""-"",G41)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O41,41,15,O,f,False,=C41,=C41,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P41,41,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q41,41,17,Q,s,False,DWPE Dosing Tank 1 - Level measurement,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q41:Q43,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R41,41,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E42,42,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F42,42,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G42,42,7,G,n,False,16,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H42,42,8,H,f,False,"=CONCATENATE(F42,""-"",G42,""/"",O42,""-"",P42)","=CONCATENATE(F42,""-"",G42,""/"",O42,""-"",P42)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I42,42,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J42,42,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K42,42,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L42,42,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N42,42,14,N,f,False,"=CONCATENATE(O42,P42,""/"",F42,""-"",G42)","=CONCATENATE(O42,P42,""/"",F42,""-"",G42)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O42,42,15,O,f,False,=O41,=O41,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P42,42,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R42,42,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E43,43,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F43,43,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G43,43,7,G,n,False,13,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H43,43,8,H,f,False,"=CONCATENATE(F43,""-"",G43,""/"",O43,""-"",P43)","=CONCATENATE(F43,""-"",G43,""/"",O43,""-"",P43)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I43,43,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J43,43,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K43,43,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L43,43,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N43,43,14,N,f,False,"=CONCATENATE(O43,P43,""/"",F43,""-"",G43)","=CONCATENATE(O43,P43,""/"",F43,""-"",G43)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O43,43,15,O,f,False,=O42,=O42,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P43,43,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R43,43,18,R,s,False,IN PLC SIDE TB:DX2:13&DX2:17  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B44,44,2,B,f,False,=B41+1,=B41+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B44:B46,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C44,44,3,C,s,False,20GDN000LS011,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C44:C46,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D44,44,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D44:D46,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E44,44,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F44,44,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G44,44,7,G,n,False,18,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H44,44,8,H,f,False,"=CONCATENATE(F44,""-"",G44,""/"",O44,""-"",P44)","=CONCATENATE(F44,""-"",G44,""/"",O44,""-"",P44)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I44,44,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J44,44,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K44,44,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L44,44,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M44,44,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M44:M46,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N44,44,14,N,f,False,"=CONCATENATE(O44,P44,""/"",F44,""-"",G44)","=CONCATENATE(O44,P44,""/"",F44,""-"",G44)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O44,44,15,O,f,False,=C44,=C44,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P44,44,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q44,44,17,Q,s,False,DWPE Dosing Tank 2 - Level measurement,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q44:Q46,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R44,44,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E45,45,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F45,45,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G45,45,7,G,n,False,20,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H45,45,8,H,f,False,"=CONCATENATE(F45,""-"",G45,""/"",O45,""-"",P45)","=CONCATENATE(F45,""-"",G45,""/"",O45,""-"",P45)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I45,45,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J45,45,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K45,45,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L45,45,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N45,45,14,N,f,False,"=CONCATENATE(O45,P45,""/"",F45,""-"",G45)","=CONCATENATE(O45,P45,""/"",F45,""-"",G45)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O45,45,15,O,f,False,=O44,=O44,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P45,45,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R45,45,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E46,46,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F46,46,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G46,46,7,G,n,False,17,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H46,46,8,H,f,False,"=CONCATENATE(F46,""-"",G46,""/"",O46,""-"",P46)","=CONCATENATE(F46,""-"",G46,""/"",O46,""-"",P46)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I46,46,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J46,46,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K46,46,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L46,46,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N46,46,14,N,f,False,"=CONCATENATE(O46,P46,""/"",F46,""-"",G46)","=CONCATENATE(O46,P46,""/"",F46,""-"",G46)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O46,46,15,O,f,False,=O45,=O45,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P46,46,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R46,46,18,R,s,False,IN PLC SIDE TB:DX2:17&DX2:19  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B47,47,2,B,f,False,=B44+1,=B44+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B47:B49,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C47,47,3,C,s,False,20GDN000LS012,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C47:C49,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D47,47,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D47:D49,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E47,47,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F47,47,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G47,47,7,G,n,False,22,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H47,47,8,H,f,False,"=CONCATENATE(F47,""-"",G47,""/"",O47,""-"",P47)","=CONCATENATE(F47,""-"",G47,""/"",O47,""-"",P47)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I47,47,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J47,47,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K47,47,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L47,47,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M47,47,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M47:M49,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N47,47,14,N,f,False,"=CONCATENATE(O47,P47,""/"",F47,""-"",G47)","=CONCATENATE(O47,P47,""/"",F47,""-"",G47)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O47,47,15,O,f,False,=C47,=C47,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P47,47,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q47,47,17,Q,s,False,"Waste Holding Tank - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q47:Q49,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R47,47,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E48,48,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F48,48,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G48,48,7,G,n,False,24,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H48,48,8,H,f,False,"=CONCATENATE(F48,""-"",G48,""/"",O48,""-"",P48)","=CONCATENATE(F48,""-"",G48,""/"",O48,""-"",P48)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I48,48,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J48,48,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K48,48,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L48,48,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N48,48,14,N,f,False,"=CONCATENATE(O48,P48,""/"",F48,""-"",G48)","=CONCATENATE(O48,P48,""/"",F48,""-"",G48)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O48,48,15,O,f,False,=O47,=O47,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P48,48,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R48,48,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E49,49,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F49,49,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G49,49,7,G,n,False,21,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H49,49,8,H,f,False,"=CONCATENATE(F49,""-"",G49,""/"",O49,""-"",P49)","=CONCATENATE(F49,""-"",G49,""/"",O49,""-"",P49)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I49,49,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J49,49,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K49,49,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L49,49,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N49,49,14,N,f,False,"=CONCATENATE(O49,P49,""/"",F49,""-"",G49)","=CONCATENATE(O49,P49,""/"",F49,""-"",G49)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O49,49,15,O,f,False,=O48,=O48,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P49,49,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R49,49,18,R,s,False,IN PLC SIDE TB:DX2:21&DX2:23  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B50,50,2,B,f,False,=B47+1,=B47+1,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,B50:B52,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C50,50,3,C,s,False,20GDN000LS013,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C50:C52,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D50,50,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D50:D52,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E50,50,5,E,s,False,1C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F50,50,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G50,50,7,G,n,False,26,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H50,50,8,H,f,False,"=CONCATENATE(F50,""-"",G50,""/"",O50,""-"",P50)","=CONCATENATE(F50,""-"",G50,""/"",O50,""-"",P50)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I50,50,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J50,50,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K50,50,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L50,50,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M50,50,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M50:M52,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N50,50,14,N,f,False,"=CONCATENATE(O50,P50,""/"",F50,""-"",G50)","=CONCATENATE(O50,P50,""/"",F50,""-"",G50)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O50,50,15,O,f,False,=C50,=C50,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P50,50,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q50,50,17,Q,s,False,"Thickened Sludge Sump - Level measurement, Remote switching",,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q50:Q52,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R50,50,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E51,51,5,E,s,False,2C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F51,51,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G51,51,7,G,n,False,28,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H51,51,8,H,f,False,"=CONCATENATE(F51,""-"",G51,""/"",O51,""-"",P51)","=CONCATENATE(F51,""-"",G51,""/"",O51,""-"",P51)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I51,51,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J51,51,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K51,51,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L51,51,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N51,51,14,N,f,False,"=CONCATENATE(O51,P51,""/"",F51,""-"",G51)","=CONCATENATE(O51,P51,""/"",F51,""-"",G51)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O51,51,15,O,f,False,=O50,=O50,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P51,51,16,P,s,False,NO,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R51,51,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E52,52,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F52,52,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G52,52,7,G,n,False,25,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H52,52,8,H,f,False,"=CONCATENATE(F52,""-"",G52,""/"",O52,""-"",P52)","=CONCATENATE(F52,""-"",G52,""/"",O52,""-"",P52)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I52,52,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J52,52,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K52,52,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L52,52,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N52,52,14,N,f,False,"=CONCATENATE(O52,P52,""/"",F52,""-"",G52)","=CONCATENATE(O52,P52,""/"",F52,""-"",G52)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O52,52,15,O,f,False,=O51,=O51,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P52,52,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R52,52,18,R,s,False,IN PLC SIDE TB:DX2:25&DX2:27  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B53,53,2,B,n,False,16,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,B53:B54,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C53,53,3,C,s,False,20GDN000LS014,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C53:C54,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D53,53,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D53:D54,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E53,53,5,E,s,False,1C,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F53,53,6,F,s,False,DX2,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G53,53,7,G,n,False,30,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H53,53,8,H,f,False,"=CONCATENATE(F53,""-"",G53,""/"",O53,""-"",P53)","=CONCATENATE(F53,""-"",G53,""/"",O53,""-"",P53)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I53,53,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J53,53,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K53,53,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L53,53,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M53,53,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M53:M54,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N53,53,14,N,f,False,"=CONCATENATE(O53,P53,""/"",F53,""-"",G53)","=CONCATENATE(O53,P53,""/"",F53,""-"",G53)",88,0,Aptos,18.0,False,False,,,,00000000,,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O53,53,15,O,s,False,20GDN000LS014,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P53,53,16,P,s,False,NO,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q53,53,17,Q,s,False,Filtered Water Channel To CCT INLET CHAMBER - LOW LEVEL SWITCHING,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q53:Q54,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R53,53,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E54,54,5,E,s,False,2C,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F54,54,6,F,s,False,DX2,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G54,54,7,G,n,False,29,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H54,54,8,H,f,False,"=CONCATENATE(F54,""-"",G54,""/"",O54,""-"",P54)","=CONCATENATE(F54,""-"",G54,""/"",O54,""-"",P54)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I54,54,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J54,54,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K54,54,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L54,54,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N54,54,14,N,f,False,"=CONCATENATE(O54,P54,""/"",F54,""-"",G54)","=CONCATENATE(O54,P54,""/"",F54,""-"",G54)",88,0,Aptos,18.0,False,False,,,,00000000,,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O54,54,15,O,s,False,20GDN000LS014,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P54,54,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R54,54,18,R,n,False,,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B55,55,2,B,n,False,17,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,B55:B57,30.0,14.88671875
+FIELD DIGITAL INST - PLC,C55,55,3,C,s,False,20GDN000LS015,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,C55:C57,30.0,26.5546875
+FIELD DIGITAL INST - PLC,D55,55,4,D,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,D55:D57,30.0,24.33203125
+FIELD DIGITAL INST - PLC,E55,55,5,E,s,False,1C,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F55,55,6,F,s,False,DX1,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G55,55,7,G,n,False,6,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H55,55,8,H,f,False,"=CONCATENATE(F55,""-"",G55,""/"",O55,""-"",P55)","=CONCATENATE(F55,""-"",G55,""/"",O55,""-"",P55)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I55,55,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J55,55,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K55,55,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L55,55,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,M55,55,13,M,s,False,3C x 1.0 SQ.MM,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,M55:M57,30.0,24.33203125
+FIELD DIGITAL INST - PLC,N55,55,14,N,f,False,"=CONCATENATE(O55,P55,""/"",F55,""-"",G55)","=CONCATENATE(O55,P55,""/"",F55,""-"",G55)",88,0,Aptos,18.0,False,False,,,,00000000,,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O55,55,15,O,s,False,20GDN000LS015,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P55,55,16,P,s,False,NO,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,Q55,55,17,Q,s,False,Filtered Water Channel To CCT INLET CHAMBER - LOW LEVEL SWITCHING,,157,General,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,Q55:Q57,30.0,56.77734375
+FIELD DIGITAL INST - PLC,R55,55,18,R,s,False,HIGH,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E56,56,5,E,s,False,3C,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F56,56,6,F,s,False,DX2,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G56,56,7,G,n,False,8,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H56,56,8,H,f,False,"=CONCATENATE(F56,""-"",G56,""/"",O56,""-"",P56)","=CONCATENATE(F56,""-"",G56,""/"",O56,""-"",P56)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I56,56,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J56,56,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K56,56,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L56,56,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N56,56,14,N,f,False,"=CONCATENATE(O56,P56,""/"",F56,""-"",G56)","=CONCATENATE(O56,P56,""/"",F56,""-"",G56)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O56,56,15,O,f,False,=O55,=O55,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P56,56,16,P,s,False,NO,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R56,56,18,R,s,False,LOW,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,E57,57,5,E,s,False,2C,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.5546875
+FIELD DIGITAL INST - PLC,F57,57,6,F,s,False,DX1,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,G57,57,7,G,n,False,5,,73,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,20.109375
+FIELD DIGITAL INST - PLC,H57,57,8,H,f,False,"=CONCATENATE(F57,""-"",G57,""/"",O57,""-"",P57)","=CONCATENATE(F57,""-"",G57,""/"",O57,""-"",P57)",155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,44.88671875
+FIELD DIGITAL INST - PLC,I57,57,9,I,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,19.33203125
+FIELD DIGITAL INST - PLC,J57,57,10,J,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,21.0
+FIELD DIGITAL INST - PLC,K57,57,11,K,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,L57,57,12,L,s,False,*,,155,0,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,22.33203125
+FIELD DIGITAL INST - PLC,N57,57,14,N,f,False,"=CONCATENATE(O57,P57,""/"",F57,""-"",G57)","=CONCATENATE(O57,P57,""/"",F57,""-"",G57)",88,0,Aptos,18.0,False,False,,,,00000000,,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,43.77734375
+FIELD DIGITAL INST - PLC,O57,57,15,O,s,False,20GDN000LS015,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,32.109375
+FIELD DIGITAL INST - PLC,P57,57,16,P,s,False,C,,167,General,Aptos,18.0,False,False,,,,00000000,center,center,,0,thin,thin,thin,thin,True,False,,,,,30.0,17.88671875
+FIELD DIGITAL INST - PLC,R57,57,18,R,s,False,IN PLC SIDE TB:DX1:5&DX1:7  IS ALREADY LOOPED,,156,0,Aptos,18.0,False,False,,,,00000000,center,center,True,0,thin,thin,thin,thin,True,False,,,,,30.0,81.0
+FIELD DIGITAL INST - PLC,B58,58,2,B,s,False,"Note: 
+PLC Panel terminals are yet to be finalized and will be updated on final PLC wiring diagram.",,164,General,Aptos,18.0,False,False,,,,00000000,left,center,True,0,thin,thin,thin,thin,True,False,,,,B58:R58,49.95,14.88671875
