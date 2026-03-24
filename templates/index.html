@@ -7,498 +7,805 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    /* ---- Layout: use full width, reduce side gutters ---- */
+    /* ─── Design tokens ─────────────────────────────────────────────── */
     :root {
-      --base-font: 11.5px;
-      --th-font: 11px;
-      --h2-font: 18px;
-      --h3-font: 15px;
-      --cell-pad-y: 5px;
-      --cell-pad-x: 6px;
+      --bg:          #0f1117;
+      --surface:     #171b26;
+      --surface-2:   #1e2333;
+      --surface-3:   #252a3a;
+      --border:      #2c3349;
+      --border-soft: #232840;
+      --accent:      #4f8fff;
+      --accent-dim:  #1e3a6e;
+      --accent-glow: rgba(79,143,255,.18);
+      --green:       #3ecf8e;
+      --amber:       #f5a623;
+      --red:         #ff5f5f;
+      --text:        #e4e9f4;
+      --text-2:      #8b95b0;
+      --text-3:      #565e78;
+      --mono:        'IBM Plex Mono', monospace;
+      --sans:        'IBM Plex Sans', system-ui, sans-serif;
+
+      /* group stripe palette — subtle left-border accent colors */
+      --g0: #4f8fff;
+      --g1: #3ecf8e;
+      --g2: #f5a623;
+      --g3: #c97eff;
+      --g4: #ff7eb3;
+      --g5: #5ce1e6;
+      --g6: #ffcd56;
+      --g7: #ff8c42;
     }
-    html { font-size: 14px; }
-    body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    .app-shell, .layout, .main { max-width: 100%; width: 100%; }
-    .main { padding: 8px 12px; }
 
-    /* ---- Typography ---- */
-    h2 { font-size: var(--h2-font); margin: 8px 0 6px; }
-    h3 { font-size: var(--h3-font); margin: 8px 0 6px; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 13px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-    .table-shell { width: 100%; }
-    .table-container { width: 100%; overflow: visible; }
-    table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    thead th, tbody td { border: 1px solid #E5E9EF; vertical-align: top; padding: var(--cell-pad-y) var(--cell-pad-x); }
-    thead th { white-space: normal; word-break: break-word; font-weight: 600; font-size: var(--th-font); line-height: 1.25; background: #F4F7FB; }
-    tbody td { font-size: var(--base-font); line-height: 1.25; }
-    td > input, td > select, td > textarea { width: 100%; box-sizing: border-box; font-size: var(--base-font); line-height: 1.25; padding: 6px 6px; border: 1px solid #D8DEE9; border-radius: 4px; background: #fff; }
-    td.serial, th.serial { width: 28px; text-align: center; white-space: nowrap; }
-    .toolbar { margin: 6px 0; }
-    .badge { font-size: 11px; padding: 2px 6px; background: #e9f2ff; border-radius: 999px; display: inline-block; }
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px 10px; }
-    .btn-primary, .btn-secondary, .btn-danger { font-size: 12px; padding: 6px 10px; }
-    .section-head, .subsection-head { overflow: visible; }
-    @media (max-width: 1366px) { html { font-size: 13px; } thead th, tbody td { padding: 6px 6px; } }
+    /* ─── Topbar ─────────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 52px;
+      display: flex; align-items: center; gap: 12px;
+      backdrop-filter: blur(8px);
+    }
+    .brand-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-family: var(--mono); font-weight: 600; font-size: 11px;
+      color: #fff; letter-spacing: .5px;
+    }
+    .brand-title {
+      font-family: var(--mono); font-weight: 600;
+      font-size: 13px; letter-spacing: .04em;
+      color: var(--text);
+    }
+    .brand-sub {
+      font-size: 11px; color: var(--text-3); margin-top: 1px;
+    }
 
-    /* ====== Minimal spreadsheet-like grid ====== */
+    /* ─── Layout ─────────────────────────────────────────────────────── */
+    .main { max-width: 100%; padding: 24px 28px 60px; }
+
+    /* ─── Section card ───────────────────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: var(--mono); font-weight: 600; font-size: 13px;
+      color: var(--accent); letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; display: inline-block;
+      width: 3px; height: 16px;
+      background: var(--accent); border-radius: 2px;
+    }
+
+    /* ─── Header grid ────────────────────────────────────────────────── */
+    .hdr-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px 12px;
+    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label {
+      font-size: 10.5px; font-weight: 600;
+      color: var(--text-3); letter-spacing: .06em; text-transform: uppercase;
+    }
+    .field input, .field textarea {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans); font-size: 12.5px;
+      padding: 7px 10px;
+      resize: vertical;
+      transition: border-color .15s;
+    }
+    .field input:focus, .field textarea:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .f-12 { grid-column: span 12; }
+    .f-8  { grid-column: span 8;  }
+    .f-6  { grid-column: span 6;  }
+    .f-4  { grid-column: span 4;  }
+    .f-3  { grid-column: span 3;  }
+    .f-2  { grid-column: span 2;  }
+
+    /* ─── Subsection ─────────────────────────────────────────────────── */
+    .subsection { margin-top: 24px; }
+    .subsection:first-child { margin-top: 0; }
+    .sub-head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      background: var(--accent-dim); color: var(--accent);
+      letter-spacing: .04em;
+    }
+    .sub-title {
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+
+    /* ─── Toolbar ────────────────────────────────────────────────────── */
+    .sg-toolbar {
+      display: flex; gap: 6px; align-items: center;
+      margin-bottom: 6px;
+    }
+    .sg-toolbar .btn {
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      padding: 4px 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 5px; color: var(--text-2);
+      cursor: pointer; transition: all .15s;
+    }
+    .sg-toolbar .btn:hover {
+      background: var(--accent-dim); border-color: var(--accent);
+      color: var(--accent);
+    }
+    .sg-legend {
+      font-size: 10.5px; color: var(--text-3);
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sg-legend-dot {
+      width: 10px; height: 10px; border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* ─── SimpleGrid ─────────────────────────────────────────────────── */
     .simple-grid {
-      --cell-h: 28px; --pad: 6px;
-      --grid-border:#e0e0e0; --cell-border:#e6e6e6;
-      border:1px solid var(--grid-border);
-      background:#fff; overflow:auto; border-radius:12px;
-      font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      overflow: auto;
+      font-family: var(--sans); font-size: 12px;
     }
-    .sg-head, .sg-row { display:grid; grid-auto-rows: var(--cell-h); }
-    .sg-head { position:sticky; top:0; background:#f7f9fb; z-index:1; }
-    .sg-cell, .sg-hcell {
-      border-right:1px solid var(--cell-border);
-      border-bottom:1px solid var(--cell-border);
-      padding:0 var(--pad);
-      display:flex; align-items:center;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    .sg-head { position: sticky; top: 0; z-index: 2; }
+    .sg-hcell {
+      background: var(--surface-3);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px;
+      height: 30px;
+      display: flex; align-items: center;
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      color: var(--text-3); letter-spacing: .05em; text-transform: uppercase;
+      white-space: nowrap;
     }
-    .sg-hcell { font-weight:600; color:#334; }
-    .sg-cell { outline:none; }
-    .sg-cell[contenteditable="true"]:focus { outline:2px solid #4c9ffe; outline-offset:-2px; }
-    .sg-toolbar { margin:.5rem 0 .25rem; display:flex; gap:.5rem; align-items:center; }
-    .sg-toolbar .btn { padding:.35rem .6rem; border:1px solid #ccd; background:#f7f9fb; cursor:pointer; border-radius:4px; }
-    .sg-toolbar .btn:hover { background:#eef4ff; }
-    
-    /* Dropdown inside grid styling */
+    .sg-hcell:last-child { border-right: none; }
+
+    .sg-cell {
+      border-right: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 0 8px;
+      height: 28px;
+      display: flex; align-items: center;
+      color: var(--text); font-size: 12px;
+      outline: none;
+      transition: background .1s;
+      position: relative;
+    }
+    .sg-cell:last-child { border-right: none; }
+    .sg-cell[contenteditable="true"] { cursor: text; }
+    .sg-cell[contenteditable="true"]:focus {
+      background: var(--accent-dim);
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      z-index: 1;
+    }
+
+    /* ─── Group stripe ───────────────────────────────────────────────── */
+    /*
+      Each group of consecutive identical tags gets a data-group-color attr
+      on its FIRST cell of that row. We draw a 3px left border on col-0 cells.
+    */
+    .sg-row-group-start .sg-cell[data-c="0"] {
+      border-top: 1px solid var(--border);
+    }
+    .sg-cell[data-c="0"][data-group-bar] {
+      border-left: 3px solid var(--group-color, var(--accent));
+    }
+
+    /* subtle alternating tint per group */
+    .sg-row[data-group-even="true"] .sg-cell {
+      background: rgba(255,255,255,.015);
+    }
+    .sg-row[data-group-even="true"] .sg-cell[contenteditable="true"]:focus {
+      background: var(--accent-dim);
+    }
+
+    /* Dropdown in cell */
     .sg-select {
-      width: 100%; border: none; outline: none; background: transparent; 
-      font: inherit; padding: 0; margin: 0; color: inherit; cursor: pointer;
+      width: 100%; border: none; outline: none;
+      background: transparent;
+      font: inherit; color: var(--text);
+      cursor: pointer; padding: 0;
     }
+    .sg-select option { background: var(--surface-3); color: var(--text); }
+
+    /* ─── Footer ─────────────────────────────────────────────────────── */
+    .submit-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .footer-hint { font-size: 11.5px; color: var(--text-3); }
+    .footer-actions { display: flex; gap: 8px; }
+
+    .btn-secondary {
+      font-family: var(--mono); font-size: 11.5px; font-weight: 500;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text-2);
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-primary {
+      font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+      padding: 8px 18px;
+      background: var(--accent);
+      border: none; border-radius: 7px; color: #fff;
+      cursor: pointer; transition: all .15s;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+
+    /* ─── Scrollbar ──────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-mark">AI</div>
-        <div class="brand-copy">
-          <p class="brand-title">Automation de Instrumentation</p>
+
+<div class="topbar">
+  <div class="brand-mark">AI</div>
+  <div>
+    <div class="brand-title">Automation de Instrumentation</div>
+    <div class="brand-sub">CIS Workbook Generator</div>
+  </div>
+</div>
+
+<main class="main">
+  <form id="cisForm">
+
+    <!-- ── Document Header ───────────────────────────────────────────── -->
+    <section class="section">
+      <div class="section-title">Document Header</div>
+      <div class="hdr-grid">
+        <div class="field f-12">
+          <label for="projectName">Project Name</label>
+          <textarea id="projectName" name="projectName" rows="2" required></textarea>
+        </div>
+        <div class="field f-8">
+          <label for="documentName">Document Name</label>
+          <input id="documentName" name="documentName" required />
+        </div>
+        <div class="field f-4">
+          <label for="documentNumber">Document Number</label>
+          <input id="documentNumber" name="documentNumber" required />
+        </div>
+        <div class="field f-4">
+          <label for="client">Client</label>
+          <input id="client" name="client" />
+        </div>
+        <div class="field f-4">
+          <label for="consultant">Consultant</label>
+          <input id="consultant" name="consultant" />
+        </div>
+        <div class="field f-4">
+          <label for="date">Date</label>
+          <input id="date" type="date" name="date" />
+        </div>
+        <div class="field f-3">
+          <label for="preparedBy">Prepared By</label>
+          <input id="preparedBy" name="preparedBy" />
+        </div>
+        <div class="field f-3">
+          <label for="checkedBy">Checked By</label>
+          <input id="checkedBy" name="checkedBy" />
+        </div>
+        <div class="field f-3">
+          <label for="approvedBy">Approved By</label>
+          <input id="approvedBy" name="approvedBy" />
+        </div>
+        <div class="field f-3">
+          <label for="revision">Revision</label>
+          <input id="revision" name="revision" />
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="layout">
-      <main class="main">
-        <form id="cisForm">
-          
-          <section class="section" id="header-section">
-            <div class="section-head">
-              <div class="section-head-left">
-                <h2>Document Header</h2>
-              </div>
-            </div>
-            <div class="grid">
-              <div class="field field--span-12">
-                <label for="projectName">Project Name</label>
-                <textarea id="projectName" name="projectName" required></textarea>
-              </div>
-              <div class="field field--span-12">
-                <label for="documentName">Document Name</label>
-                <input id="documentName" name="documentName" required />
-              </div>
-              <div class="field field--span-4">
-                <label for="client">Client</label>
-                <input id="client" name="client" />
-              </div>
-              <div class="field field--span-4">
-                <label for="consultant">Consultant</label>
-                <input id="consultant" name="consultant" />
-              </div>
-              <div class="field field--span-4">
-                <label for="documentNumber">Document Number</label>
-                <input id="documentNumber" name="documentNumber" required />
-              </div>
-              <div class="field field--span-3">
-                <label for="date">Date</label>
-                <input id="date" type="date" name="date" />
-              </div>
-              <div class="field field--span-3">
-                <label for="preparedBy">Prepared By</label>
-                <input id="preparedBy" name="preparedBy" />
-              </div>
-              <div class="field field--span-3">
-                <label for="checkedBy">Checked By</label>
-                <input id="checkedBy" name="checkedBy" />
-              </div>
-              <div class="field field--span-3">
-                <label for="approvedBy">Approved By</label>
-                <input id="approvedBy" name="approvedBy" />
-              </div>
-              <div class="field field--span-3">
-                <label for="revision">Revision</label>
-                <input id="revision" name="revision" />
-              </div>
-            </div>
-          </section>
+    <!-- ── Stage 1 ────────────────────────────────────────────────────── -->
+    <section class="section">
+      <div class="section-title">Stage 1 — Instruments / Equipment Entry</div>
 
-          <section class="section" id="stage1-section">
-            <div class="section-head">
-              <div class="section-head-left">
-                <h2>Stage 1 — Instruments/Equipment Entry</h2>
-              </div>
-            </div>
+      <!-- Section 1: Field Instruments -->
+      <div class="subsection">
+        <div class="sub-head">
+          <span class="badge">Section 1</span>
+          <span class="sub-title">Field Instruments</span>
+        </div>
+        <div class="sg-toolbar">
+          <button type="button" class="btn" id="fiAdd5">+ 5 rows</button>
+          <span class="sg-legend">
+            <span class="sg-legend-dot" style="background:var(--g0)"></span>
+            <span class="sg-legend-dot" style="background:var(--g1)"></span>
+            <span class="sg-legend-dot" style="background:var(--g2)"></span>
+            Color bar = same tag group
+          </span>
+        </div>
+        <div id="fiGrid" class="simple-grid"></div>
+      </div>
 
-            <div class="subsection">
-              <div class="subsection-head">
-                <div>
-                  <div class="badge">Section 1</div>
-                  <h3>Field Instruments</h3>
-                </div>
-              </div>
-              <div class="sg-toolbar">
-                <button type="button" class="btn" id="fiAdd5">+5 rows</button>
-              </div>
-              <div id="fiGrid" class="simple-grid" aria-label="Field Instruments grid"></div>
-            </div>
+      <!-- Section 2: Electrical Equipment -->
+      <div class="subsection" style="margin-top:28px">
+        <div class="sub-head">
+          <span class="badge">Section 2</span>
+          <span class="sub-title">Agitators, Drives, Incomers, Bus Couplers, Transformers and UPS</span>
+        </div>
+        <div class="sg-toolbar">
+          <button type="button" class="btn" id="elAdd5">+ 5 rows</button>
+          <span class="sg-legend">
+            <span class="sg-legend-dot" style="background:var(--g0)"></span>
+            Color bar = same tag group (multiple signals)
+          </span>
+        </div>
+        <div id="elGrid" class="simple-grid"></div>
+      </div>
 
-            <div class="subsection">
-              <div class="subsection-head">
-                <div>
-                  <div class="badge">Section 2</div>
-                  <h3>Agitators, Drives, Incomers, Bus Couplers, Transformers and UPS</h3>
-                </div>
-              </div>
-              <div class="sg-toolbar">
-                <button type="button" class="btn" id="elAdd5">+5 rows</button>
-              </div>
-              <div id="elGrid" class="simple-grid" aria-label="Electrical equipment grid"></div>
-            </div>
+      <!-- Section 3: MOVs -->
+      <div class="subsection" style="margin-top:28px">
+        <div class="sub-head">
+          <span class="badge">Section 3</span>
+          <span class="sub-title">Motor Operated Valves</span>
+        </div>
+        <div class="sg-toolbar">
+          <button type="button" class="btn" id="movAdd5">+ 5 rows</button>
+          <span class="sg-legend">
+            <span class="sg-legend-dot" style="background:var(--g0)"></span>
+            Color bar = same tag group (multiple signals)
+          </span>
+        </div>
+        <div id="movGrid" class="simple-grid"></div>
+      </div>
+    </section>
 
-            <div class="subsection">
-              <div class="subsection-head">
-                <div>
-                  <div class="badge">Section 3</div>
-                  <h3>Motor Operated Valves</h3>
-                </div>
-              </div>
-              <div class="sg-toolbar">
-                <button type="button" class="btn" id="movAdd5">+5 rows</button>
-              </div>
-              <div id="movGrid" class="simple-grid" aria-label="MOV equipment grid"></div>
-            </div>
-          </section>
+    <!-- ── Footer ────────────────────────────────────────────────────── -->
+    <section class="section submit-footer">
+      <span class="footer-hint">Review your entries before generating the workbook.</span>
+      <div class="footer-actions">
+        <button type="button" class="btn-secondary" onclick="previewData()">Validate Data</button>
+        <button type="submit" class="btn-primary">⬇ Generate Excel (.xlsx)</button>
+      </div>
+    </section>
 
-          <section class="section submit-footer">
-            <div class="footer-container">
-              <div class="footer-info">
-                <p class="text-faint">Review your entries in the grid before generating the workbook.</p>
-              </div>
-              <div class="footer-actions">
-                <button type="button" class="btn-secondary" onclick="previewData()">Validate Data</button>
-                <button type="submit" class="btn-primary">Generate Excel (.xlsx)</button>
-              </div>
-            </div>
-          </section>
+  </form>
+</main>
 
-        </form>
-      </main>
-    </div>
-  </div>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Group color palette (CSS variable names)
+// ─────────────────────────────────────────────────────────────────────────────
+const GROUP_COLORS = ['--g0','--g1','--g2','--g3','--g4','--g5','--g6','--g7'];
 
-  <script>
-    // -------- Upgraded SimpleGrid (Supports Dropdowns & Paste) --------
-    class SimpleGrid {
-      constructor(host, columns, initialRows=5) {
-        this.host = host;
-        this.columns = columns; // [{key, header, width, options?}]
-        this.rows = 0;
+// ─────────────────────────────────────────────────────────────────────────────
+// SimpleGrid
+// ─────────────────────────────────────────────────────────────────────────────
+class SimpleGrid {
+  constructor(host, columns, initialRows = 5) {
+    this.host    = host;
+    this.columns = columns;
+    this.rows    = 0;
 
-        this.head = document.createElement('div'); this.head.className = 'sg-head';
-        this.body = document.createElement('div'); this.body.className = 'sg-body';
-        this.host.innerHTML = '';
-        this.host.appendChild(this.head); this.host.appendChild(this.body);
+    this.head = document.createElement('div');
+    this.head.className = 'sg-head';
+    this.body = document.createElement('div');
+    this.body.className = 'sg-body';
 
-        const template = columns.map(col => col.width || '140px').join(' ');
-        this.head.style.gridTemplateColumns = template;
-        this.body.style.display = 'grid';
-        this.body.style.gridTemplateColumns = template;
+    host.innerHTML = '';
+    host.appendChild(this.head);
+    host.appendChild(this.body);
 
-        for (const col of columns) {
-          const h = document.createElement('div');
-          h.className = 'sg-hcell';
-          h.textContent = col.header;
-          this.head.appendChild(h);
-        }
+    const template = columns.map(c => c.width || '140px').join(' ');
+    this.head.style.cssText = `display:grid; grid-template-columns:${template};`;
+    this.body.style.cssText = `display:grid; grid-template-columns:${template};`;
 
-        this.addRows(initialRows);
-
-        this.body.addEventListener('paste', (e) => {
-          const cell = e.target.closest('.sg-cell');
-          if (!cell) return;
-          const startR = +cell.dataset.r;
-          const startC = +cell.dataset.c;
-          const text = (e.clipboardData || window.clipboardData).getData('text');
-          if (!text) return;
-          e.preventDefault();
-
-          const lines = text.split(/\r?\n/);
-          if (lines.length && lines[lines.length-1].trim()==='') lines.pop();
-          const matrix = lines.map(line => line.includes('\t') ? line.split('\t') : line.split(','));
-
-          const needRows = startR + matrix.length - this.rows;
-          if (needRows > 0) this.addRows(needRows);
-
-          for (let i=0; i<matrix.length; i++) {
-            const row = matrix[i];
-            for (let j=0; j<row.length && (startC+j)<this.columns.length; j++) {
-              const dest = this._cell(startR+i, startC+j);
-              if (dest) {
-                const select = dest.querySelector('select');
-                if (select) {
-                  const val = row[j].trim();
-                  const opts = Array.from(select.options).map(o => o.value);
-                  if(opts.includes(val)) select.value = val;
-                } else {
-                  dest.textContent = row[j];
-                }
-              }
-            }
-          }
-        });
-
-        this.body.addEventListener('keydown', (e) => {
-          const a = document.activeElement;
-          if (!a || !a.classList.contains('sg-cell')) return; 
-          const r = +a.dataset.r, c = +a.dataset.c;
-          let nr = r, nc = c;
-          if (e.key === 'ArrowRight') nc++;
-          else if (e.key === 'ArrowLeft') nc--;
-          else if (e.key === 'ArrowDown') nr++;
-          else if (e.key === 'ArrowUp') nr--;
-          else return;
-          if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.columns.length) return;
-          const next = this._cell(nr, nc);
-          if (next) { next.focus(); e.preventDefault(); }
-        });
-      }
-
-      addRows(n=5) {
-        for (let i=0; i<n; i++) {
-          const r = this.rows;
-          for (let c=0; c<this.columns.length; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'sg-cell';
-            cell.dataset.r = r; cell.dataset.c = c;
-            
-            const colDef = this.columns[c];
-            
-            if (colDef.options) {
-               const select = document.createElement('select');
-               select.className = 'sg-select';
-               select.appendChild(new Option('', '')); // Blank default
-               colDef.options.forEach(opt => select.appendChild(new Option(opt, opt)));
-               cell.appendChild(select);
-            } else {
-               cell.contentEditable = 'true';
-            }
-
-            this.body.appendChild(cell);
-          }
-          this.rows++;
-        }
-      }
-
-      _cell(r,c) { return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`); }
-
-      getData() {
-        const out = [];
-        for (let r=0; r<this.rows; r++) {
-          const obj = {}; let nonEmpty = false;
-          for (let c=0; c<this.columns.length; c++) {
-            const key = this.columns[c].key;
-            const cell = this._cell(r,c);
-            if (!cell) continue;
-
-            let v = '';
-            const select = cell.querySelector('select');
-            if (select) {
-              v = select.value.trim();
-            } else {
-              v = (cell.textContent || '').trim();
-            }
-
-            obj[key] = v; if (v) nonEmpty = true;
-          }
-          if (nonEmpty) out.push(obj);
-        }
-        return out;
-      }
+    for (const col of columns) {
+      const h = document.createElement('div');
+      h.className = 'sg-hcell';
+      h.textContent = col.header;
+      this.head.appendChild(h);
     }
 
-    // --- Column Definitions ---
-    const sigTypeOptions = ["4-20mA", "Potential Free Contact", "24V DC"];
-    const sigOptions = ["DI", "DO", "AI", "AO"];
+    this.addRows(initialRows);
+    this._bindEvents();
+  }
 
-    const fiCols = [
-      { key:'tag',        header:'Tag No',              width:'140px' },
-      { key:'instrument', header:'Instrument Name',     width:'180px' },
-      { key:'service',    header:'Service Description', width:'220px' },
-      { key:'lineSize',   header:'Line Size',           width:'90px'  },
-      { key:'medium',     header:'Medium',              width:'110px' },
-      { key:'workP',      header:'W. Press',            width:'85px'  },
-      { key:'workF',      header:'W. Flow',             width:'85px'  },
-      { key:'workL',      header:'W. Level',            width:'85px'  },
-      { key:'desP',       header:'D. Press',            width:'85px'  },
-      { key:'desF',       header:'D. Flow',             width:'85px'  },
-      { key:'desL',       header:'D. Level',            width:'85px'  },
-      { key:'typeSpec',   header:'Specification',       width:'200px' },
-      { key:'processConn',header:'Process Conn',        width:'140px' },
-      { key:'setPoint',   header:'Set-point',           width:'110px' },
-      { key:'range',      header:'Range',               width:'130px' },
-      { key:'uom',        header:'UOM',                 width:'70px'  },
-      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
-      { key:'source',     header:'Source',              width:'120px' },
-      { key:'destination',header:'Destination',         width:'120px' },
-      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
-    ];
+  // ── Event binding ──────────────────────────────────────────────────────────
+  _bindEvents() {
+    // ── Paste ──
+    this.body.addEventListener('paste', (e) => {
+      const cell = e.target.closest?.('.sg-cell') ?? e.target;
+      if (!cell?.classList.contains('sg-cell')) return;
+      const startR = +cell.dataset.r, startC = +cell.dataset.c;
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if (!text) return;
+      e.preventDefault();
 
-    const elCols = [
-      { key:'tag',        header:'Tag No',              width:'140px' },
-      { key:'instrument', header:'Instrument Name',     width:'180px' },
-      { key:'service',    header:'Service Description', width:'220px' },
-      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
-      { key:'source',     header:'Source',              width:'120px' },
-      { key:'destination',header:'Destination',         width:'120px' },
-      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
-    ];
+      const lines  = text.split(/\r?\n/);
+      if (lines.at(-1).trim() === '') lines.pop();
+      const matrix = lines.map(l => l.includes('\t') ? l.split('\t') : l.split(','));
 
-    // UPDATED: Now matches elCols exactly
-    const movCols = [
-      { key:'tag',        header:'Tag No',              width:'140px' },
-      { key:'instrument', header:'Instrument Name',     width:'180px' },
-      { key:'service',    header:'Service Description', width:'220px' },
-      { key:'signalType', header:'Signal type',         width:'140px', options: sigTypeOptions },
-      { key:'source',     header:'Source',              width:'120px' },
-      { key:'destination',header:'Destination',         width:'120px' },
-      { key:'signal',     header:'Signal',              width:'100px', options: sigOptions }
-    ];
+      const need = startR + matrix.length - this.rows;
+      if (need > 0) this.addRows(need);
 
-    const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols, 5);
-    const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols, 5);
-    const movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
+      for (let i = 0; i < matrix.length; i++) {
+        for (let j = 0; j < matrix[i].length && (startC + j) < this.columns.length; j++) {
+          const dest = this._cell(startR + i, startC + j);
+          if (!dest) continue;
+          const sel = dest.querySelector('select');
+          const val = matrix[i][j].trim();
+          if (sel) {
+            const opts = Array.from(sel.options).map(o => o.value);
+            if (opts.includes(val)) sel.value = val;
+          } else {
+            dest.textContent = val;
+          }
+        }
+      }
+      this._refreshGrouping();
+    });
 
-    document.getElementById('fiAdd5').addEventListener('click', () => fiGrid.addRows(5));
-    document.getElementById('elAdd5').addEventListener('click', () => elGrid.addRows(5));
-    document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
+    // ── Keyboard navigation ──
+    this.body.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      // Which element holds our data-r / data-c?
+      const cell = active?.closest?.('.sg-cell') ?? (active?.classList.contains('sg-cell') ? active : null);
+      if (!cell) return;
 
-    // --- Form Data Serialization ---
-    function getFormDataWithGrids(formEl) {
-      const data = new FormData(formEl);
-      const packPFL = (p, f, l) => `${p || ''}/${f || ''}/${l || ''}`;
+      const isContentEditable = cell.contentEditable === 'true';
+      const isSelect          = active.tagName === 'SELECT';
 
-      const sections = [
-        { grid: fiGrid, prefix: 'fi' },
-        { grid: elGrid, prefix: 'el' },
-        { grid: movGrid, prefix: 'mov' }
-      ];
+      const r = +cell.dataset.r, c = +cell.dataset.c;
 
-      sections.forEach(({grid, prefix}) => {
-        grid.getData().forEach(r => {
-          data.append(`${prefix}TagNo[]`, r.tag || '');
-          data.append(`${prefix}Instrument[]`, r.instrument || '');
-          data.append(`${prefix}ServiceDescription[]`, r.service || '');
-          data.append(`${prefix}LineSize[]`, r.lineSize || '');
-          data.append(`${prefix}Medium[]`, r.medium || '');
-          data.append(`${prefix}TypeSpec[]`, r.typeSpec || '');
-          data.append(`${prefix}ProcessConnection[]`, r.processConn || '');
-          data.append(`${prefix}WorkingValues[]`, packPFL(r.workP, r.workF, r.workL));
-          data.append(`${prefix}DesignValues[]`,  packPFL(r.desP,  r.desF,  r.desL));
-          data.append(`${prefix}SetPoint[]`, r.setPoint || '');
-          data.append(`${prefix}InstrumentRange[]`, r.range || '');
-          data.append(`${prefix}Uom[]`, r.uom || '');
-          
-          data.append(`${prefix}SignalType[]`, r.signalType || '');
-          data.append(`${prefix}Source[]`, r.source || '');
-          data.append(`${prefix}Destination[]`, r.destination || '');
-          data.append(`${prefix}Signal[]`, r.signal || '');
-        });
-      });
+      // ── Arrow keys ────────────────────────────────────────────────────────
+      if (['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)) {
 
-      return data;
-    }
+        if (isContentEditable) {
+          // Only intercept if cursor is at the edge of the text
+          const sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) return;
+          const range = sel.getRangeAt(0);
+          const atStart = range.startOffset === 0 && range.collapsed;
+          const textLen = cell.textContent.length;
+          const atEnd   = range.endOffset === textLen && range.collapsed;
 
-    // --- Preview Hook ---
-    window.previewData = async function() {
-      const form = document.getElementById('cisForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
+          if (e.key === 'ArrowLeft'  && !atStart) return; // let browser handle
+          if (e.key === 'ArrowRight' && !atEnd)   return;
+          // Up/Down always navigate (no cursor-position concept vertically)
+        }
+
+        // Navigate to adjacent cell
+        let nr = r, nc = c;
+        if (e.key === 'ArrowRight') nc++;
+        if (e.key === 'ArrowLeft')  nc--;
+        if (e.key === 'ArrowDown')  nr++;
+        if (e.key === 'ArrowUp')    nr--;
+
+        if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.columns.length) return;
+
+        const next = this._cell(nr, nc);
+        if (!next) return;
+        e.preventDefault();
+
+        const nextSel = next.querySelector('select');
+        if (nextSel) nextSel.focus();
+        else         next.focus();
         return;
       }
-      
-      const data = getFormDataWithGrids(form);
-      
-      try {
-        const res = await fetch('/preview', { method: 'POST', body: data });
-        const json = await res.json();
-        
-        console.log('Preview Response:', json);
-        if (!res.ok) { 
-          // Check if the backend sent back the 'errors' array from the validator
-          if (json.errors && json.errors.length) {
-            alert("Validation Failed:\n\n" + json.errors.join('\n'));
-          } else {
-            alert(json.message || 'Preview failed.');
-          }
-          return; 
-        }
-        
-        // Success case
-        alert(json.message || 'Preview successful! Data is clean.');
-      } catch (err) {
-        console.error(err);
-        alert('Network or server error during validation.');
-      }
-    };
 
-    // --- Submit Hook ---
-    document.getElementById('cisForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const data = getFormDataWithGrids(this);
-
-      try {
-        const res = await fetch('/submit', { method: 'POST', body: data });
-        
-        if (res.ok && res.headers.get('content-type')?.includes('spreadsheetml')) {
-          const blob = await res.blob();
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = "Instrument_List.xlsx";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          window.URL.revokeObjectURL(downloadUrl);
-          return;
-        }
-
-        const json = await res.json();
-        if (!res.ok) {
-          if (json.errors && Array.isArray(json.errors)) {
-            alert("Validation Failed:\n\n" + json.errors.join('\n'));
-          } else {
-            alert(json.error || json.message || 'Submission failed.');
-          }
-          return;
-        }
-
-        if (json.download_url) {
-          window.location.href = json.download_url;
-        }
-        
-      } catch (err) {
-        console.error(err);
-        alert('Network or server error during submission.');
+      // ── Tab key ───────────────────────────────────────────────────────────
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const dir = e.shiftKey ? -1 : 1;
+        let nc = c + dir, nr = r;
+        if (nc < 0) { nc = this.columns.length - 1; nr--; }
+        if (nc >= this.columns.length) { nc = 0; nr++; }
+        if (nr < 0 || nr >= this.rows) return;
+        const next = this._cell(nr, nc);
+        if (!next) return;
+        const nextSel = next.querySelector('select');
+        if (nextSel) nextSel.focus();
+        else         next.focus();
+        return;
       }
     });
-  </script>
+
+    // ── Input change → refresh grouping ──
+    this.body.addEventListener('input', () => this._refreshGrouping());
+    this.body.addEventListener('change', () => this._refreshGrouping());
+  }
+
+  // ── Row factory ───────────────────────────────────────────────────────────
+  addRows(n = 5) {
+    for (let i = 0; i < n; i++) {
+      const r = this.rows;
+
+      // We wrap each row's cells in a row div for grouping
+      // BUT SimpleGrid uses a flat CSS grid, so we add a data-r attr on cells
+      // and use a hidden row sentinel div for row-level styling.
+      const rowEl = document.createElement('div');
+      rowEl.className = 'sg-row';
+      rowEl.dataset.r = r;
+      rowEl.style.cssText = `display:contents`; // transparent to grid layout
+
+      for (let c = 0; c < this.columns.length; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'sg-cell';
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+
+        const colDef = this.columns[c];
+        if (colDef.options) {
+          const sel = document.createElement('select');
+          sel.className = 'sg-select';
+          sel.appendChild(new Option('', ''));
+          colDef.options.forEach(o => sel.appendChild(new Option(o, o)));
+          // Forward focus/blur to the parent cell for outline
+          sel.addEventListener('focus', () => cell.style.outline = '2px solid var(--accent)');
+          sel.addEventListener('blur',  () => cell.style.outline = '');
+          cell.appendChild(sel);
+        } else {
+          cell.contentEditable = 'true';
+        }
+
+        rowEl.appendChild(cell);
+      }
+
+      this.body.appendChild(rowEl);
+      this.rows++;
+    }
+    this._refreshGrouping();
+  }
+
+  // ── Tag grouping ──────────────────────────────────────────────────────────
+  _refreshGrouping() {
+    // Column 0 = Tag No
+    let prevTag      = null;
+    let groupIndex   = -1;
+    let groupEven    = false;
+
+    for (let r = 0; r < this.rows; r++) {
+      const c0   = this._cell(r, 0);
+      if (!c0) continue;
+      const tag  = (c0.textContent || '').trim();
+      const rowEl = this.body.querySelector(`.sg-row[data-r="${r}"]`);
+
+      if (tag && tag === prevTag) {
+        // Same group — continuation row
+        c0.removeAttribute('data-group-bar');
+        if (rowEl) {
+          rowEl.classList.remove('sg-row-group-start');
+          rowEl.dataset.groupEven = groupEven;
+        }
+      } else if (tag) {
+        // New non-empty tag → new group
+        groupIndex = (groupIndex + 1) % GROUP_COLORS.length;
+        groupEven  = !groupEven;
+        const colorVar = `var(${GROUP_COLORS[groupIndex]})`;
+        c0.setAttribute('data-group-bar', '');
+        c0.style.setProperty('--group-color', colorVar);
+        if (rowEl) {
+          rowEl.classList.add('sg-row-group-start');
+          rowEl.dataset.groupEven = groupEven;
+        }
+      } else {
+        // Empty tag — no grouping
+        c0.removeAttribute('data-group-bar');
+        if (rowEl) {
+          rowEl.classList.remove('sg-row-group-start');
+          delete rowEl.dataset.groupEven;
+        }
+      }
+      prevTag = tag || null;
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  _cell(r, c) {
+    return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`);
+  }
+
+  getData() {
+    const out = [];
+    for (let r = 0; r < this.rows; r++) {
+      const obj = {}; let nonEmpty = false;
+      for (let c = 0; c < this.columns.length; c++) {
+        const cell = this._cell(r, c);
+        if (!cell) continue;
+        const sel = cell.querySelector('select');
+        const v   = sel ? sel.value.trim() : (cell.textContent || '').trim();
+        obj[this.columns[c].key] = v;
+        if (v) nonEmpty = true;
+      }
+      if (nonEmpty) out.push(obj);
+    }
+    return out;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Column definitions
+// ─────────────────────────────────────────────────────────────────────────────
+const sigTypeOptions = ['4-20mA', 'Potential Free Contact', '24V DC'];
+const sigOptions     = ['DI', 'DO', 'AI', 'AO'];
+
+const fiCols = [
+  { key:'tag',         header:'Tag No',              width:'130px' },
+  { key:'instrument',  header:'Instrument Name',     width:'170px' },
+  { key:'service',     header:'Service Description', width:'210px' },
+  { key:'lineSize',    header:'Line Size',           width:'85px'  },
+  { key:'medium',      header:'Medium',              width:'100px' },
+  { key:'workP',       header:'W. Press',            width:'80px'  },
+  { key:'workF',       header:'W. Flow',             width:'80px'  },
+  { key:'workL',       header:'W. Level',            width:'80px'  },
+  { key:'desP',        header:'D. Press',            width:'80px'  },
+  { key:'desF',        header:'D. Flow',             width:'80px'  },
+  { key:'desL',        header:'D. Level',            width:'80px'  },
+  { key:'typeSpec',    header:'Specification',       width:'190px' },
+  { key:'processConn', header:'Process Conn',        width:'130px' },
+  { key:'setPoint',    header:'Set-point',           width:'100px' },
+  { key:'range',       header:'Range',               width:'120px' },
+  { key:'uom',         header:'UOM',                 width:'65px'  },
+  { key:'signalType',  header:'Signal Type',         width:'160px', options: sigTypeOptions },
+  { key:'source',      header:'Source',              width:'110px' },
+  { key:'destination', header:'Destination',         width:'110px' },
+  { key:'signal',      header:'Signal',              width:'90px',  options: sigOptions },
+];
+
+const elCols = [
+  { key:'tag',         header:'Tag No',              width:'130px' },
+  { key:'instrument',  header:'Instrument Name',     width:'180px' },
+  { key:'service',     header:'Service Description', width:'220px' },
+  { key:'signalType',  header:'Signal Type',         width:'160px', options: sigTypeOptions },
+  { key:'source',      header:'Source',              width:'120px' },
+  { key:'destination', header:'Destination',         width:'120px' },
+  { key:'signal',      header:'Signal',              width:'90px',  options: sigOptions },
+];
+
+const movCols = [
+  { key:'tag',         header:'Tag No',              width:'130px' },
+  { key:'instrument',  header:'Instrument Name',     width:'180px' },
+  { key:'service',     header:'Service Description', width:'220px' },
+  { key:'signalType',  header:'Signal Type',         width:'160px', options: sigTypeOptions },
+  { key:'source',      header:'Source',              width:'120px' },
+  { key:'destination', header:'Destination',         width:'120px' },
+  { key:'signal',      header:'Signal',              width:'90px',  options: sigOptions },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Grid instances
+// ─────────────────────────────────────────────────────────────────────────────
+const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5);
+const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5);
+const movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
+
+document.getElementById('fiAdd5').addEventListener('click',  () => fiGrid.addRows(5));
+document.getElementById('elAdd5').addEventListener('click',  () => elGrid.addRows(5));
+document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Form serialization
+// ─────────────────────────────────────────────────────────────────────────────
+function getFormDataWithGrids(formEl) {
+  const data    = new FormData(formEl);
+  const packPFL = (p, f, l) => `${p||''}/${f||''}/${l||''}`;
+
+  [
+    { grid: fiGrid,  prefix: 'fi',  hasPFL: true  },
+    { grid: elGrid,  prefix: 'el',  hasPFL: false },
+    { grid: movGrid, prefix: 'mov', hasPFL: false },
+  ].forEach(({ grid, prefix, hasPFL }) => {
+    grid.getData().forEach(r => {
+      data.append(`${prefix}TagNo[]`,              r.tag         || '');
+      data.append(`${prefix}Instrument[]`,         r.instrument  || '');
+      data.append(`${prefix}ServiceDescription[]`, r.service     || '');
+      if (hasPFL) {
+        data.append(`${prefix}LineSize[]`,           r.lineSize    || '');
+        data.append(`${prefix}Medium[]`,             r.medium      || '');
+        data.append(`${prefix}TypeSpec[]`,           r.typeSpec    || '');
+        data.append(`${prefix}ProcessConnection[]`,  r.processConn || '');
+        data.append(`${prefix}WorkingValues[]`,      packPFL(r.workP, r.workF, r.workL));
+        data.append(`${prefix}DesignValues[]`,       packPFL(r.desP,  r.desF,  r.desL));
+        data.append(`${prefix}SetPoint[]`,           r.setPoint    || '');
+        data.append(`${prefix}InstrumentRange[]`,    r.range       || '');
+        data.append(`${prefix}Uom[]`,                r.uom         || '');
+      }
+      data.append(`${prefix}SignalType[]`,         r.signalType  || '');
+      data.append(`${prefix}Source[]`,             r.source      || '');
+      data.append(`${prefix}Destination[]`,        r.destination || '');
+      data.append(`${prefix}Signal[]`,             r.signal      || '');
+    });
+  });
+
+  return data;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Validate
+// ─────────────────────────────────────────────────────────────────────────────
+window.previewData = async function () {
+  const form = document.getElementById('cisForm');
+  if (!form.checkValidity()) { form.reportValidity(); return; }
+  const data = getFormDataWithGrids(form);
+  try {
+    const res  = await fetch('/preview', { method: 'POST', body: data });
+    const json = await res.json();
+    if (!res.ok) {
+      alert(json.errors?.length ? 'Validation Failed:\n\n' + json.errors.join('\n') : json.message || 'Preview failed.');
+      return;
+    }
+    alert(json.message || 'Preview successful! Data is clean.');
+  } catch (err) {
+    console.error(err); alert('Network or server error during validation.');
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Submit
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('cisForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const data = getFormDataWithGrids(this);
+  try {
+    const res = await fetch('/submit', { method: 'POST', body: data });
+    if (res.ok && res.headers.get('content-type')?.includes('spreadsheetml')) {
+      const blob = await res.blob();
+      const a    = Object.assign(document.createElement('a'), {
+        href: window.URL.createObjectURL(blob),
+        download: 'Instrument_List.xlsx',
+      });
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(a.href);
+      return;
+    }
+    const json = await res.json();
+    if (!res.ok) {
+      alert(json.errors?.length ? 'Validation Failed:\n\n' + json.errors.join('\n') : json.error || json.message || 'Submission failed.');
+      return;
+    }
+    if (json.download_url) window.location.href = json.download_url;
+  } catch (err) {
+    console.error(err); alert('Network or server error during submission.');
+  }
+});
+</script>
 </body>
 </html>
