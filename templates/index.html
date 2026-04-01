@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <style>
     :root {
       --bg:#0f1117; --surface:#171b26; --surface-2:#1e2333; --surface-3:#252a3a;
@@ -107,6 +108,18 @@
     .btn-validate{background:transparent;border:1px solid var(--border);color:var(--text-2);font-family:var(--mono);font-size:11.5px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;transition:all .15s}
     .btn-validate:hover{border-color:var(--green);color:var(--green)}
 
+    /* Download buttons */
+    .dl-btn {
+      width:100%; padding:9px 14px; border-radius:8px; cursor:pointer;
+      font-family:var(--mono); font-size:11.5px; font-weight:600;
+      background:var(--dl-dim, var(--accent-dim));
+      border:1px solid var(--dl-color, var(--accent));
+      color:var(--dl-color, var(--accent));
+      transition:all .15s;
+    }
+    .dl-btn:hover:not(:disabled) { filter:brightness(1.15); }
+    .dl-btn:disabled { opacity:.5; cursor:not-allowed; }
+
     /* Scrollbar */
     ::-webkit-scrollbar{width:6px;height:6px}
     ::-webkit-scrollbar-track{background:transparent}
@@ -121,6 +134,16 @@
   <div>
     <div class="brand-title">Automation de Instrumentation</div>
     <div class="brand-sub">CIS Workbook Generator</div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.dashboard') }}" style="font-family:var(--mono);font-size:11px;color:var(--amber);text-decoration:none;border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">⚙ Admin</a>
+    {% endif %}
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3)">{{ current_user.username }}</span>
+    <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" style="font-family:var(--mono);font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-3);cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">Sign out</button>
+    </form>
   </div>
 </div>
 
@@ -147,6 +170,11 @@
     <div class="wp-step" data-step="3" onclick="goToStep(3)">
       <div class="wp-dot">4</div>
       <div><div class="wp-label">Motor Operated Valves</div><div class="wp-sub">Section 3 — MOVs</div></div>
+    </div>
+    <div class="wp-connector" id="con-3"></div>
+    <div class="wp-step" data-step="4" onclick="goToStep(4)">
+      <div class="wp-dot">5</div>
+      <div><div class="wp-label">Download</div><div class="wp-sub">Generate &amp; export files</div></div>
     </div>
   </div>
 
@@ -293,11 +321,90 @@
     </div>
     <div class="wizard-nav">
       <button type="button" class="btn-nav btn-back" onclick="prevStep()">← Back</button>
-      <span class="nav-hint">Step 4 of 4 — Review and generate</span>
+      <span class="nav-hint">Step 4 of 5 — Review and validate</span>
       <div style="display:flex;gap:8px">
         <button type="button" class="btn-validate" onclick="previewData()">✓ Validate</button>
-        <button type="submit" class="btn-nav btn-submit">⬇ Generate Excel</button>
+        <button type="button" class="btn-nav btn-next" onclick="nextStep()">Next →</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 5 — Download ════════════════════════════════════════════════ -->
+  <div class="step-panel" id="step-4">
+    <div class="section">
+      <div class="section-title">Download Generated Files</div>
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:24px">
+        All documents are generated from the data you entered. Click each button to download individually.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+
+        <!-- Instrument List -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(79,143,255,.15);border:1px solid rgba(79,143,255,.3);display:grid;place-items:center;font-size:16px">📋</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Instrument List</div>
+              <div style="font-size:11px;color:var(--text-3)">Field instruments, electrical &amp; MOV data</div>
+            </div>
+          </div>
+          <button type="button" class="dl-btn" data-endpoint="/submit" style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
+            ⬇ Download Instrument List
+          </button>
+        </div>
+
+        <!-- IO List -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.3);display:grid;place-items:center;font-size:16px">🔌</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">IO List</div>
+              <div style="font-size:11px;color:var(--text-3)">Input / output signal schedule</div>
+            </div>
+          </div>
+          <button type="button" class="dl-btn" data-endpoint="/download/io-list" style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
+            ⬇ Download IO List
+          </button>
+        </div>
+
+        <!-- Cable Schedule -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);display:grid;place-items:center;font-size:16px">🗂</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Cable Schedule</div>
+              <div style="font-size:11px;color:var(--text-3)">Cable tags, routing &amp; termination</div>
+            </div>
+          </div>
+          <button type="button" class="dl-btn" data-endpoint="/download/cable-schedule" style="--dl-color:#f5a623;--dl-dim:rgba(245,166,35,.12)">
+            ⬇ Download Cable Schedule
+          </button>
+        </div>
+
+        <!-- Cable Interconnection Schedule -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(201,126,255,.12);border:1px solid rgba(201,126,255,.3);display:grid;place-items:center;font-size:16px">🔗</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Cable Interconnection</div>
+              <div style="font-size:11px;color:var(--text-3)">End-to-end wiring connections</div>
+            </div>
+          </div>
+          <button type="button" class="dl-btn" data-endpoint="/download/cable-interconnection" style="--dl-color:#c97eff;--dl-dim:rgba(201,126,255,.12)">
+            ⬇ Download Interconnection Schedule
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Status message -->
+      <div id="dlStatus" style="margin-top:16px;min-height:24px;font-size:12px"></div>
+    </div>
+
+    <div class="wizard-nav">
+      <button type="button" class="btn-nav btn-back" onclick="prevStep()">← Back</button>
+      <span class="nav-hint">Step 5 of 5 — Download your files</span>
+      <span></span>
     </div>
   </div>
 
@@ -307,7 +414,7 @@
 <script>
 // ── Wizard ─────────────────────────────────────────────────────────────────
 let currentStep = 0;
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 function goToStep(n) {
   if (n < 0 || n >= TOTAL_STEPS) return;
@@ -599,11 +706,19 @@ function getFormDataWithGrids(formEl) {
   return data;
 }
 
+// ── CSRF token helper (read from meta tag injected by Flask-WTF) ────────────
+function getCsrf() {
+  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
 // ── Validate ────────────────────────────────────────────────────────────────
 window.previewData = async function () {
   const data = getFormDataWithGrids(document.getElementById('cisForm'));
   try {
-    const res  = await fetch('/preview', { method: 'POST', body: data });
+    const res  = await fetch('/preview', {
+      method: 'POST', body: data,
+      headers: { 'X-CSRFToken': getCsrf() },
+    });
     const json = await res.json();
     if (!res.ok) {
       alert(json.errors?.length ? 'Validation Failed:\n\n' + json.errors.join('\n') : json.message || 'Preview failed.');
@@ -613,28 +728,48 @@ window.previewData = async function () {
   } catch (err) { console.error(err); alert('Network or server error during validation.'); }
 };
 
-// ── Submit ──────────────────────────────────────────────────────────────────
-document.getElementById('cisForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const data = getFormDataWithGrids(this);
+// ── Download buttons (Step 5) ───────────────────────────────────────────────
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.dl-btn');
+  if (!btn) return;
+
+  const endpoint = btn.dataset.endpoint;
+  const status   = document.getElementById('dlStatus');
+  const origText = btn.textContent;
+
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  if (status) status.innerHTML = '<span style="color:var(--text-3)">⏳ Generating file…</span>';
+
   try {
-    const res = await fetch('/submit', { method: 'POST', body: data });
+    const data = getFormDataWithGrids(document.getElementById('cisForm'));
+    const res  = await fetch(endpoint, {
+      method: 'POST', body: data,
+      headers: { 'X-CSRFToken': getCsrf() },
+    });
+
     if (res.ok && res.headers.get('content-type')?.includes('spreadsheetml')) {
-      const blob = await res.blob();
+      const blob     = await res.blob();
+      const filename = res.headers.get('content-disposition')
+        ?.match(/filename="?([^";\n]+)"?/)?.[1] || 'download.xlsx';
       const a = Object.assign(document.createElement('a'), {
-        href: window.URL.createObjectURL(blob), download: 'Instrument_List.xlsx',
+        href: window.URL.createObjectURL(blob), download: filename,
       });
       document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(a.href);
-      return;
+      if (status) status.innerHTML = `<span style="color:var(--green)">✓ ${filename} downloaded.</span>`;
+    } else {
+      const json = await res.json();
+      const msg  = json.message || json.error || 'Not yet implemented.';
+      if (status) status.innerHTML = `<span style="color:var(--amber)">⚠ ${msg}</span>`;
     }
-    const json = await res.json();
-    if (!res.ok) {
-      alert(json.errors?.length ? 'Validation Failed:\n\n' + json.errors.join('\n') : json.error || json.message || 'Submission failed.');
-      return;
-    }
-    if (json.download_url) window.location.href = json.download_url;
-  } catch (err) { console.error(err); alert('Network or server error during submission.'); }
+  } catch (err) {
+    console.error(err);
+    if (status) status.innerHTML = '<span style="color:var(--red)">✗ Network error. Please try again.</span>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
 });
 </script>
 </body>
