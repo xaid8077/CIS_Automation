@@ -61,10 +61,16 @@ class User(UserMixin, db.Model):
         except (VerificationError, InvalidHashError):
             return False
 
-        # Argon2 recommends rehashing when parameters change
+        # Argon2 recommends rehashing when parameters change.
+        # The commit is best-effort: a DB hiccup here must not mask a
+        # successful login, so any exception is swallowed and the old
+        # hash remains in place until the next successful login attempt.
         if _ph.check_needs_rehash(self.password_hash):
-            self.password_hash = _ph.hash(plaintext)
-            db.session.commit()
+            try:
+                self.password_hash = _ph.hash(plaintext)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
         return True
 

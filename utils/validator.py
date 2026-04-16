@@ -33,12 +33,28 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
             fi_tags.add(tag)
 
         if signal and signal not in VALID_SIGNALS:
-            errors.append(f"Section 1 Tag '{tag or idx}': Invalid Signal '{signal}'. Must be one of {sorted(VALID_SIGNALS)}.")
+            errors.append(
+                f"Section 1 Tag '{tag or idx}': Invalid Signal '{signal}'. "
+                f"Must be one of {sorted(VALID_SIGNALS)}."
+            )
         if sig_t and sig_t not in VALID_SIGNAL_TYPES:
-            errors.append(f"Section 1 Tag '{tag or idx}': Invalid Signal Type '{sig_t}'.")
+            errors.append(
+                f"Section 1 Tag '{tag or idx}': Invalid Signal Type '{sig_t}'."
+            )
 
     # ── Sections 2 & 3 — grouped (tag may repeat within section) ─────────────
-    def _validate_grouped(rows, label, forbidden_tags):
+    def _validate_grouped(
+        rows: List[Dict[str, Any]],
+        label: str,
+        forbidden_tags: Set[str],
+    ) -> Set[str]:
+        """
+        Validate a grouped section and return the set of tags seen in it.
+
+        Appends error messages directly to the outer `errors` list.
+        Returns the seen-tag set so the caller can pass it as `forbidden_tags`
+        to the next section, preventing cross-section tag collisions.
+        """
         seen: Set[str] = set()
         for idx, row in enumerate(rows, start=1):
             tag    = row.get("Tag No", "").strip()
@@ -49,13 +65,20 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
                 errors.append(f"{label} Row {idx}: Tag No is required.")
                 continue
             if tag in forbidden_tags:
-                errors.append(f"{label} Row {idx}: Tag '{tag}' already used in another section.")
+                errors.append(
+                    f"{label} Row {idx}: Tag '{tag}' already used in another section."
+                )
             seen.add(tag)
 
             if signal and signal not in VALID_SIGNALS:
-                errors.append(f"{label} Tag '{tag}': Invalid Signal '{signal}'. Must be one of {sorted(VALID_SIGNALS)}.")
+                errors.append(
+                    f"{label} Tag '{tag}': Invalid Signal '{signal}'. "
+                    f"Must be one of {sorted(VALID_SIGNALS)}."
+                )
             if sig_t and sig_t not in VALID_SIGNAL_TYPES:
-                errors.append(f"{label} Tag '{tag}': Invalid Signal Type '{sig_t}'.")
+                errors.append(
+                    f"{label} Tag '{tag}': Invalid Signal Type '{sig_t}'."
+                )
         return seen
 
     el_tags = _validate_grouped(payload.get("electrical", []), "Section 2 (Electrical)", set())

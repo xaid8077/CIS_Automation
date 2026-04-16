@@ -18,11 +18,13 @@ class Base:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ── Session cookies ───────────────────────────────────────────────────────
-    # HttpOnly: JS cannot read the cookie (blocks XSS theft)
-    # Samesite: blocks CSRF from cross-site requests
-    # Secure: only sent over HTTPS (overridden to False in dev below)
+    # HttpOnly: JS cannot read the cookie (blocks XSS theft).
+    # Samesite: blocks CSRF from cross-site requests.
+    # Secure defaults to True here so any env class that forgets to override
+    # it stays safe.  Development and Testing explicitly set it to False.
     SESSION_COOKIE_HTTPONLY  = True
     SESSION_COOKIE_SAMESITE  = "Lax"
+    SESSION_COOKIE_SECURE    = True   # overridden to False in dev/testing below
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
     # ── CSRF ──────────────────────────────────────────────────────────────────
@@ -48,7 +50,7 @@ class Production(Base):
     DEBUG  = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")   # must be set
-    SESSION_COOKIE_SECURE   = True   # HTTPS only
+    # SESSION_COOKIE_SECURE inherited as True from Base — no override needed.
     WTF_CSRF_SSL_STRICT     = True
 
     @classmethod
