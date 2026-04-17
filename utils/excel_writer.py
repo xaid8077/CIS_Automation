@@ -1,8 +1,9 @@
 """
 excel_writer.py
 ───────────────
-Writes payload into the IL.xlsx template (templates/IL.xlsx).
+Writes payload into the IL.xlsx and IO.xlsx templates.
 
+─── Instrument List (IL.xlsx) ───────────────────────────────────────────────
 Cover sheet     → fills project metadata into fixed cells.
                   AI14 receives the Instrument List document number
                   from fi_meta["docNumber"], not from the global header.
@@ -14,12 +15,31 @@ Instrument List → Section 1 data starting at row 6.
                   Column I   : intentionally skipped (spacer in template).
                   Columns U–V: velocity & optimised diameter for flowmeters.
                   Sections 2 & 3 reserved for a future update.
+
+─── IO List (IO.xlsx) ───────────────────────────────────────────────────────
+Cover sheet     → same cell mapping as IL cover.
+                  AI14 receives the IO List document number from io_meta.
+
+IO List sheet   → Three section blocks starting at row 6.
+                  Each block opens with a merged header row (A:N).
+                  Column A : serial number (continuous across all sections)
+                  Column B : Tag No
+                  Column C : Instrument Name
+                  Column D : Service Description
+                  Column E : Signal Type
+                  Column F : Source
+                  Column G : Destination
+                  Column H : DI  — 1 if Signal == "DI", else blank
+                  Column I : DO  — 1 if Signal == "DO", else blank
+                  Column J : AI  — 1 if Signal == "AI", else blank
+                  Column K : AO  — 1 if Signal == "AO", else blank
+                  Column L : skipped (blank, bordered)
+                  Column M : TRIP — "TRIP" if "trip" in Service Description
 """
 
 import json
 import math
 import re
-import functools
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -51,11 +71,13 @@ LEFT_WRAP   = Alignment(horizontal="left",   vertical="center", wrap_text=True)
 BASE_DIR      = Path(__file__).resolve().parent.parent
 TEMPLATE_PATH = BASE_DIR / "templates" / "IL.xlsx"
 CODE_MAP_PATH = BASE_DIR / "templates" / "instrument_code_map.json"
+IO_TEMPLATE_PATH = BASE_DIR / "templates" / "IO.xlsx"
 
 
 # ─── Flowmeter keywords ───────────────────────────────────────────────────────
 # Any instrument whose name contains one of these strings (case-insensitive)
 # will have velocity and optimised diameter calculated and written to U & V.
+# Add more keywords here as your naming conventions require.
 
 FLOW_KEYWORDS = [
     "flow transmitter",
@@ -73,8 +95,9 @@ FLOW_KEYWORDS = [
 ]
 
 # Standard nominal bore sizes in mm (DN series).
-# DN5000 is not a recognised standard nominal bore in ASME B36.10 / ISO 4200 /
-# DIN EN 10220 and is intentionally excluded.
+# The velocity optimiser steps through this list so every result lands on
+# a real pipe size.  DN5000 is NOT included — it is not a recognised
+# standard nominal bore in ASME B36.10, ISO 4200, or DIN EN 10220.
 STANDARD_DN = [
     15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150,
     200, 250, 300, 350, 400, 450, 500, 600, 700, 800,
@@ -93,11 +116,13 @@ DOC_NUMBER_START_COL = 4   # D
 
 
 # ─── Instrument code config — lazy loader ─────────────────────────────────────
-# _load_instrument_code_config is decorated with @functools.lru_cache so the
-# JSON file is read and parsed exactly once across the lifetime of the process,
-# regardless of how many concurrent requests trigger write_workbook().
-# This replaces the previous module-level mutable variable + manual None-check
-# pattern, which was not thread-safe.
+# The config is NOT loaded at module import time.  Loading it on first use
+# (inside write_workbook) means a missing JSON file will only raise an error
+# during an actual download request — not at Flask startup — so the rest of
+# the application continues to function normally.
+
+_instrument_code_config: Optional[Dict[str, Any]] = None   # cache
+
 
 def _normalize_text(text: str) -> str:
     """
@@ -112,11 +137,9 @@ def _normalize_text(text: str) -> str:
     return text
 
 
-@functools.lru_cache(maxsize=1)
 def _load_instrument_code_config(path: Path) -> Dict[str, Any]:
     """
-    Read and validate instrument_code_map.json.  Called at most once per
-    process — subsequent calls return the cached result instantly.
+    Read and validate instrument_code_map.json.
 
     Expected JSON structure:
     {
@@ -173,8 +196,6 @@ def _load_instrument_code_config(path: Path) -> Dict[str, Any]:
 
     normalised_stops: set = {_normalize_text(w) for w in config["stop_words"]}
 
-    # Return a plain dict — lru_cache requires hashable arguments but the
-    # return value itself can be any object.
     return {
         "exact_map":      normalised_exact,
         "contains_rules": normalised_rules,
@@ -183,8 +204,14 @@ def _load_instrument_code_config(path: Path) -> Dict[str, Any]:
 
 
 def _get_code_config() -> Dict[str, Any]:
-    """Return the instrument code config (loaded and cached on first call)."""
-    return _load_instrument_code_config(CODE_MAP_PATH)
+    """
+    Return the instrument code config, loading it on first call (lazy load).
+    Subsequent calls return the cached result without re-reading the file.
+    """
+    global _instrument_code_config
+    if _instrument_code_config is None:
+        _instrument_code_config = _load_instrument_code_config(CODE_MAP_PATH)
+    return _instrument_code_config
 
 
 # ─── Instrument code generation ───────────────────────────────────────────────
@@ -229,10 +256,10 @@ def _generate_instrument_code(instr_name: str) -> str:
     if not text:
         return ""
 
-    config         = _get_code_config()
-    exact_map      = config["exact_map"]
+    config        = _get_code_config()
+    exact_map     = config["exact_map"]
     contains_rules = config["contains_rules"]
-    stop_words     = config["stop_words"]
+    stop_words    = config["stop_words"]
 
     # 1. Exact match
     if text in exact_map:
@@ -249,15 +276,18 @@ def _generate_instrument_code(instr_name: str) -> str:
 
 # ─── Cover sheet ──────────────────────────────────────────────────────────────
 
-def _fill_cover(ws, header: Dict[str, str], fi_meta: Dict[str, str]) -> None:
+def _fill_cover(ws, header: Dict[str, str], meta: Dict[str, str]) -> None:
     """
-    Write project metadata into fixed cells on the Cover sheet.
+    Write project metadata into fixed cells on a Cover sheet.
 
     Global project fields come from `header`.
-    The Instrument List document number comes from `fi_meta["docNumber"]`
-    and is written to AI14.  It is also written character-by-character
-    across row DOC_NUMBER_ROW starting at DOC_NUMBER_START_COL, because
-    the template uses individual cells per character in its cover layout.
+    The document number comes from `meta["docNumber"]` and is written to AI14.
+    It is also written character-by-character across row DOC_NUMBER_ROW
+    starting at DOC_NUMBER_START_COL (D44), because the template uses
+    individual cells per character in its cover layout.
+
+    This function is shared by both the IL and IO workbook writers — pass
+    fi_meta for the Instrument List, io_meta for the IO List.
     """
     mapping = {
         "AI6":  header.get("date",        ""),
@@ -268,14 +298,14 @@ def _fill_cover(ws, header: Dict[str, str], fi_meta: Dict[str, str]) -> None:
         "AI11": header.get("projectName", ""),
         "AI12": header.get("client",      ""),
         "AI13": header.get("consultant",  ""),
-        "AI14": fi_meta.get("docNumber",  ""),
+        "AI14": meta.get("docNumber",     ""),
     }
 
     for cell_ref, value in mapping.items():
         ws[cell_ref] = value
 
     # Character-by-character write for the styled document number box.
-    doc_number = str(fi_meta.get("docNumber", "") or "")
+    doc_number = str(meta.get("docNumber", "") or "")
     for i, ch in enumerate(doc_number):
         ws.cell(row=DOC_NUMBER_ROW, column=DOC_NUMBER_START_COL + i, value=ch)
 
@@ -304,8 +334,7 @@ def _calculate_optimized_velocity(
 
     Strategy
     --------
-    1. Snap initial_dia_mm to the nearest standard DN, recording its index
-       in a single enumerated pass (avoids a redundant O(n) list.index() call).
+    1. Snap initial_dia_mm to the nearest standard DN.
     2. If velocity is already in range, return immediately.
     3. Velocity > V_MAX (pipe too small) → step UP the DN list.
     4. Velocity < V_MIN (pipe too large) → step DOWN the DN list.
@@ -317,12 +346,10 @@ def _calculate_optimized_velocity(
     if flow_m3h <= 0 or initial_dia_mm <= 0:
         return 0.0, initial_dia_mm
 
-    # Snap to nearest standard DN and capture the index in one pass.
-    idx, current_dia = min(
-        enumerate(STANDARD_DN),
-        key=lambda pair: abs(pair[1] - initial_dia_mm),
-    )
-    velocity = _velocity_at(current_dia, flow_m3h)
+    # Snap to nearest standard DN.
+    current_dia = min(STANDARD_DN, key=lambda dn: abs(dn - initial_dia_mm))
+    idx         = STANDARD_DN.index(current_dia)
+    velocity    = _velocity_at(current_dia, flow_m3h)
 
     if V_MIN <= velocity <= V_MAX:
         return round(velocity, 3), float(current_dia)
@@ -333,6 +360,7 @@ def _calculate_optimized_velocity(
             v = _velocity_at(dn, flow_m3h)
             if v <= V_MAX:
                 return round(v, 3), float(dn)
+        # Still too fast at largest standard size — return largest with its velocity.
         largest = STANDARD_DN[-1]
         return round(_velocity_at(largest, flow_m3h), 3), float(largest)
 
@@ -341,6 +369,7 @@ def _calculate_optimized_velocity(
         v = _velocity_at(dn, flow_m3h)
         if v >= V_MIN:
             return round(v, 3), float(dn)
+    # Still too slow at smallest standard size — return smallest with its velocity.
     smallest = STANDARD_DN[0]
     return round(_velocity_at(smallest, flow_m3h), 3), float(smallest)
 
@@ -420,6 +449,7 @@ def _write_fi_fixed(ws, rows: List[Dict[str, Any]]) -> None:
         for col_letter, field_key in FI_COL_MAP.items():
             cell           = ws[f"{col_letter}{r}"]
             cell.value     = row_dict.get(field_key, "")
+            # Tag No (C) is centred; all other data columns are left-aligned.
             cell.alignment = CENTER_WRAP if col_letter == "C" else LEFT_WRAP
             cell.border    = THIN
 
@@ -442,8 +472,8 @@ def _write_fi_fixed(ws, rows: List[Dict[str, Any]]) -> None:
 
             except (ValueError, ZeroDivisionError):
                 # Input could not be parsed — write ERR so the engineer
-                # knows a calculation was attempted but the values could
-                # not be read numerically.
+                # knows a calculation was attempted but the Line Size or
+                # Design Flow value could not be read numerically.
                 for col in ("U", "V"):
                     cell           = ws[f"{col}{r}"]
                     cell.value     = "ERR"
@@ -464,7 +494,7 @@ def _fill_instrument_list(ws, payload: Dict[str, Any]) -> None:
 # ─── Sections 2 & 3 — reserved for future implementation ─────────────────────
 
 
-# ─── Public entry point ───────────────────────────────────────────────────────
+# ─── IL Public entry point ────────────────────────────────────────────────────
 
 def write_workbook(
     payload: Dict[str, Any],
@@ -474,9 +504,9 @@ def write_workbook(
     Load IL.xlsx template, fill Cover + Instrument List, save to destination.
 
     The instrument code config (instrument_code_map.json) is loaded here on
-    first call via _get_code_config() — cached by lru_cache — so a missing
-    JSON file only raises an error when a download is actually attempted,
-    leaving the rest of the application unaffected.
+    first call via _get_code_config() — not at module import time — so a
+    missing JSON file only raises an error when a download is actually
+    attempted, leaving the rest of the application unaffected.
 
     Parameters
     ----------
@@ -506,8 +536,9 @@ def write_workbook(
             "Place IL.xlsx inside the templates/ folder of the project."
         )
 
-    # Trigger load of the instrument code config before touching the workbook.
-    # Any config error surfaces now with a clear message rather than mid-write.
+    # Trigger lazy load of the instrument code config here, before we touch
+    # the workbook.  Any config error surfaces now with a clear message rather
+    # than mid-write after the workbook has already been partially modified.
     _get_code_config()
 
     wb      = load_workbook(TEMPLATE_PATH)
@@ -522,7 +553,172 @@ def write_workbook(
     if "Instrument List" in wb.sheetnames:
         _fill_instrument_list(wb["Instrument List"], payload)
     else:
+        # Sheet missing from template — create it as a fallback.
         ws = wb.create_sheet("Instrument List")
         _fill_instrument_list(ws, payload)
+
+    wb.save(destination)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# IO List
+# ═════════════════════════════════════════════════════════════════════════════
+
+IO_START_ROW    = 6
+_IO_BLOCK_FILL  = _fill("252a3a")   # surface-3 tint — visually distinct header
+
+# Block header alignment: left-indented, not wrapped (single-line label)
+_IO_BLOCK_ALIGN = Alignment(horizontal="left", vertical="center",
+                             indent=1, wrap_text=False)
+
+
+def _io_cell(ws, row: int, col: int, value: Any, alignment: Alignment) -> None:
+    """Write value + border + alignment into a single IO List data cell."""
+    c           = ws.cell(row=row, column=col)
+    c.value     = value
+    c.alignment = alignment
+    c.border    = THIN
+
+
+def _write_io_block_header(ws, row: int, label: str) -> None:
+    """
+    Write a merged section-label row spanning columns A (1) through N (14).
+
+    openpyxl requires the border to be applied to every cell in the merged
+    range individually — otherwise only the outer edge of the top-left cell
+    is styled.
+    """
+    ws.merge_cells(f"A{row}:N{row}")
+
+    hdr           = ws.cell(row=row, column=1)
+    hdr.value     = label
+    hdr.fill      = _IO_BLOCK_FILL
+    hdr.alignment = _IO_BLOCK_ALIGN
+    hdr.border    = THIN
+
+    # Apply border to the remaining cells in the merged range so the full
+    # outer border renders correctly across all columns.
+    for col in range(2, 15):   # columns B(2) … N(14)
+        ws.cell(row=row, column=col).border = THIN
+
+
+def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
+    """
+    Write all three instrument sections into the 'IO List' sheet.
+
+    Section order and block labels:
+      1. Field Instruments
+      2. Electrical Equipment
+      3. Motor Operated Valves
+
+    Each section opens with a merged header row.  Serial numbers run
+    continuously from 1 across all three sections.
+
+    Column layout (1-based):
+      1  A  Serial number
+      2  B  Tag No
+      3  C  Instrument Name
+      4  D  Service Description
+      5  E  Signal Type
+      6  F  Source
+      7  G  Destination
+      8  H  DI  — 1 if Signal == "DI", else blank
+      9  I  DO  — 1 if Signal == "DO", else blank
+     10  J  AI  — 1 if Signal == "AI", else blank
+     11  K  AO  — 1 if Signal == "AO", else blank
+     12  L  Skipped (blank, bordered)
+     13  M  TRIP — "TRIP" if "trip" in Service Description, else blank
+    """
+    sections = [
+        ("Field Instruments",     payload.get("field_instruments", [])),
+        ("Electrical Equipment",  payload.get("electrical",        [])),
+        ("Motor Operated Valves", payload.get("mov",               [])),
+    ]
+
+    row    = IO_START_ROW
+    serial = 1
+
+    for block_label, rows in sections:
+        # ── Merged block header ───────────────────────────────────────────────
+        _write_io_block_header(ws, row, block_label)
+        row += 1
+
+        # ── Data rows ─────────────────────────────────────────────────────────
+        for rd in rows:
+            tag     = rd.get("Tag No",              "")
+            instr   = rd.get("Instrument Name",     "")
+            service = rd.get("Service Description", "")
+            sig_t   = rd.get("Signal Type",         "")
+            source  = rd.get("Source",              "")
+            dest    = rd.get("Destination",         "")
+            signal  = rd.get("Signal",              "").strip().upper()
+
+            _io_cell(ws, row,  1, serial,                          CENTER_WRAP)
+            _io_cell(ws, row,  2, tag,                             CENTER_WRAP)
+            _io_cell(ws, row,  3, instr,                           LEFT_WRAP)
+            _io_cell(ws, row,  4, service,                         LEFT_WRAP)
+            _io_cell(ws, row,  5, sig_t,                           CENTER_WRAP)
+            _io_cell(ws, row,  6, source,                          CENTER_WRAP)
+            _io_cell(ws, row,  7, dest,                            CENTER_WRAP)
+            _io_cell(ws, row,  8, 1 if signal == "DI" else "",     CENTER_WRAP)
+            _io_cell(ws, row,  9, 1 if signal == "DO" else "",     CENTER_WRAP)
+            _io_cell(ws, row, 10, 1 if signal == "AI" else "",     CENTER_WRAP)
+            _io_cell(ws, row, 11, 1 if signal == "AO" else "",     CENTER_WRAP)
+            _io_cell(ws, row, 12, "",                              CENTER_WRAP)  # L skipped
+            trip = "TRIP" if "trip" in service.lower() else ""
+            _io_cell(ws, row, 13, trip,                            CENTER_WRAP)
+
+            serial += 1
+            row    += 1
+
+
+# ─── IO Public entry point ────────────────────────────────────────────────────
+
+def write_io_workbook(
+    payload: Dict[str, Any],
+    destination: Union[BytesIO, Path],
+) -> None:
+    """
+    Load IO.xlsx template, fill Cover + IO List sheet, save to destination.
+
+    Parameters
+    ----------
+    payload:
+        Dictionary from app.py._build_payload(). Expected keys:
+          "header"            – global project fields (projectName, client, …)
+          "io_meta"           – {"docName": …, "docNumber": …} for the IO List
+          "field_instruments" – list of row dicts (Section 1)
+          "electrical"        – list of row dicts (Section 2)
+          "mov"               – list of row dicts (Section 3)
+
+    destination:
+        BytesIO for in-memory streaming to the browser, or a Path to save
+        directly to disk.
+
+    Raises
+    ------
+    FileNotFoundError
+        If IO.xlsx is not found at IO_TEMPLATE_PATH.
+    """
+    if not IO_TEMPLATE_PATH.exists():
+        raise FileNotFoundError(
+            f"IO template not found at {IO_TEMPLATE_PATH}.\n"
+            "Place IO.xlsx inside the templates/ folder of the project."
+        )
+
+    wb      = load_workbook(IO_TEMPLATE_PATH)
+    header  = payload.get("header",  {})
+    io_meta = payload.get("io_meta", {})
+
+    # ── Cover sheet ───────────────────────────────────────────────────────────
+    if "Cover" in wb.sheetnames:
+        _fill_cover(wb["Cover"], header, io_meta)
+
+    # ── IO List sheet ─────────────────────────────────────────────────────────
+    if "IO List" in wb.sheetnames:
+        _write_io_list_sheet(wb["IO List"], payload)
+    else:
+        ws = wb.create_sheet("IO List")
+        _write_io_list_sheet(ws, payload)
 
     wb.save(destination)

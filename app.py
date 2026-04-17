@@ -25,7 +25,7 @@ from config      import get_config
 from extensions  import db, login_manager, csrf, limiter
 from models      import User
 from forms       import LoginForm, RegisterForm, EditUserForm
-from utils.excel_writer import write_workbook
+from utils.excel_writer import write_workbook, write_io_workbook
 from utils.validator    import validate_payload
 
 
@@ -65,6 +65,7 @@ def login():
         # to prevent username enumeration via timing.
         dummy_hash = "$argon2id$v=19$m=65536,t=3,p=2$dummy$dummy"
         if user is None:
+            # run a dummy verify so timing is consistent
             try:
                 from argon2 import PasswordHasher
                 PasswordHasher().verify(dummy_hash, form.password.data)
@@ -143,9 +144,8 @@ def create_user():
 @admin_bp.route("/users/<int:user_id>/edit", methods=["POST"])
 @admin_required
 def edit_user(user_id):
-    # db.get_or_404 is the SQLAlchemy 2.x–compatible replacement for
-    # the legacy Model.query.get_or_404() call.
-    user = db.get_or_404(User, user_id)
+    user = User.query.get_or_404(user_id)
+    # Prevent admin from demoting themselves
     if user.id == current_user.id:
         flash("You cannot edit your own account here.", "warning")
         return redirect(url_for("admin.dashboard"))
@@ -161,7 +161,7 @@ def edit_user(user_id):
 @admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
 @admin_required
 def delete_user(user_id):
-    user = db.get_or_404(User, user_id)
+    user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
         flash("You cannot delete your own account.", "warning")
         return redirect(url_for("admin.dashboard"))
@@ -185,15 +185,6 @@ def _clean(v):
 
 def _get_list(form, key):
     return [_clean(v) for v in form.getlist(key)]
-
-def _safe(lst, i):
-    """Return lst[i] if in bounds, else empty string.
-
-    All array fields sent by the browser are kept in sync by the JS
-    serialiser, so out-of-bounds access should never happen in practice.
-    This guard is retained for defensive correctness.
-    """
-    return lst[i] if i < len(lst) else ""
 
 def _unpack_pfl(packed, idx):
     raw   = packed[idx] if idx < len(packed) else ""
@@ -223,22 +214,22 @@ def _build_fi(form):
         w = _unpack_pfl(working_vals, i)
         d = _unpack_pfl(design_vals,  i)
         row = {
-            "Tag No":              _safe(tags,         i),
-            "Instrument Name":     _safe(instruments,  i),
-            "Service Description": _safe(services,     i),
-            "Line Size":           _safe(line_sizes,   i),
-            "Medium":              _safe(mediums,       i),
-            "Specification":       _safe(specs,        i),
-            "Process Conn":        _safe(conns,        i),
+            "Tag No":              tags[i]         if i < len(tags)         else "",
+            "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
+            "Service Description": services[i]     if i < len(services)     else "",
+            "Line Size":           line_sizes[i]   if i < len(line_sizes)   else "",
+            "Medium":              mediums[i]       if i < len(mediums)      else "",
+            "Specification":       specs[i]        if i < len(specs)        else "",
+            "Process Conn":        conns[i]        if i < len(conns)        else "",
             "Work Press":  w[0], "Work Flow": w[1], "Work Level": w[2],
             "Design Press":d[0], "Design Flow":d[1],"Design Level":d[2],
-            "Set-point":           _safe(set_points,   i),
-            "Range":               _safe(ranges,       i),
-            "UOM":                 _safe(uoms,         i),
-            "Signal Type":         _safe(sig_types,    i),
-            "Source":              _safe(sources,      i),
-            "Destination":         _safe(destinations, i),
-            "Signal":              _safe(signals,      i),
+            "Set-point":           set_points[i]   if i < len(set_points)   else "",
+            "Range":               ranges[i]       if i < len(ranges)       else "",
+            "UOM":                 uoms[i]         if i < len(uoms)         else "",
+            "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
+            "Source":              sources[i]      if i < len(sources)      else "",
+            "Destination":         destinations[i] if i < len(destinations) else "",
+            "Signal":              signals[i]      if i < len(signals)      else "",
         }
         if any(row.values()):
             rows.append(row)
@@ -256,14 +247,14 @@ def _build_flat(form, prefix):
     rows = []
     for i in range(len(tags)):
         row = {
-            "Tag No":              _safe(tags,         i),
-            "Instrument Name":     _safe(instruments,  i),
-            "Service Description": _safe(services,     i),
-            "Signal Type":         _safe(sig_types,    i),
-            "Source":              _safe(sources,      i),
-            "Destination":         _safe(destinations, i),
-            "Signal Description":  _safe(sig_descs,    i),
-            "Signal":              _safe(signals,      i),
+            "Tag No":              tags[i]         if i < len(tags)         else "",
+            "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
+            "Service Description": services[i]     if i < len(services)     else "",
+            "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
+            "Source":              sources[i]      if i < len(sources)      else "",
+            "Destination":         destinations[i] if i < len(destinations) else "",
+            "Signal Description":  sig_descs[i]   if i < len(sig_descs)    else "",
+            "Signal":              signals[i]      if i < len(signals)      else "",
         }
         if any(row.values()):
             rows.append(row)
@@ -287,6 +278,7 @@ def _build_payload(form):
         "fi_meta":           _build_section_meta(form, "fi"),
         "el_meta":           _build_section_meta(form, "el"),
         "mov_meta":          _build_section_meta(form, "mov"),
+        "io_meta":           _build_section_meta(form, "io"),
         "field_instruments": _build_fi(form),
         "electrical":        _build_flat(form, "el"),
         "mov":               _build_flat(form, "mov"),
@@ -332,11 +324,22 @@ def submit():
         return jsonify({"success": False, "error": "Server error during workbook generation."}), 500
 
 
-# Placeholder routes for future documents — return 501 until implemented
 @cis_bp.route("/download/io-list", methods=["POST"])
 @login_required
 def download_io_list():
-    return jsonify({"success": False, "message": "IO List generation not yet implemented."}), 501
+    try:
+        payload = _build_payload(request.form)
+        output  = BytesIO()
+        write_io_workbook(payload, output)
+        output.seek(0)
+        filename = f"IO_List_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        return send_file(
+            output, as_attachment=True, download_name=filename,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    except Exception:
+        traceback.print_exc()
+        return jsonify({"success": False, "error": "Server error during IO List generation."}), 500
 
 
 @cis_bp.route("/download/cable-schedule", methods=["POST"])
@@ -365,13 +368,11 @@ def create_app():
     csrf.init_app(app)
     limiter.init_app(app)
 
-    # User loader for Flask-Login.
-    # db.session.get() is the SQLAlchemy 2.x API; Session.get() replaces
-    # the legacy Query.get() which emits deprecation warnings in SA 1.4+.
+    # User loader for Flask-Login
     from models import User as _User
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(_User, int(user_id))
+        return _User.query.get(int(user_id))
 
     # Register blueprints
     app.register_blueprint(auth_bp)
