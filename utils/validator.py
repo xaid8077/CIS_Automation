@@ -12,7 +12,7 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
     if not header.get("projectName", "").strip():
         errors.append("Header: Project Name is required.")
 
-    # ── Per-section doc number required ───────────────────────────────────────
+    # ── Per-document doc number required ──────────────────────────────────────
     for prefix, label in [
         ("fi",  "Instrument List (Section 1)"),
         ("el",  "Instrument List (Section 2)"),

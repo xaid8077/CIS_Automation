@@ -52,7 +52,7 @@ auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute")          # brute-force throttle on login endpoint
+@limiter.limit("10 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("cis.index"))
@@ -61,11 +61,8 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
 
-        # Constant-time path: always call check_password even on unknown user
-        # to prevent username enumeration via timing.
         dummy_hash = "$argon2id$v=19$m=65536,t=3,p=2$dummy$dummy"
         if user is None:
-            # run a dummy verify so timing is consistent
             try:
                 from argon2 import PasswordHasher
                 PasswordHasher().verify(dummy_hash, form.password.data)
@@ -86,7 +83,6 @@ def login():
         user.last_login = datetime.now(timezone.utc)
         db.session.commit()
 
-        # Safe redirect: only allow relative paths
         next_page = request.args.get("next", "")
         if next_page and next_page.startswith("/") and not next_page.startswith("//"):
             return redirect(next_page)
@@ -145,7 +141,6 @@ def create_user():
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-    # Prevent admin from demoting themselves
     if user.id == current_user.id:
         flash("You cannot edit your own account here.", "warning")
         return redirect(url_for("admin.dashboard"))
@@ -261,14 +256,18 @@ def _build_flat(form, prefix):
     return rows
 
 def _build_header(form):
+    """
+    Collect global project fields from the form.
+    "location" is written to AI15 on every cover sheet.
+    """
     return {k: form.get(k, "") for k in [
-        "projectName", "client", "consultant",
-        "date", "preparedBy", "checkedBy", "approvedBy", "revision"
+        "projectName", "client", "consultant", "location",
+        "date", "preparedBy", "checkedBy", "approvedBy", "revision",
     ]}
 
 def _build_section_meta(form, prefix):
+    """Return {"docNumber": …} for a given section prefix (fi / el / mov / io)."""
     return {
-        "docName":   _clean(form.get(f"{prefix}DocName",   "")),
         "docNumber": _clean(form.get(f"{prefix}DocNumber", "")),
     }
 
@@ -362,28 +361,23 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(get_config())
 
-    # Init extensions
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
 
-    # User loader for Flask-Login
     from models import User as _User
     @login_manager.user_loader
     def load_user(user_id):
         return _User.query.get(int(user_id))
 
-    # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(cis_bp)
 
-    # Create tables (use Flask-Migrate in production for schema changes)
     with app.app_context():
         db.create_all()
 
-    # 403 / 404 / 500 error handlers
     @app.errorhandler(403)
     def forbidden(e):
         return render_template("errors/403.html"), 403

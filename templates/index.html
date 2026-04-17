@@ -13,7 +13,7 @@
       --bg:#0f1117; --surface:#171b26; --surface-2:#1e2333; --surface-3:#252a3a;
       --border:#2c3349; --border-soft:#232840;
       --accent:#4f8fff; --accent-dim:#1e3a6e; --accent-glow:rgba(79,143,255,.18);
-      --green:#3ecf8e; --red:#ff5f5f;
+      --green:#3ecf8e; --red:#ff5f5f; --amber:#f5a623;
       --text:#e4e9f4; --text-2:#8b95b0; --text-3:#565e78;
       --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',system-ui,sans-serif;
       --g0:#4f8fff;--g1:#3ecf8e;--g2:#f5a623;--g3:#c97eff;
@@ -29,7 +29,6 @@
     .brand-title{font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.04em}
     .brand-sub{font-size:11px;color:var(--text-3);margin-top:1px}
 
-    /* Layout */
     .main{max-width:100%;padding:24px 28px 60px}
 
     /* Progress */
@@ -46,7 +45,6 @@
     .wp-connector{flex-shrink:0;width:32px;height:2px;background:var(--border);border-radius:1px;margin:0 4px;transition:background .3s}
     .wp-connector.done{background:var(--green)}
 
-    /* Step panels */
     .step-panel{display:none}
     .step-panel.active{display:block}
 
@@ -64,8 +62,8 @@
     .f-12{grid-column:span 12}.f-8{grid-column:span 8}.f-6{grid-column:span 6}
     .f-4{grid-column:span 4}.f-3{grid-column:span 3}.f-2{grid-column:span 2}
 
-    /* Doc meta row (per-section doc name + number) */
-    .doc-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+    /* Doc number row (single field per section) */
+    .doc-number-row{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
 
     /* Sub-head / badge */
     .sub-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -103,24 +101,14 @@
     .btn-back:hover{border-color:var(--accent);color:var(--accent)}
     .btn-next{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-weight:600}
     .btn-next:hover{background:var(--accent);color:#fff}
-    .btn-submit{background:var(--accent);border:none;color:#fff;font-weight:600;box-shadow:0 0 16px var(--accent-glow)}
-    .btn-submit:hover{filter:brightness(1.1)}
     .btn-validate{background:transparent;border:1px solid var(--border);color:var(--text-2);font-family:var(--mono);font-size:11.5px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;transition:all .15s}
     .btn-validate:hover{border-color:var(--green);color:var(--green)}
 
     /* Download buttons */
-    .dl-btn {
-      width:100%; padding:9px 14px; border-radius:8px; cursor:pointer;
-      font-family:var(--mono); font-size:11.5px; font-weight:600;
-      background:var(--dl-dim, var(--accent-dim));
-      border:1px solid var(--dl-color, var(--accent));
-      color:var(--dl-color, var(--accent));
-      transition:all .15s;
-    }
-    .dl-btn:hover:not(:disabled) { filter:brightness(1.15); }
-    .dl-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .dl-btn{width:100%;padding:9px 14px;border-radius:8px;cursor:pointer;font-family:var(--mono);font-size:11.5px;font-weight:600;background:var(--dl-dim,var(--accent-dim));border:1px solid var(--dl-color,var(--accent));color:var(--dl-color,var(--accent));transition:all .15s}
+    .dl-btn:hover:not(:disabled){filter:brightness(1.15)}
+    .dl-btn:disabled{opacity:.5;cursor:not-allowed}
 
-    /* Scrollbar */
     ::-webkit-scrollbar{width:6px;height:6px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -150,7 +138,7 @@
 <main class="main">
 <form id="cisForm">
 
-  <!-- ── Progress bar ─────────────────────────────────────────────────── -->
+  <!-- ── Progress bar ──────────────────────────────────────────────── -->
   <div class="wizard-progress">
     <div class="wp-step active" data-step="0" onclick="goToStep(0)">
       <div class="wp-dot">1</div>
@@ -178,7 +166,7 @@
     </div>
   </div>
 
-  <!-- ══ STEP 1 — Document Header ════════════════════════════════════════ -->
+  <!-- ══ STEP 1 — Document Header ═════════════════════════════════════ -->
   <div class="step-panel active" id="step-0">
     <div class="section">
       <div class="section-title">Document Header</div>
@@ -196,22 +184,26 @@
           <input id="consultant" name="consultant" />
         </div>
         <div class="field f-4">
+          <label for="location">Location</label>
+          <input id="location" name="location" placeholder="e.g. Pump House — Area 3" />
+        </div>
+        <div class="field f-4">
           <label for="date">Date</label>
           <input id="date" type="date" name="date" />
         </div>
-        <div class="field f-3">
+        <div class="field f-2">
           <label for="preparedBy">Prepared By</label>
           <input id="preparedBy" name="preparedBy" />
         </div>
-        <div class="field f-3">
+        <div class="field f-2">
           <label for="checkedBy">Checked By</label>
           <input id="checkedBy" name="checkedBy" />
         </div>
-        <div class="field f-3">
+        <div class="field f-2">
           <label for="approvedBy">Approved By</label>
           <input id="approvedBy" name="approvedBy" />
         </div>
-        <div class="field f-3">
+        <div class="field f-2">
           <label for="revision">Revision</label>
           <input id="revision" name="revision" />
         </div>
@@ -223,16 +215,12 @@
     </div>
   </div>
 
-  <!-- ══ STEP 2 — Field Instruments ══════════════════════════════════════ -->
+  <!-- ══ STEP 2 — Field Instruments ═══════════════════════════════════ -->
   <div class="step-panel" id="step-1">
     <div class="section">
       <div class="section-title">Section 1 — Field Instruments</div>
-      <div class="doc-meta">
-        <div class="field">
-          <label for="fiDocName">Document Name</label>
-          <input id="fiDocName" name="fiDocName" placeholder="e.g. Instrument List – Area 1" />
-        </div>
-        <div class="field">
+      <div class="doc-number-row">
+        <div class="field" style="max-width:360px">
           <label for="fiDocNumber">Document Number</label>
           <input id="fiDocNumber" name="fiDocNumber" placeholder="e.g. PRJ-IL-001" required />
         </div>
@@ -258,16 +246,12 @@
     </div>
   </div>
 
-  <!-- ══ STEP 3 — Electrical Equipment ═══════════════════════════════════ -->
+  <!-- ══ STEP 3 — Electrical Equipment ════════════════════════════════ -->
   <div class="step-panel" id="step-2">
     <div class="section">
       <div class="section-title">Section 2 — Electrical Equipment</div>
-      <div class="doc-meta">
-        <div class="field">
-          <label for="elDocName">Document Name</label>
-          <input id="elDocName" name="elDocName" placeholder="e.g. Instrument List – Electrical" />
-        </div>
-        <div class="field">
+      <div class="doc-number-row">
+        <div class="field" style="max-width:360px">
           <label for="elDocNumber">Document Number</label>
           <input id="elDocNumber" name="elDocNumber" placeholder="e.g. PRJ-IL-002" required />
         </div>
@@ -292,16 +276,12 @@
     </div>
   </div>
 
-  <!-- ══ STEP 4 — MOVs ════════════════════════════════════════════════════ -->
+  <!-- ══ STEP 4 — MOVs ═════════════════════════════════════════════════ -->
   <div class="step-panel" id="step-3">
     <div class="section">
       <div class="section-title">Section 3 — Motor Operated Valves</div>
-      <div class="doc-meta">
-        <div class="field">
-          <label for="movDocName">Document Name</label>
-          <input id="movDocName" name="movDocName" placeholder="e.g. Instrument List – MOV" />
-        </div>
-        <div class="field">
+      <div class="doc-number-row">
+        <div class="field" style="max-width:360px">
           <label for="movDocNumber">Document Number</label>
           <input id="movDocNumber" name="movDocNumber" placeholder="e.g. PRJ-IL-003" required />
         </div>
@@ -329,29 +309,20 @@
     </div>
   </div>
 
-  <!-- ══ STEP 5 — Download ════════════════════════════════════════════════ -->
+  <!-- ══ STEP 5 — Download ════════════════════════════════════════════ -->
   <div class="step-panel" id="step-4">
     <div class="section">
       <div class="section-title">Download Generated Files</div>
 
-      <!-- ── IO List document meta ─────────────────────────────────────── -->
+      <!-- IO List document number -->
       <div style="margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-          <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase">IO List Document Info</span>
-        </div>
-        <div class="doc-meta" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
-          <div class="field">
-            <label for="ioDocName">Document Name</label>
-            <input id="ioDocName" name="ioDocName" placeholder="e.g. IO List – Area 1" />
-          </div>
-          <div class="field">
-            <label for="ioDocNumber">Document Number</label>
-            <input id="ioDocNumber" name="ioDocNumber" placeholder="e.g. PRJ-IOL-001" />
-          </div>
+        <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">IO List Document Info</div>
+        <div class="field" style="max-width:360px">
+          <label for="ioDocNumber">Document Number</label>
+          <input id="ioDocNumber" name="ioDocNumber" placeholder="e.g. PRJ-IOL-001" />
         </div>
       </div>
 
-      <!-- ── Download cards ────────────────────────────────────────────── -->
       <p style="font-size:12.5px;color:var(--text-3);margin-bottom:20px">
         All documents are generated from the data you entered. Click each button to download individually.
       </p>
@@ -416,7 +387,6 @@
 
       </div>
 
-      <!-- Status message -->
       <div id="dlStatus" style="margin-top:16px;min-height:24px;font-size:12px"></div>
     </div>
 
@@ -431,14 +401,13 @@
 </main>
 
 <script>
-// ── Wizard ─────────────────────────────────────────────────────────────────
+// ── Wizard ──────────────────────────────────────────────────────────────────
 let currentStep = 0;
 const TOTAL_STEPS = 5;
 
 function goToStep(n) {
   if (n < 0 || n >= TOTAL_STEPS) return;
 
-  // Validate required fields on the current panel before moving forward
   if (n > currentStep) {
     const panel = document.getElementById(`step-${currentStep}`);
     for (const el of panel.querySelectorAll('[required]')) {
@@ -725,7 +694,7 @@ function getFormDataWithGrids(formEl) {
   return data;
 }
 
-// ── CSRF token helper (read from meta tag injected by Flask-WTF) ────────────
+// ── CSRF token helper ───────────────────────────────────────────────────────
 function getCsrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
