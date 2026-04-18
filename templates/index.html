@@ -3,117 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CIS Automation Input</title>
+  <title>CIS Automation Input - {{ project.name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <style>
-    :root {
-      --bg:#0f1117; --surface:#171b26; --surface-2:#1e2333; --surface-3:#252a3a;
-      --border:#2c3349; --border-soft:#232840;
-      --accent:#4f8fff; --accent-dim:#1e3a6e; --accent-glow:rgba(79,143,255,.18);
-      --green:#3ecf8e; --red:#ff5f5f; --amber:#f5a623;
-      --text:#e4e9f4; --text-2:#8b95b0; --text-3:#565e78;
-      --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',system-ui,sans-serif;
-      --g0:#4f8fff;--g1:#3ecf8e;--g2:#f5a623;--g3:#c97eff;
-      --g4:#ff7eb3;--g5:#5ce1e6;--g6:#ffcd56;--g7:#ff8c42;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{font-size:13px;scroll-behavior:smooth}
-    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
-
-    /* Topbar */
-    .topbar{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(8px)}
-    .brand-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:11px;color:#fff;letter-spacing:.5px}
-    .brand-title{font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.04em}
-    .brand-sub{font-size:11px;color:var(--text-3);margin-top:1px}
-
-    .main{max-width:100%;padding:24px 28px 60px}
-
-    /* Progress */
-    .wizard-progress{display:flex;align-items:center;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px}
-    .wp-step{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;opacity:.45;transition:opacity .2s;padding:4px 0}
-    .wp-step.active{opacity:1}
-    .wp-step.done{opacity:.75}
-    .wp-step:hover{opacity:.85}
-    .wp-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:600;border:2px solid var(--border);color:var(--text-3);transition:all .2s}
-    .wp-step.active .wp-dot{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
-    .wp-step.done .wp-dot{border-color:var(--green);background:rgba(62,207,142,.15);color:var(--green);font-size:13px}
-    .wp-label{font-size:11.5px;font-weight:600;line-height:1.3}
-    .wp-sub{font-size:10px;color:var(--text-3);margin-top:1px}
-    .wp-connector{flex-shrink:0;width:32px;height:2px;background:var(--border);border-radius:1px;margin:0 4px;transition:background .3s}
-    .wp-connector.done{background:var(--green)}
-
-    .step-panel{display:none}
-    .step-panel.active{display:block}
-
-    /* Section card */
-    .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:20px}
-    .section-title{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .section-title::before{content:'';display:inline-block;width:3px;height:16px;background:var(--accent);border-radius:2px}
-
-    /* Form fields */
-    .hdr-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 12px}
-    .field{display:flex;flex-direction:column;gap:4px}
-    .field label{font-size:10.5px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
-    .field input,.field textarea{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:12.5px;padding:7px 10px;resize:vertical;transition:border-color .15s}
-    .field input:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    .f-12{grid-column:span 12}.f-8{grid-column:span 8}.f-6{grid-column:span 6}
-    .f-4{grid-column:span 4}.f-3{grid-column:span 3}.f-2{grid-column:span 2}
-
-    /* Doc number row (single field per section) */
-    .doc-number-row{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
-
-    /* Sub-head / badge */
-    .sub-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .badge{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--accent-dim);color:var(--accent);letter-spacing:.04em}
-    .sub-title{font-size:13px;font-weight:600;color:var(--text)}
-
-    /* Toolbar */
-    .sg-toolbar{display:flex;gap:6px;align-items:center;margin-bottom:6px}
-    .sg-toolbar .btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:4px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;color:var(--text-2);cursor:pointer;transition:all .15s}
-    .sg-toolbar .btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-    .sg-legend{font-size:10.5px;color:var(--text-3);margin-left:auto;display:flex;align-items:center;gap:6px}
-    .sg-legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
-
-    /* SimpleGrid */
-    .simple-grid{border:1px solid var(--border);border-radius:10px;background:var(--surface-2);overflow:auto;font-family:var(--sans);font-size:12px}
-    .sg-head{position:sticky;top:0;z-index:2}
-    .sg-hcell{background:var(--surface-3);border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 8px;height:30px;display:flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
-    .sg-hcell:last-child{border-right:none}
-    .sg-cell{border-right:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);padding:0 8px;height:28px;display:flex;align-items:center;color:var(--text);font-size:12px;outline:none;position:relative}
-    .sg-cell:last-child{border-right:none}
-    .sg-cell[contenteditable="true"]{cursor:text}
-    .sg-cell[contenteditable="true"]:focus{background:var(--accent-dim);outline:2px solid var(--accent);outline-offset:-2px;z-index:1}
-    .sg-row-group-start .sg-cell[data-c="0"]{border-top:1px solid var(--border)}
-    .sg-cell[data-c="0"][data-group-bar]{border-left:3px solid var(--group-color,var(--accent))}
-    .sg-row[data-group-even="true"] .sg-cell{background:rgba(255,255,255,.015)}
-    .sg-row[data-group-even="true"] .sg-cell[contenteditable="true"]:focus{background:var(--accent-dim)}
-    .sg-select{width:100%;border:none;outline:none;background:transparent;font:inherit;color:var(--text);cursor:pointer;padding:0}
-    .sg-select option{background:var(--surface-3);color:var(--text)}
-
-    /* Wizard nav */
-    .wizard-nav{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-top:8px}
-    .nav-hint{font-size:11.5px;color:var(--text-3)}
-    .btn-nav{font-family:var(--mono);font-size:11.5px;font-weight:500;padding:8px 18px;border-radius:7px;cursor:pointer;transition:all .15s}
-    .btn-back{background:transparent;border:1px solid var(--border);color:var(--text-2)}
-    .btn-back:hover{border-color:var(--accent);color:var(--accent)}
-    .btn-next{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-weight:600}
-    .btn-next:hover{background:var(--accent);color:#fff}
-    .btn-validate{background:transparent;border:1px solid var(--border);color:var(--text-2);font-family:var(--mono);font-size:11.5px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;transition:all .15s}
-    .btn-validate:hover{border-color:var(--green);color:var(--green)}
-
-    /* Download buttons */
-    .dl-btn{width:100%;padding:9px 14px;border-radius:8px;cursor:pointer;font-family:var(--mono);font-size:11.5px;font-weight:600;background:var(--dl-dim,var(--accent-dim));border:1px solid var(--dl-color,var(--accent));color:var(--dl-color,var(--accent));transition:all .15s}
-    .dl-btn:hover:not(:disabled){filter:brightness(1.15)}
-    .dl-btn:disabled{opacity:.5;cursor:not-allowed}
-
-    ::-webkit-scrollbar{width:6px;height:6px}
-    ::-webkit-scrollbar-track{background:transparent}
-    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-    ::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
@@ -123,6 +18,11 @@
     <div class="brand-title">Automation de Instrumentation</div>
     <div class="brand-sub">CIS Workbook Generator</div>
   </div>
+  
+  <a href="{{ url_for('cis.project_dashboard', project_id=project.id) }}" style="margin-left: 20px; font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:4px 10px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+    &larr; Back to {{ project.name }}
+  </a>
+
   <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
     {% if current_user.is_admin %}
       <a href="{{ url_for('admin.dashboard') }}" style="font-family:var(--mono);font-size:11px;color:var(--amber);text-decoration:none;border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">⚙ Admin</a>
@@ -138,7 +38,6 @@
 <main class="main">
 <form id="cisForm">
 
-  <!-- ── Progress bar ──────────────────────────────────────────────── -->
   <div class="wizard-progress">
     <div class="wp-step active" data-step="0" onclick="goToStep(0)">
       <div class="wp-dot">1</div>
@@ -166,34 +65,34 @@
     </div>
   </div>
 
-  <!-- ══ STEP 1 — Document Header ═════════════════════════════════════ -->
   <div class="step-panel active" id="step-0">
     <div class="section">
       <div class="section-title">Document Header</div>
       <div class="hdr-grid">
         <div class="field f-12">
-          <label for="projectName">Project Name</label>
-          <textarea id="projectName" name="projectName" rows="2" required></textarea>
+          <label for="projectName">Project Name (Auto-filled)</label>
+          <textarea id="projectName" name="projectName" rows="2" style="background:var(--surface-3); opacity: 0.8;" readonly>{{ project.name }}</textarea>
         </div>
         <div class="field f-4">
           <label for="client">Client</label>
-          <input id="client" name="client" />
+          <input id="client" name="client" value="{{ project.client }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
         </div>
         <div class="field f-4">
           <label for="consultant">Consultant</label>
-          <input id="consultant" name="consultant" />
+          <input id="consultant" name="consultant" value="{{ project.consultant or '' }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
         </div>
         <div class="field f-4">
           <label for="location">Location</label>
-          <input id="location" name="location" placeholder="e.g. Pump House — Area 3" />
+          <input id="location" name="location" value="{{ project.location or '' }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
         </div>
+        
         <div class="field f-4">
           <label for="date">Date</label>
-          <input id="date" type="date" name="date" />
+          <input id="date" type="date" name="date" required />
         </div>
         <div class="field f-2">
           <label for="preparedBy">Prepared By</label>
-          <input id="preparedBy" name="preparedBy" />
+          <input id="preparedBy" name="preparedBy" value="{{ current_user.username }}" required />
         </div>
         <div class="field f-2">
           <label for="checkedBy">Checked By</label>
@@ -205,7 +104,7 @@
         </div>
         <div class="field f-2">
           <label for="revision">Revision</label>
-          <input id="revision" name="revision" />
+          <input id="revision" name="revision" required />
         </div>
       </div>
     </div>
@@ -215,7 +114,6 @@
     </div>
   </div>
 
-  <!-- ══ STEP 2 — Field Instruments ═══════════════════════════════════ -->
   <div class="step-panel" id="step-1">
     <div class="section">
       <div class="section-title">Section 1 — Field Instruments</div>
@@ -246,7 +144,6 @@
     </div>
   </div>
 
-  <!-- ══ STEP 3 — Electrical Equipment ════════════════════════════════ -->
   <div class="step-panel" id="step-2">
     <div class="section">
       <div class="section-title">Section 2 — Electrical Equipment</div>
@@ -276,7 +173,6 @@
     </div>
   </div>
 
-  <!-- ══ STEP 4 — MOVs ═════════════════════════════════════════════════ -->
   <div class="step-panel" id="step-3">
     <div class="section">
       <div class="section-title">Section 3 — Motor Operated Valves</div>
@@ -309,12 +205,10 @@
     </div>
   </div>
 
-  <!-- ══ STEP 5 — Download ════════════════════════════════════════════ -->
   <div class="step-panel" id="step-4">
     <div class="section">
       <div class="section-title">Download Generated Files</div>
 
-      <!-- IO List document number -->
       <div style="margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--border)">
         <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">IO List Document Info</div>
         <div class="field" style="max-width:360px">
@@ -324,12 +218,11 @@
       </div>
 
       <p style="font-size:12.5px;color:var(--text-3);margin-bottom:20px">
-        All documents are generated from the data you entered. Click each button to download individually.
+        All documents are generated from the data you entered and will be saved to the project history.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
 
-        <!-- Instrument List -->
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <div style="width:36px;height:36px;border-radius:8px;background:rgba(79,143,255,.15);border:1px solid rgba(79,143,255,.3);display:grid;place-items:center;font-size:16px">📋</div>
@@ -338,12 +231,11 @@
               <div style="font-size:11px;color:var(--text-3)">Field instruments, electrical &amp; MOV data</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="/submit" style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
-            ⬇ Download Instrument List
+          <button type="button" class="dl-btn" data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, doc_type='Instrument List') }}" style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
+            ⬇ Save & Download List
           </button>
         </div>
 
-        <!-- IO List -->
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.3);display:grid;place-items:center;font-size:16px">🔌</div>
@@ -352,12 +244,11 @@
               <div style="font-size:11px;color:var(--text-3)">Input / output signal schedule</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="/download/io-list" style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
-            ⬇ Download IO List
+          <button type="button" class="dl-btn" data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, doc_type='IO List') }}" style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
+            ⬇ Save & Download IO
           </button>
         </div>
 
-        <!-- Cable Schedule -->
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);display:grid;place-items:center;font-size:16px">🗂</div>
@@ -371,7 +262,6 @@
           </button>
         </div>
 
-        <!-- Cable Interconnection Schedule -->
         <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <div style="width:36px;height:36px;border-radius:8px;background:rgba(201,126,255,.12);border:1px solid rgba(201,126,255,.3);display:grid;place-items:center;font-size:16px">🔗</div>
@@ -745,7 +635,7 @@ document.addEventListener('click', async (e) => {
       });
       document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(a.href);
-      if (status) status.innerHTML = `<span style="color:var(--green)">✓ ${filename} downloaded.</span>`;
+      if (status) status.innerHTML = `<span style="color:var(--green)">✓ ${filename} downloaded successfully.</span>`;
     } else {
       const json = await res.json();
       const msg  = json.message || json.error || 'Not yet implemented.';

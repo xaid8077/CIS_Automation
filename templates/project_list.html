@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Project | WAP Central</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('cis.index') }}">Centralized Data Repository</a>
+        <div class="ms-auto d-flex gap-3 align-items-center">
+            <span class="navbar-text text-white">Hello, {{ current_user.username }}</span>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-info btn-sm">Admin Panel</a>
+            {% endif %}
+            <form action="{{ url_for('auth.logout') }}" method="POST" class="m-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold text-secondary">Available Projects</h2>
+            <p class="text-muted">Select a project to view document history or generate new revisions.</p>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for p in projects %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 border-top border-primary border-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ p.name }}</h5>
+                    <p class="card-text mb-1"><small class="text-muted">Client:</small> {{ p.client }}</p>
+                    {% if p.location %}
+                    <p class="card-text"><small class="text-muted">Location:</small> {{ p.location }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 text-end pb-3">
+                    <a href="{{ url_for('cis.project_dashboard', project_id=p.id) }}" class="btn btn-primary">Open Project Workspace &rarr;</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No projects are currently available. {% if current_user.is_admin %}Please create one in the Admin Panel.{% else %}Please contact your administrator to set up a project.{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

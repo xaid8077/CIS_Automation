@@ -2,9 +2,6 @@
 forms.py
 ────────
 Flask-WTF forms.
-
-Each form includes a CSRF hidden field automatically (Flask-WTF default).
-Validators run server-side regardless of any client-side checks.
 """
 
 from flask_wtf import FlaskForm
@@ -16,51 +13,22 @@ from wtforms.validators import (
     DataRequired, Email, Length,
     EqualTo, ValidationError
 )
-from models import User, ROLES
+from models import User, Project, ROLES
 
 
 class LoginForm(FlaskForm):
-    username  = StringField(
-        "Username",
-        validators=[DataRequired(), Length(min=3, max=64)],
-        render_kw={"autocomplete": "username", "placeholder": "Username"},
-    )
-    password  = PasswordField(
-        "Password",
-        validators=[DataRequired(), Length(min=8, max=128)],
-        render_kw={"autocomplete": "current-password", "placeholder": "Password"},
-    )
+    username  = StringField("Username", validators=[DataRequired(), Length(min=3, max=64)])
+    password  = PasswordField("Password", validators=[DataRequired(), Length(min=8, max=128)])
     remember  = BooleanField("Remember me")
     submit    = SubmitField("Sign in")
 
 
 class RegisterForm(FlaskForm):
-    """Admin-only: create a new user account."""
-    username  = StringField(
-        "Username",
-        validators=[DataRequired(), Length(min=3, max=64)],
-        render_kw={"placeholder": "Username"},
-    )
-    email     = StringField(
-        "Email",
-        validators=[DataRequired(), Email(), Length(max=120)],
-        render_kw={"placeholder": "user@example.com"},
-    )
-    password  = PasswordField(
-        "Password",
-        validators=[DataRequired(), Length(min=8, max=128)],
-        render_kw={"placeholder": "Min 8 characters"},
-    )
-    password2 = PasswordField(
-        "Confirm Password",
-        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
-        render_kw={"placeholder": "Repeat password"},
-    )
-    role      = SelectField(
-        "Role",
-        choices=[(r, r.capitalize()) for r in ROLES],
-        default="user",
-    )
+    username  = StringField("Username", validators=[DataRequired(), Length(min=3, max=64)])
+    email     = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
+    password  = PasswordField("Password", validators=[DataRequired(), Length(min=8, max=128)])
+    password2 = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo("password")])
+    role      = SelectField("Role", choices=[(r, r.capitalize()) for r in ROLES], default="user")
     submit    = SubmitField("Create User")
 
     def validate_username(self, field):
@@ -73,10 +41,19 @@ class RegisterForm(FlaskForm):
 
 
 class EditUserForm(FlaskForm):
-    """Admin-only: change a user's role or active status."""
-    role      = SelectField(
-        "Role",
-        choices=[(r, r.capitalize()) for r in ROLES],
-    )
+    role      = SelectField("Role", choices=[(r, r.capitalize()) for r in ROLES])
     is_active = BooleanField("Active")
     submit    = SubmitField("Save Changes")
+
+
+class ProjectForm(FlaskForm):
+    """Admin-only: create a new project repository."""
+    name       = StringField("Project Name", validators=[DataRequired(), Length(max=150)], render_kw={"placeholder": "e.g., Chandrawal W.T.P."})
+    client     = StringField("Client", validators=[DataRequired(), Length(max=150)], render_kw={"placeholder": "e.g., Delhi Jal Board"})
+    consultant = StringField("Consultant", validators=[Length(max=150)], render_kw={"placeholder": "Optional"})
+    location   = StringField("Location", validators=[Length(max=150)], render_kw={"placeholder": "Site Location"})
+    submit     = SubmitField("Create Project")
+
+    def validate_name(self, field):
+        if Project.query.filter_by(name=field.data).first():
+            raise ValidationError("A project with this name already exists.")

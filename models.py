@@ -1,14 +1,7 @@
 """
 models.py
 ─────────
-SQLAlchemy User model.
-
-Password hashing: Argon2id via argon2-cffi.
-  - Winner of the Password Hashing Competition (PHC).
-  - Memory-hard: resists GPU/ASIC brute-force far better than bcrypt.
-  - pip install argon2-cffi
-
-Roles: "user" (read/generate) | "admin" (user management dashboard).
+SQLAlchemy Models for Users, Projects, and Document Revisions.
 """
 
 from datetime import datetime, timezone
@@ -18,15 +11,14 @@ from flask_login import UserMixin
 from extensions import db
 
 _ph = PasswordHasher(
-    time_cost=3,        # iterations
-    memory_cost=65536,  # 64 MB RAM per hash — brute-force is expensive
+    time_cost=3,        
+    memory_cost=65536,  
     parallelism=2,
     hash_len=32,
     salt_len=16,
 )
 
 ROLES = ("user", "admin")
-
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -39,21 +31,16 @@ class User(UserMixin, db.Model):
     is_active    = db.Column(db.Boolean,     nullable=False, default=True)
     created_at   = db.Column(db.DateTime,    default=lambda: datetime.now(timezone.utc))
     last_login   = db.Column(db.DateTime,    nullable=True)
-
-    # ── Password handling ─────────────────────────────────────────────────────
+    
+    # Relationships
+    revisions    = db.relationship('DocumentRevision', backref='author', lazy=True)
 
     def set_password(self, plaintext: str) -> None:
-        """Hash plaintext with Argon2id and store the result."""
         if len(plaintext) < 8:
             raise ValueError("Password must be at least 8 characters.")
         self.password_hash = _ph.hash(plaintext)
 
     def check_password(self, plaintext: str) -> bool:
-        """
-        Verify plaintext against the stored hash.
-        Also transparently rehashes if the stored parameters are outdated.
-        Returns True on success, False on mismatch.
-        """
         try:
             _ph.verify(self.password_hash, plaintext)
         except VerifyMismatchError:
@@ -61,10 +48,6 @@ class User(UserMixin, db.Model):
         except (VerificationError, InvalidHashError):
             return False
 
-        # Argon2 recommends rehashing when parameters change.
-        # The commit is best-effort: a DB hiccup here must not mask a
-        # successful login, so any exception is swallowed and the old
-        # hash remains in place until the next successful login attempt.
         if _ph.check_needs_rehash(self.password_hash):
             try:
                 self.password_hash = _ph.hash(plaintext)
@@ -74,11 +57,45 @@ class User(UserMixin, db.Model):
 
         return True
 
-    # ── Role helpers ──────────────────────────────────────────────────────────
-
     @property
     def is_admin(self) -> bool:
         return self.role == "admin"
 
     def __repr__(self):
         return f"<User {self.username!r} role={self.role!r}>"
+
+
+class Project(db.Model):
+    __tablename__ = "projects"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    name        = db.Column(db.String(150), unique=True, nullable=False)
+    client      = db.Column(db.String(150), nullable=False)
+    consultant  = db.Column(db.String(150), nullable=True)
+    location    = db.Column(db.String(150), nullable=True)
+    created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    revisions   = db.relationship('DocumentRevision', backref='project', lazy=True, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Project {self.name!r}>"
+
+
+class DocumentRevision(db.Model):
+    __tablename__ = "document_revisions"
+
+    id              = db.Column(db.Integer, primary_key=True)
+    project_id      = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    doc_type        = db.Column(db.String(50), nullable=False) # e.g., "Instrument List", "IO List"
+    revision_number = db.Column(db.Integer, nullable=False, default=0)
+    
+    # Store the entire form payload as JSON so it can be re-loaded or analyzed later
+    data_payload    = db.Column(db.JSON, nullable=False)
+    
+    created_at      = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"<DocRev {self.doc_type} Rev:{self.revision_number} Proj:{self.project_id}>"
