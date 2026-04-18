@@ -24,13 +24,13 @@ Cover sheet     → same cell mapping as IL cover.
 IO List sheet   → Three section blocks starting at row 6.
                   Each block opens with a merged header row (A:N).
                   Column A : serial number (continuous across all sections)
-                  Column B : Tag No
-                  Column C : Instrument Name
+                  Column B : Tag No          ← merged for same-tag runs
+                  Column C : Instrument Name ← merged for same-tag runs
                   Column D : Service Description
                               (Electrical & MOV: "Service Desc - Signal Desc")
                   Column E : Signal Type
-                  Column F : Source
-                  Column G : Destination
+                  Column F : Source          ← merged for same-tag runs
+                  Column G : Destination     ← merged for same-tag runs
                   Column H : DI  — 1 if Signal == "DI", else blank
                   Column I : DO  — 1 if Signal == "DO", else blank
                   Column J : AI  — 1 if Signal == "AI", else blank
@@ -427,6 +427,10 @@ _IO_BLOCK_FONT  = Font(bold=True, color="FFFFFF")
 _IO_BLOCK_ALIGN = Alignment(horizontal="left", vertical="center",
                              indent=1, wrap_text=False)
 
+# Columns to merge for same-tag runs (1-based column indices).
+# B=2 Tag No, C=3 Instrument Name, F=6 Source, G=7 Destination.
+_IO_MERGE_COLS = (2, 3, 6, 7)
+
 
 def _io_cell(ws, row: int, col: int, value: Any, alignment: Alignment) -> None:
     """Write value + border + alignment into a single IO List data cell."""
@@ -456,6 +460,71 @@ def _write_io_block_header(ws, row: int, label: str) -> None:
         ws.cell(row=row, column=col).border = THIN
 
 
+def _merge_tag_runs(ws, tag_runs: List[Tuple[int, int]]) -> None:
+    """
+    For each (start_row, end_row) run where end > start, merge columns
+    B, C, F, G vertically and centre-align the merged cell.
+
+    openpyxl keeps the top-left cell's value after merging, which is exactly
+    what we want — the value was already written to the first row of each run.
+
+    A thin border is applied to the top-left cell of every merged range so
+    the outer edge remains visible in Excel.
+    """
+    for start_row, end_row in tag_runs:
+        if end_row <= start_row:
+            continue   # single-row tag — nothing to merge
+        for col in _IO_MERGE_COLS:
+            col_letter = chr(ord('A') + col - 1)   # 1-based → letter
+            ws.merge_cells(
+                start_row=start_row, start_column=col,
+                end_row=end_row,     end_column=col,
+            )
+            merged_cell           = ws.cell(row=start_row, column=col)
+            merged_cell.alignment = CENTER_WRAP
+            merged_cell.border    = THIN
+
+
+def _collect_tag_runs(rows: List[Dict[str, Any]], first_data_row: int) -> List[Tuple[int, int]]:
+    """
+    Scan the row list and return a list of (start_row, end_row) spans for
+    every consecutive run of the same non-empty tag number.
+
+    Single-row tags are included as (row, row) so the caller can skip them
+    cheaply with `if end > start`.
+
+    Parameters
+    ----------
+    rows:
+        The data rows for one section (already filtered to non-empty rows).
+    first_data_row:
+        The sheet row number that corresponds to rows[0].
+    """
+    runs: List[Tuple[int, int]] = []
+    if not rows:
+        return runs
+
+    run_start  = first_data_row
+    run_tag    = rows[0].get("Tag No", "").strip()
+
+    for i, rd in enumerate(rows[1:], start=1):
+        current_tag = rd.get("Tag No", "").strip()
+        current_row = first_data_row + i
+
+        if current_tag and current_tag == run_tag:
+            # Same tag — extend the current run.
+            continue
+        else:
+            # Tag changed (or is blank) — close the previous run.
+            runs.append((run_start, first_data_row + i - 1))
+            run_start = current_row
+            run_tag   = current_tag
+
+    # Close the final run.
+    runs.append((run_start, first_data_row + len(rows) - 1))
+    return runs
+
+
 def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
     """
     Write all three instrument sections into the 'IO List' sheet.
@@ -465,17 +534,22 @@ def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
       2. Electrical Equipment (service + " - " + signal description)
       3. Motor Operated Valves (service + " - " + signal description)
 
+    After writing each section's data rows, consecutive rows that share the
+    same Tag No are merged vertically in columns B (Tag No), C (Instrument
+    Name), F (Source), and G (Destination).  Signal-specific columns (D, E,
+    H–K, M) are intentionally not merged because they differ per signal.
+
     The TRIP flag in column M is evaluated against the raw service
     description before concatenation, so the keyword match is unambiguous.
 
     Column layout (1-based):
       1  A  Serial number  (continuous across all sections)
-      2  B  Tag No
-      3  C  Instrument Name
+      2  B  Tag No          ← merged for same-tag runs
+      3  C  Instrument Name ← merged for same-tag runs
       4  D  Service Description (El/MOV: "Service Desc - Signal Desc")
       5  E  Signal Type
-      6  F  Source
-      7  G  Destination
+      6  F  Source          ← merged for same-tag runs
+      7  G  Destination     ← merged for same-tag runs
       8  H  DI  — 1 if Signal == "DI", else blank
       9  I  DO  — 1 if Signal == "DO", else blank
      10  J  AI  — 1 if Signal == "AI", else blank
@@ -483,7 +557,7 @@ def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
      12  L  Skipped (blank, bordered)
      13  M  TRIP — "TRIP" if "trip" in Service Description, else blank
     """
-    # concat_sig_desc flag: True for Electrical and MOV, False for FI
+    # concat_sig_desc: True for Electrical and MOV, False for Field Instruments
     sections = [
         ("Field Instruments",     payload.get("field_instruments", []), False),
         ("Electrical Equipment",  payload.get("electrical",        []), True),
@@ -494,9 +568,16 @@ def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
     serial = 1
 
     for block_label, rows, concat_sig_desc in sections:
+        # ── Merged block header ───────────────────────────────────────────────
         _write_io_block_header(ws, row, block_label)
         row += 1
 
+        if not rows:
+            continue
+
+        first_data_row = row   # remember where this section's data starts
+
+        # ── Data rows ─────────────────────────────────────────────────────────
         for rd in rows:
             tag      = rd.get("Tag No",              "")
             instr    = rd.get("Instrument Name",     "")
@@ -507,12 +588,14 @@ def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
             dest     = rd.get("Destination",         "")
             signal   = rd.get("Signal",              "").strip().upper()
 
+            # Concatenate service + sig_desc for Electrical and MOV sections.
             if concat_sig_desc and sig_desc:
                 service_display = f"{service} - {sig_desc}" if service else sig_desc
             else:
                 service_display = service
 
-            trip = "TRIP" if "trip" in service+" - "+sig_desc.lower() else ""
+            # TRIP evaluated on raw service only (before concatenation).
+            trip = "TRIP" if "trip" in service.lower() else ""
 
             _io_cell(ws, row,  1, serial,                          CENTER_WRAP)
             _io_cell(ws, row,  2, tag,                             CENTER_WRAP)
@@ -530,6 +613,10 @@ def _write_io_list_sheet(ws, payload: Dict[str, Any]) -> None:
 
             serial += 1
             row    += 1
+
+        # ── Merge same-tag runs in B, C, F, G ────────────────────────────────
+        tag_runs = _collect_tag_runs(rows, first_data_row)
+        _merge_tag_runs(ws, tag_runs)
 
 
 # ─── IO Public entry point ────────────────────────────────────────────────────
