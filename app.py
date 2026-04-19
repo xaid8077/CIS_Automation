@@ -482,7 +482,7 @@ def preview():
     """
     try:
         payload = _build_payload(request.form)
-        errors  = validate_payload(payload)
+        errors  = validate_payload(payload, require_doc_numbers=False)
         if errors:
             return jsonify({"ok": False, "errors": errors}), 422
         row_counts = {

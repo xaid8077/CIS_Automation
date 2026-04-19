@@ -4,7 +4,10 @@ VALID_SIGNALS      = {"AI", "AO", "DI", "DO"}
 VALID_SIGNAL_TYPES = {"4-20mA", "Potential Free Contact", "24V DC"}
 
 
-def validate_payload(payload: Dict[str, Any]) -> List[str]:
+def validate_payload(
+    payload: Dict[str, Any],
+    require_doc_numbers: bool = True,
+) -> List[str]:
     errors: List[str] = []
 
     # ── Header ────────────────────────────────────────────────────────────────
@@ -12,16 +15,17 @@ def validate_payload(payload: Dict[str, Any]) -> List[str]:
     if not header.get("projectName", "").strip():
         errors.append("Header: Project Name is required.")
 
-    # ── Per-document doc number required ──────────────────────────────────────
-    for prefix, label in [
-        ("fi",  "Instrument List (Section 1)"),
-        ("el",  "Instrument List (Section 2)"),
-        ("mov", "Instrument List (Section 3)"),
-        ("io",  "IO List"),
-    ]:
-        meta = payload.get(f"{prefix}_meta", {})
-        if not meta.get("docNumber", "").strip():
-            errors.append(f"{label}: Document Number is required.")
+    if require_doc_numbers:
+        # ── Per-document doc number required ──────────────────────────────────
+        for prefix, label in [
+            ("fi",  "Instrument List (Section 1)"),
+            ("el",  "Instrument List (Section 2)"),
+            ("mov", "Instrument List (Section 3)"),
+            ("io",  "IO List"),
+        ]:
+            meta = payload.get(f"{prefix}_meta", {})
+            if not meta.get("docNumber", "").strip():
+                errors.append(f"{label}: Document Number is required.")
 
     # ── Section 1 — Field Instruments ────────────────────────────────────────
     fi_tags: Set[str] = set()

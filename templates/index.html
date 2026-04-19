@@ -542,6 +542,9 @@ function prevStep() { goToStep(currentStep - 1); }
 // Group colors
 // ═══════════════════════════════════════════════════════════════════════════
 const GROUP_COLORS = ['--g0','--g1','--g2','--g3','--g4','--g5','--g6','--g7'];
+let fiGrid;
+let elGrid;
+let movGrid;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SimpleGrid
@@ -575,7 +578,7 @@ class SimpleGrid {
       if (!text) return;
       e.preventDefault();
       const lines  = text.split(/\r?\n/);
-      if (lines.at(-1).trim() === '') lines.pop();
+      if (lines[lines.length - 1].trim() === '') lines.pop();
       const matrix = lines.map(l => l.includes('\t') ? l.split('\t') : l.split(','));
       const need   = startR + matrix.length - this.rows;
       if (need > 0) this.addRows(need);
@@ -763,9 +766,9 @@ const movCols = [
 // ═══════════════════════════════════════════════════════════════════════════
 // Grid instances
 // ═══════════════════════════════════════════════════════════════════════════
-const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5);
-const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5);
-const movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
+fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5);
+elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5);
+movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
 
 document.getElementById('fiAdd5').addEventListener('click',  () => fiGrid.addRows(5));
 document.getElementById('fiAdd1').addEventListener('click',  () => fiGrid.addRows(1));
@@ -778,6 +781,8 @@ document.getElementById('movAdd1').addEventListener('click', () => movGrid.addRo
 // Row count badges
 // ═══════════════════════════════════════════════════════════════════════════
 function updateCounts() {
+  if (!fiGrid || !elGrid || !movGrid) return;
+
   const fi  = fiGrid.getData().length;
   const el  = elGrid.getData().length;
   const mov = movGrid.getData().length;
@@ -807,6 +812,11 @@ function updateCounts() {
 function getFormDataWithGrids(formEl) {
   const data    = new FormData(formEl);
   const packPFL = (p, f, l) => `${p||''}/${f||''}/${l||''}`;
+  const csrf = getCsrf();
+
+  if (csrf && !data.has('csrf_token')) {
+    data.append('csrf_token', csrf);
+  }
 
   [
     { grid: fiGrid,  prefix: 'fi',  hasPFL: true  },
@@ -848,6 +858,53 @@ function getCsrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
+function parseHtmlError(text) {
+  const title = text.match(/<title[^>]*>(.*?)<\/title>/i)?.[1];
+  const heading = text.match(/<h1[^>]*>(.*?)<\/h1>/i)?.[1];
+  return (heading || title || '').replace(/\s+/g, ' ').trim();
+}
+
+async function postForm(endpoint, data) {
+  if (!endpoint) {
+    return { ok: false, message: 'Missing server endpoint for this action.' };
+  }
+
+  const csrf = getCsrf();
+  if (csrf && !data.has('csrf_token')) {
+    data.append('csrf_token', csrf);
+  }
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    body: data,
+    credentials: 'same-origin',
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRFToken': csrf,
+      'X-CSRF-Token': csrf,
+    },
+  });
+
+  const text = await res.text();
+  let json = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+
+  if (json) {
+    return res.ok ? json : { ok: false, status: res.status, ...json };
+  }
+
+  const htmlError = parseHtmlError(text);
+  return {
+    ok: false,
+    status: res.status,
+    message: htmlError || `Request failed with HTTP ${res.status}.`,
+  };
+}
+
 const cisForm = document.getElementById('cisForm');
 const ENDPOINTS = {
   preview: cisForm?.dataset.previewEndpoint || '',
@@ -860,16 +917,12 @@ const ENDPOINTS = {
 window.validateData = async function () {
   try {
     const data = getFormDataWithGrids(cisForm);
-    const res  = await fetch(ENDPOINTS.preview, {
-      method: 'POST', body: data,
-      headers: { 'X-CSRFToken': getCsrf() },
-    });
-    const json = await res.json();
+    const json = await postForm(ENDPOINTS.preview, data);
     if (json.ok) {
       toast('✓ ' + json.message, 'success', 5000);
     } else {
-      const msgs = (json.errors || [json.message || 'Unknown error']).join('\n');
-      toast('Validation failed — check console for details.', 'error', 6000);
+      const msgs = (json.errors || [json.error || json.message || 'Unknown error']).join('\n');
+      toast(json.status ? `Validation failed (${json.status}).` : 'Validation failed.', 'error', 6000);
       console.warn('Validation errors:\n' + msgs);
     }
   } catch (err) {
@@ -887,17 +940,12 @@ window.saveData = async function () {
   btn.textContent = '💾 Saving…';
   try {
     const data = getFormDataWithGrids(cisForm);
-    const res  = await fetch(ENDPOINTS.saveDraft, {
-      method: 'POST',
-      body: data,
-      headers: { 'X-CSRFToken': getCsrf() },
-    });
-    const json = await res.json();
+    const json = await postForm(ENDPOINTS.saveDraft, data);
     if (json.ok) {
       markClean();
       toast('Data saved successfully. You can continue editing or download.', 'success', 5000);
     } else {
-      toast('Save failed: ' + (json.error || 'Unknown error'), 'error');
+      toast('Save failed: ' + (json.error || json.message || 'Unknown error'), 'error');
     }
   } catch (err) {
     console.error(err);
@@ -952,8 +1000,13 @@ document.addEventListener('click', async (e) => {
   try {
     const data = getFormDataWithGrids(cisForm);
     const res  = await fetch(endpoint, {
-      method: 'POST', body: data,
-      headers: { 'X-CSRFToken': getCsrf() },
+      method: 'POST',
+      body: data,
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRFToken': getCsrf(),
+        'X-CSRF-Token': getCsrf(),
+      },
     });
 
     const ct = res.headers.get('content-type') || '';
