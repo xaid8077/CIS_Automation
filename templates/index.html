@@ -107,7 +107,9 @@
 <div id="toast-rack"></div>
 
 <main class="main">
-<form id="cisForm">
+<form id="cisForm"
+      data-preview-endpoint="{{ url_for('cis.preview') }}"
+      data-save-endpoint="{{ url_for('cis.save_draft', project_id=project.id, loc_id=location.id) }}">
 
   <!-- ── Wizard progress bar ──────────────────────────────────────────────── -->
   <div class="wizard-progress">
@@ -451,6 +453,10 @@
 </form>
 </main>
 
+<template id="previous-data">
+{{ previous_data | tojson if previous_data else 'null' }}
+</template>
+
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
 // Toast system
@@ -460,7 +466,11 @@ function toast(msg, type = 'info', duration = 4000) {
   const icons = { success:'✓', error:'✗', warn:'⚠', info:'ℹ' };
   const el    = document.createElement('div');
   el.className = `toast toast-${type}`;
-  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  const iconEl = document.createElement('span');
+  const msgEl  = document.createElement('span');
+  iconEl.textContent = icons[type] || 'ℹ';
+  msgEl.textContent  = msg;
+  el.append(iconEl, msgEl);
   rack.appendChild(el);
   setTimeout(() => {
     el.style.transition = 'opacity .3s';
@@ -838,13 +848,19 @@ function getCsrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
+const cisForm = document.getElementById('cisForm');
+const ENDPOINTS = {
+  preview: cisForm?.dataset.previewEndpoint || '',
+  saveDraft: cisForm?.dataset.saveEndpoint || '',
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Validate
 // ═══════════════════════════════════════════════════════════════════════════
 window.validateData = async function () {
   try {
-    const data = getFormDataWithGrids(document.getElementById('cisForm'));
-    const res  = await fetch("{{ url_for('cis.preview') }}", {
+    const data = getFormDataWithGrids(cisForm);
+    const res  = await fetch(ENDPOINTS.preview, {
       method: 'POST', body: data,
       headers: { 'X-CSRFToken': getCsrf() },
     });
@@ -870,11 +886,12 @@ window.saveData = async function () {
   btn.disabled = true;
   btn.textContent = '💾 Saving…';
   try {
-    const data = getFormDataWithGrids(document.getElementById('cisForm'));
-    const res  = await fetch(
-      "{{ url_for('cis.save_draft', project_id=project.id, loc_id=location.id) }}",
-      { method: 'POST', body: data, headers: { 'X-CSRFToken': getCsrf() } }
-    );
+    const data = getFormDataWithGrids(cisForm);
+    const res  = await fetch(ENDPOINTS.saveDraft, {
+      method: 'POST',
+      body: data,
+      headers: { 'X-CSRFToken': getCsrf() },
+    });
     const json = await res.json();
     if (json.ok) {
       markClean();
@@ -933,7 +950,7 @@ document.addEventListener('click', async (e) => {
   toast('Generating file — please wait…', 'info', 3000);
 
   try {
-    const data = getFormDataWithGrids(document.getElementById('cisForm'));
+    const data = getFormDataWithGrids(cisForm);
     const res  = await fetch(endpoint, {
       method: 'POST', body: data,
       headers: { 'X-CSRFToken': getCsrf() },
@@ -968,7 +985,8 @@ document.addEventListener('click', async (e) => {
 // Pre-fill grids from last saved revision
 // ═══════════════════════════════════════════════════════════════════════════
 (function preloadGrids() {
-  const raw = {{ previous_data | tojson if previous_data else 'null' }};
+  const rawEl = document.getElementById('previous-data');
+  const raw = rawEl ? JSON.parse(rawEl.textContent || 'null') : null;
   if (!raw) return;
 
   function fillGrid(grid, rows, colMap) {

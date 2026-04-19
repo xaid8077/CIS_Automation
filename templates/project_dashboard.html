@@ -3,16 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ project.display_name }} — CIS Repository</title>
+  <title>{{ project.display_name }} &mdash; CIS Repository</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <style>
+    .flash-alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+    }
+    .flash-alert-danger {
+      background: rgba(255,95,95,.12);
+      border: 1px solid rgba(255,95,95,.3);
+      color: #ff8f8f;
+    }
+    .flash-alert-success {
+      background: rgba(62,207,142,.1);
+      border: 1px solid rgba(62,207,142,.3);
+      color: var(--green);
+    }
+    .flash-alert-warning {
+      background: rgba(245,166,35,.1);
+      border: 1px solid rgba(245,166,35,.3);
+      color: var(--amber);
+    }
+    .flash-alert-info {
+      background: rgba(79,143,255,.1);
+      border: 1px solid rgba(79,143,255,.3);
+      color: #7eb8ff;
+    }
+    .location-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .location-pills.has-active-location {
+      margin-bottom: 14px;
+    }
+  </style>
 </head>
 <body>
 
-<!-- ── Topbar ─────────────────────────────────────────────────────────────── -->
+<!-- Topbar -->
 <div class="topbar">
   <div class="brand-mark">AI</div>
   <div>
@@ -24,12 +61,12 @@
             text-decoration:none;border:1px solid rgba(79,143,255,.3);
             padding:4px 10px;border-radius:6px;transition:all .15s"
      onmouseover="this.style.background='var(--accent-dim)'"
-     onmouseout="this.style.background='transparent'">← All Projects</a>
+     onmouseout="this.style.background='transparent'">&larr; All Projects</a>
   <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
     {% if current_user.is_admin %}
       <a href="{{ url_for('admin.dashboard') }}"
          style="font-family:var(--mono);font-size:11px;color:var(--amber);text-decoration:none;
-                border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">⚙ Admin</a>
+                border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">&#9881; Admin</a>
     {% endif %}
     <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3)">
       {{ current_user.username }}
@@ -53,11 +90,12 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for cat, msg in messages %}
-        <div style="padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:12.5px;
-          {%- if cat=='danger'  %}background:rgba(255,95,95,.12);border:1px solid rgba(255,95,95,.3);color:#ff8f8f
-          {%- elif cat=='success' %}background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.3);color:var(--green)
-          {%- elif cat=='warning' %}background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--amber)
-          {%- else %}background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:#7eb8ff{%- endif %}">
+        {% set flash_class = {
+          'danger': 'flash-alert-danger',
+          'success': 'flash-alert-success',
+          'warning': 'flash-alert-warning'
+        }.get(cat, 'flash-alert-info') %}
+        <div class="flash-alert {{ flash_class }}">
           {{ msg }}
         </div>
       {% endfor %}
@@ -77,8 +115,10 @@
         {% endif %}
         <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;
                     font-size:12px;color:var(--text-2)">
-          <span>🏢 {{ project.client }}</span>
-          {% if project.consultant %}<span>👷 {{ project.consultant }}</span>{% endif %}
+          <span>&#127970; {{ project.client }}</span>
+          {% if project.consultant %}
+            <span>&#128119; {{ project.consultant }}</span>
+          {% endif %}
         </div>
       </div>
       <div class="stat-grid" style="margin-bottom:0">
@@ -92,7 +132,11 @@
         </div>
         <div class="stat-tile">
           <div class="stat-num" style="color:var(--amber);font-size:18px">
-            {{ revisions[0].created_at.strftime('%d %b') if revisions else '—' }}
+            {% if revisions %}
+              {{ revisions[0].created_at.strftime('%d %b') }}
+            {% else %}
+              &mdash;
+            {% endif %}
           </div>
           <div class="stat-label">Last Activity</div>
         </div>
@@ -103,7 +147,7 @@
   <!-- Location selector -->
   <div class="d-card">
     <div class="d-card-header">
-      <span>📍 Locations</span>
+      <span>&#128205; Locations</span>
       {% if current_user.is_admin %}
         <a href="{{ url_for('admin.dashboard') }}"
            style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none">
@@ -113,7 +157,11 @@
     </div>
 
     {% if locations %}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:{% if active_location %}14px{% else %}0{% endif %}">
+      {% if active_location %}
+        <div class="location-pills has-active-location">
+      {% else %}
+        <div class="location-pills">
+      {% endif %}
         <!-- "All" pill -->
         <a href="{{ url_for('cis.project_dashboard', project_id=project.id) }}"
            class="loc-pill {% if not active_location %}active{% endif %}"
@@ -161,8 +209,8 @@
   <div class="d-card">
     <div class="d-card-header">
       <span>
-        🕐 Revision History
-        {% if active_location %} — {{ active_location.display }}{% endif %}
+        &#128336; Revision History
+        {% if active_location %} &mdash; {{ active_location.display }}{% endif %}
       </span>
       <!-- Filter buttons -->
       <div style="display:flex;gap:6px">
@@ -199,23 +247,23 @@
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               {% if rev.doc_type == 'Instrument List' %}
-                <span style="font-size:15px">📋</span>
+                <span style="font-size:15px">&#128203;</span>
                 <div>
                   <div style="font-weight:600;font-size:12.5px">Instrument List</div>
                   <div style="font-size:10.5px;color:var(--text-3)">
-                    {{ rev.data_payload.get('fi_meta',{}).get('docNumber','—') }}
+                    {{ rev.data_payload.get('fi_meta',{}).get('docNumber') or 'N/A' }}
                   </div>
                 </div>
               {% elif rev.doc_type == 'IO List' %}
-                <span style="font-size:15px">🔌</span>
+                <span style="font-size:15px">&#128268;</span>
                 <div>
                   <div style="font-weight:600;font-size:12.5px">IO List</div>
                   <div style="font-size:10.5px;color:var(--text-3)">
-                    {{ rev.data_payload.get('io_meta',{}).get('docNumber','—') }}
+                    {{ rev.data_payload.get('io_meta',{}).get('docNumber') or 'N/A' }}
                   </div>
                 </div>
               {% else %}
-                <span style="font-size:15px">🗂</span>
+                <span style="font-size:15px">&#128450;</span>
                 <div style="font-weight:600;font-size:12.5px">{{ rev.doc_type }}</div>
               {% endif %}
             </div>
@@ -225,7 +273,7 @@
             {% if rev.location %}
               <span class="tag tag-gray">{{ rev.location.display }}</span>
             {% else %}
-              <span style="color:var(--text-3);font-size:11px">—</span>
+              <span style="color:var(--text-3);font-size:11px">N/A</span>
             {% endif %}
           </td>
 
@@ -237,13 +285,13 @@
               {% if el %}<span class="tag tag-amber">EL:{{ el }}</span>{% endif %}
               {% if mv %}<span class="tag tag-green">MOV:{{ mv }}</span>{% endif %}
               {% if not fi and not el and not mv %}
-                <span style="color:var(--text-3)">—</span>
+                <span style="color:var(--text-3)">N/A</span>
               {% endif %}
             </div>
           </td>
 
           <td style="color:var(--text-2);font-size:12px">
-            {{ rev.author.username if rev.author else '—' }}
+            {{ rev.author.username if rev.author else 'N/A' }}
           </td>
 
           <td style="color:var(--text-3);font-size:11.5px;white-space:nowrap">
@@ -255,14 +303,14 @@
               <a href="{{ url_for('cis.download_revision', project_id=project.id, rev_id=rev.id) }}"
                  class="btn-secondary"
                  style="font-size:11px;padding:5px 10px;text-decoration:none">
-                ⬇ Download
+                &#11015; Download
               </a>
               <button class="btn-secondary view-btn"
                       style="font-size:11px;padding:5px 10px;cursor:pointer"
-                      data-payload="{{ rev.data_payload | tojson | e }}"
-                      data-label="{{ rev.doc_type }} — Rev {{ rev.revision_number }}">
+                      data-label="{{ rev.doc_type }} - Rev {{ rev.revision_number }}">
                 { } Data
               </button>
+              <template class="payload-template">{{ rev.data_payload | tojson }}</template>
             </div>
           </td>
 
@@ -274,7 +322,7 @@
 
     {% else %}
     <div style="text-align:center;padding:44px 24px;color:var(--text-3)">
-      <div style="font-size:30px;margin-bottom:12px">📂</div>
+      <div style="font-size:30px;margin-bottom:12px">&#128194;</div>
       <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px">
         No revisions yet
       </div>
@@ -312,7 +360,7 @@
 </div>
 
 <script>
-// ── Filter buttons ────────────────────────────────────────────────────────────
+// Filter buttons
 document.querySelectorAll('.rev-filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.rev-filter').forEach(b => b.classList.remove('active'));
@@ -324,16 +372,17 @@ document.querySelectorAll('.rev-filter').forEach(btn => {
   });
 });
 
-// ── JSON modal ────────────────────────────────────────────────────────────────
+// JSON modal
 const modal = document.getElementById('jsonModal');
 
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const payload = btn.parentElement?.querySelector('.payload-template')?.textContent || '';
     try {
-      const parsed = JSON.parse(btn.dataset.payload);
+      const parsed = JSON.parse(payload);
       document.getElementById('modalPre').textContent = JSON.stringify(parsed, null, 2);
     } catch {
-      document.getElementById('modalPre').textContent = btn.dataset.payload;
+      document.getElementById('modalPre').textContent = payload;
     }
     document.getElementById('modalLabel').textContent = btn.dataset.label;
     modal.style.display = 'grid';
