@@ -16,6 +16,7 @@ class Base:
     # ── Core ──────────────────────────────────────────────────────────────────
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-before-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024   # 16 MB upload limit
 
     # ── Session cookies ───────────────────────────────────────────────────────
     # HttpOnly: JS cannot read the cookie (blocks XSS theft).

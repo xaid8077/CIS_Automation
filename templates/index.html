@@ -809,46 +809,66 @@ function updateCounts() {
 // ═══════════════════════════════════════════════════════════════════════════
 // Serialization
 // ═══════════════════════════════════════════════════════════════════════════
-function getFormDataWithGrids(formEl) {
-  const data    = new FormData(formEl);
+function buildPayload() {
   const packPFL = (p, f, l) => `${p||''}/${f||''}/${l||''}`;
-  const csrf = getCsrf();
 
-  if (csrf && !data.has('csrf_token')) {
-    data.append('csrf_token', csrf);
-  }
-
+  const hdr = {};
   [
-    { grid: fiGrid,  prefix: 'fi',  hasPFL: true  },
-    { grid: elGrid,  prefix: 'el',  hasPFL: false },
-    { grid: movGrid, prefix: 'mov', hasPFL: false },
-  ].forEach(({ grid, prefix, hasPFL }) => {
-    grid.getData().forEach(r => {
-      data.append(`${prefix}TagNo[]`,              r.tag         || '');
-      data.append(`${prefix}Instrument[]`,         r.instrument  || '');
-      data.append(`${prefix}ServiceDescription[]`, r.service     || '');
-      if (hasPFL) {
-        data.append(`${prefix}LineSize[]`,          r.lineSize    || '');
-        data.append(`${prefix}Medium[]`,            r.medium      || '');
-        data.append(`${prefix}TypeSpec[]`,          r.typeSpec    || '');
-        data.append(`${prefix}ProcessConnection[]`, r.processConn || '');
-        data.append(`${prefix}WorkingValues[]`,     packPFL(r.workP, r.workF, r.workL));
-        data.append(`${prefix}DesignValues[]`,      packPFL(r.desP,  r.desF,  r.desL));
-        data.append(`${prefix}SetPoint[]`,          r.setPoint    || '');
-        data.append(`${prefix}InstrumentRange[]`,   r.range       || '');
-        data.append(`${prefix}Uom[]`,               r.uom         || '');
-      }
-      data.append(`${prefix}SignalType[]`,         r.signalType  || '');
-      data.append(`${prefix}Source[]`,             r.source      || '');
-      data.append(`${prefix}Destination[]`,        r.destination || '');
-      if (!hasPFL) {
-        data.append(`${prefix}SigDesc[]`,          r.sigDesc     || '');
-      }
-      data.append(`${prefix}Signal[]`,             r.signal      || '');
-    });
+    'projectName','client','consultant','location',
+    'date','preparedBy','checkedBy','approvedBy','revision'
+  ].forEach(k => {
+    const el = document.querySelector(`[name="${k}"]`);
+    hdr[k] = el ? (el.value || el.textContent || '').trim() : '';
   });
 
-  return data;
+  function buildFiRows() {
+    return fiGrid.getData().map(r => ({
+      "Tag No":              r.tag         || '',
+      "Instrument Name":     r.instrument  || '',
+      "Service Description": r.service     || '',
+      "Line Size":           r.lineSize    || '',
+      "Medium":              r.medium      || '',
+      "Specification":       r.typeSpec    || '',
+      "Process Conn":        r.processConn || '',
+      "Work Press":          (r.workP      || ''),
+      "Work Flow":           (r.workF      || ''),
+      "Work Level":          (r.workL      || ''),
+      "Design Press":        (r.desP       || ''),
+      "Design Flow":         (r.desF       || ''),
+      "Design Level":        (r.desL       || ''),
+      "Set-point":           r.setPoint    || '',
+      "Range":               r.range       || '',
+      "UOM":                 r.uom         || '',
+      "Signal Type":         r.signalType  || '',
+      "Source":              r.source      || '',
+      "Destination":         r.destination || '',
+      "Signal":              r.signal      || '',
+    })).filter(r => Object.values(r).some(v => v));
+  }
+
+  function buildFlatRows(grid) {
+    return grid.getData().map(r => ({
+      "Tag No":              r.tag         || '',
+      "Instrument Name":     r.instrument  || '',
+      "Service Description": r.service     || '',
+      "Signal Type":         r.signalType  || '',
+      "Source":              r.source      || '',
+      "Destination":         r.destination || '',
+      "Signal Description":  r.sigDesc     || '',
+      "Signal":              r.signal      || '',
+    })).filter(r => Object.values(r).some(v => v));
+  }
+
+  return {
+    header:            hdr,
+    fi_meta:           { docNumber: (document.getElementById('fiDocNumber')?.value || '').trim() },
+    el_meta:           { docNumber: '' },
+    mov_meta:          { docNumber: '' },
+    io_meta:           { docNumber: (document.getElementById('ioDocNumber')?.value || '').trim() },
+    field_instruments: buildFiRows(),
+    electrical:        buildFlatRows(elGrid),
+    mov:               buildFlatRows(movGrid),
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -864,38 +884,27 @@ function parseHtmlError(text) {
   return (heading || title || '').replace(/\s+/g, ' ').trim();
 }
 
-async function postForm(endpoint, data) {
+async function postForm(endpoint, payload) {
   if (!endpoint) {
     return { ok: false, message: 'Missing server endpoint for this action.' };
   }
-
   const csrf = getCsrf();
-  if (csrf && !data.has('csrf_token')) {
-    data.append('csrf_token', csrf);
-  }
-
   const res = await fetch(endpoint, {
     method: 'POST',
-    body: data,
     credentials: 'same-origin',
     headers: {
-      'Accept': 'application/json',
-      'X-CSRFToken': csrf,
+      'Content-Type': 'application/json',
+      'X-CSRFToken':  csrf,
       'X-CSRF-Token': csrf,
     },
+    body: JSON.stringify(payload),
   });
 
   const text = await res.text();
   let json = null;
-  try {
-    json = text ? JSON.parse(text) : null;
-  } catch {
-    json = null;
-  }
+  try { json = text ? JSON.parse(text) : null; } catch { json = null; }
 
-  if (json) {
-    return res.ok ? json : { ok: false, status: res.status, ...json };
-  }
+  if (json) return res.ok ? json : { ok: false, status: res.status, ...json };
 
   const htmlError = parseHtmlError(text);
   return {
@@ -916,8 +925,8 @@ const ENDPOINTS = {
 // ═══════════════════════════════════════════════════════════════════════════
 window.validateData = async function () {
   try {
-    const data = getFormDataWithGrids(cisForm);
-    const json = await postForm(ENDPOINTS.preview, data);
+    const payload = buildPayload();
+    const json    = await postForm(ENDPOINTS.preview, payload);
     if (json.ok) {
       toast('✓ ' + json.message, 'success', 5000);
     } else {
@@ -939,8 +948,8 @@ window.saveData = async function () {
   btn.disabled = true;
   btn.textContent = '💾 Saving…';
   try {
-    const data = getFormDataWithGrids(cisForm);
-    const json = await postForm(ENDPOINTS.saveDraft, data);
+    const payload = buildPayload();
+    const json    = await postForm(ENDPOINTS.saveDraft, payload);
     if (json.ok) {
       markClean();
       toast('Data saved successfully. You can continue editing or download.', 'success', 5000);
@@ -992,21 +1001,23 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  const origText = btn.textContent;
-  btn.disabled   = true;
+  const origText  = btn.textContent;
+  btn.disabled    = true;
   btn.textContent = 'Generating…';
   toast('Generating file — please wait…', 'info', 3000);
 
   try {
-    const data = getFormDataWithGrids(cisForm);
-    const res  = await fetch(endpoint, {
+    const payload = buildPayload();
+    const csrf    = getCsrf();
+    const res     = await fetch(endpoint, {
       method: 'POST',
-      body: data,
       credentials: 'same-origin',
       headers: {
-        'X-CSRFToken': getCsrf(),
-        'X-CSRF-Token': getCsrf(),
+        'Content-Type': 'application/json',
+        'X-CSRFToken':  csrf,
+        'X-CSRF-Token': csrf,
       },
+      body: JSON.stringify(payload),
     });
 
     const ct = res.headers.get('content-type') || '';

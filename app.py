@@ -17,6 +17,7 @@ import functools
 import traceback
 from datetime import datetime, timezone
 from io import BytesIO
+from flask import Request as _FlaskRequest
 
 from flask import (
     Flask, Blueprint, render_template, request,
@@ -37,6 +38,17 @@ from forms      import (
 )
 from utils.excel_writer import write_workbook, write_io_workbook
 from utils.validator    import validate_payload
+
+
+class _BigRequest(_FlaskRequest):
+    """
+    Werkzeug 3.x enforces form-size limits as class attributes on the
+    Request object, independent of Flask config.  Override them here so
+    large grid payloads are never rejected with 413.
+    """
+    max_content_length   = 16 * 1024 * 1024   # 16 MB total POST body
+    max_form_memory_size = 16 * 1024 * 1024   # 16 MB per form field
+    max_form_parts       = 10_000             # max number of form fields
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -278,112 +290,28 @@ cis_bp = Blueprint("cis", __name__)
 
 # ── Payload builders ──────────────────────────────────────────────────────────
 
-def _clean(v):
-    return v.strip() if isinstance(v, str) else v
+def _build_payload(data: dict) -> dict:
+    """
+    Build canonical payload from a parsed JSON request body.
+    Called with:  request.get_json(force=True, silent=True) or {}
+    """
+    hdr = data.get("header") or {}
 
-def _get_list(form, key):
-    return [_clean(v) for v in form.getlist(key)]
+    def _s(d, k):
+        return (d.get(k) or "").strip() if isinstance(d, dict) else ""
 
-def _unpack_pfl(packed, idx):
-    raw   = packed[idx] if idx < len(packed) else ""
-    parts = raw.split("/")
-    parts += [""] * (3 - len(parts))
-    return parts[:3]
-
-
-def _build_fi(form):
-    tags         = _get_list(form, "fiTagNo[]")
-    instruments  = _get_list(form, "fiInstrument[]")
-    services     = _get_list(form, "fiServiceDescription[]")
-    line_sizes   = _get_list(form, "fiLineSize[]")
-    mediums      = _get_list(form, "fiMedium[]")
-    specs        = _get_list(form, "fiTypeSpec[]")
-    conns        = _get_list(form, "fiProcessConnection[]")
-    working_vals = _get_list(form, "fiWorkingValues[]")
-    design_vals  = _get_list(form, "fiDesignValues[]")
-    set_points   = _get_list(form, "fiSetPoint[]")
-    ranges       = _get_list(form, "fiInstrumentRange[]")
-    uoms         = _get_list(form, "fiUom[]")
-    sig_types    = _get_list(form, "fiSignalType[]")
-    sources      = _get_list(form, "fiSource[]")
-    destinations = _get_list(form, "fiDestination[]")
-    signals      = _get_list(form, "fiSignal[]")
-
-    rows = []
-    for i in range(len(tags)):
-        w = _unpack_pfl(working_vals, i)
-        d = _unpack_pfl(design_vals,  i)
-        row = {
-            "Tag No":              tags[i]         if i < len(tags)         else "",
-            "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
-            "Service Description": services[i]     if i < len(services)     else "",
-            "Line Size":           line_sizes[i]   if i < len(line_sizes)   else "",
-            "Medium":              mediums[i]       if i < len(mediums)      else "",
-            "Specification":       specs[i]         if i < len(specs)        else "",
-            "Process Conn":        conns[i]         if i < len(conns)        else "",
-            "Work Press":  w[0], "Work Flow": w[1], "Work Level": w[2],
-            "Design Press":d[0], "Design Flow":d[1], "Design Level":d[2],
-            "Set-point":           set_points[i]   if i < len(set_points)   else "",
-            "Range":               ranges[i]        if i < len(ranges)       else "",
-            "UOM":                 uoms[i]          if i < len(uoms)         else "",
-            "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
-            "Source":              sources[i]       if i < len(sources)      else "",
-            "Destination":         destinations[i]  if i < len(destinations) else "",
-            "Signal":              signals[i]       if i < len(signals)      else "",
-        }
-        if any(row.values()):
-            rows.append(row)
-    return rows
-
-
-def _build_flat(form, prefix):
-    tags         = _get_list(form, f"{prefix}TagNo[]")
-    instruments  = _get_list(form, f"{prefix}Instrument[]")
-    services     = _get_list(form, f"{prefix}ServiceDescription[]")
-    sig_types    = _get_list(form, f"{prefix}SignalType[]")
-    sources      = _get_list(form, f"{prefix}Source[]")
-    destinations = _get_list(form, f"{prefix}Destination[]")
-    sig_descs    = _get_list(form, f"{prefix}SigDesc[]")
-    signals      = _get_list(form, f"{prefix}Signal[]")
-
-    rows = []
-    for i in range(len(tags)):
-        row = {
-            "Tag No":              tags[i]         if i < len(tags)         else "",
-            "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
-            "Service Description": services[i]     if i < len(services)     else "",
-            "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
-            "Source":              sources[i]       if i < len(sources)      else "",
-            "Destination":         destinations[i]  if i < len(destinations) else "",
-            "Signal Description":  sig_descs[i]    if i < len(sig_descs)    else "",
-            "Signal":              signals[i]       if i < len(signals)      else "",
-        }
-        if any(row.values()):
-            rows.append(row)
-    return rows
-
-
-def _build_header(form):
-    return {k: form.get(k, "") for k in [
-        "projectName", "client", "consultant", "location",
-        "date", "preparedBy", "checkedBy", "approvedBy", "revision",
-    ]}
-
-
-def _build_section_meta(form, prefix):
-    return {"docNumber": _clean(form.get(f"{prefix}DocNumber", ""))}
-
-
-def _build_payload(form):
     return {
-        "header":            _build_header(form),
-        "fi_meta":           _build_section_meta(form, "fi"),
-        "el_meta":           _build_section_meta(form, "el"),
-        "mov_meta":          _build_section_meta(form, "mov"),
-        "io_meta":           _build_section_meta(form, "io"),
-        "field_instruments": _build_fi(form),
-        "electrical":        _build_flat(form, "el"),
-        "mov":               _build_flat(form, "mov"),
+        "header": {k: _s(hdr, k) for k in [
+            "projectName", "client", "consultant", "location",
+            "date", "preparedBy", "checkedBy", "approvedBy", "revision",
+        ]},
+        "fi_meta":           {"docNumber": _s(data.get("fi_meta")  or {}, "docNumber")},
+        "el_meta":           {"docNumber": _s(data.get("el_meta")  or {}, "docNumber")},
+        "mov_meta":          {"docNumber": _s(data.get("mov_meta") or {}, "docNumber")},
+        "io_meta":           {"docNumber": _s(data.get("io_meta")  or {}, "docNumber")},
+        "field_instruments": data.get("field_instruments") or [],
+        "electrical":        data.get("electrical")        or [],
+        "mov":               data.get("mov")               or [],
     }
 
 
@@ -481,7 +409,7 @@ def preview():
     Called by the JS previewData() function.
     """
     try:
-        payload = _build_payload(request.form)
+        payload = _build_payload(request.get_json(force=True, silent=True) or {})
         errors  = validate_payload(payload, require_doc_numbers=False)
         if errors:
             return jsonify({"ok": False, "errors": errors}), 422
@@ -520,7 +448,7 @@ def save_draft(project_id, loc_id):
     ).first_or_404()
 
     try:
-        payload = _build_payload(request.form)
+        payload = _build_payload(request.get_json(force=True, silent=True) or {})
 
         existing_draft = DocumentRevision.query.filter_by(
             project_id  = project.id,
@@ -565,7 +493,7 @@ def submit_and_save(project_id, loc_id, doc_type):
             id=loc_id, project_id=project_id
         ).first_or_404()
 
-        payload = _build_payload(request.form)
+        payload = _build_payload(request.get_json(force=True, silent=True) or {})
 
         # Revision numbers count only published revisions per doc_type
         latest_published = DocumentRevision.query.filter_by(
@@ -693,7 +621,20 @@ def download_revision(project_id, rev_id):
 
 def create_app():
     app = Flask(__name__)
+    app.request_class = _BigRequest
     app.config.from_object(get_config())
+
+    # Override upload/form-size limits explicitly here so stale
+    # config .pyc files cannot shadow the values in config.py.
+    # MAX_CONTENT_LENGTH  — total POST body Werkzeug will accept.
+    # MAX_FORM_MEMORY_SIZE — per-form-field memory cap (Werkzeug 3.x
+    #                        defaults this to 500 KB, which is too small
+    #                        for large grids).
+    # MAX_FORM_PARTS       — max number of form fields (Werkzeug 3.x
+    #                        defaults to 1 000; large grids exceed this).
+    app.config.setdefault("MAX_CONTENT_LENGTH",   16 * 1024 * 1024)
+    app.config.setdefault("MAX_FORM_MEMORY_SIZE", 16 * 1024 * 1024)
+    app.config.setdefault("MAX_FORM_PARTS",       10_000)
 
     db.init_app(app)
     login_manager.init_app(app)
