@@ -294,6 +294,8 @@ def _extract_first_number(text: str) -> float:
 
 # ─── Instrument List sheet — Section 1 ───────────────────────────────────────
 
+# ─── Instrument List sheet — Section 1 ───────────────────────────────────────
+
 FI_COL_MAP = {
     "C": "Tag No",
     "D": "Instrument Name",
@@ -301,17 +303,21 @@ FI_COL_MAP = {
     "F": "Line Size",
     "G": "Medium",
     "H": "Specification",
-    # Column I intentionally skipped — spacer/merged region in template.
-    "J": "Process Conn",
-    "K": "Work Press",
-    "L": "Work Flow",
-    "M": "Work Level",
-    "N": "Design Press",
-    "O": "Design Flow",
-    "P": "Design Level",
-    "Q": "Set-point",
-    "R": "Range",
-    "S": "UOM",
+    # Column I is now Process Conn — the old spacer column has been removed
+    # from the template, so every column from the old J onwards shifts left.
+    "I": "Process Conn",
+    "J": "Work Press",
+    "K": "Work Flow",
+    "L": "Work Level",
+    "M": "Design Press",
+    "N": "Design Flow",
+    "O": "Design Level",
+    "P": "Set-point",
+    "Q": "Range",
+    "R": "UOM",
+    # Column S = Remarks — always empty, but borders must be rendered.
+    # Not included in FI_COL_MAP because it carries no payload field;
+    # it is written explicitly in _write_fi_fixed below.
 }
 
 FI_START_ROW = 6
@@ -339,6 +345,13 @@ def _write_fi_fixed(ws, rows: List[Dict[str, Any]]) -> None:
             cell.alignment = CENTER_WRAP if col_letter == "C" else LEFT_WRAP
             cell.border    = THIN
 
+        # Column S — Remarks: always empty, border rendered so the template
+        # cell is not left naked when openpyxl writes the row.
+        remarks_cell           = ws[f"S{r}"]
+        remarks_cell.value     = ""
+        remarks_cell.alignment = CENTER_WRAP
+        remarks_cell.border    = THIN
+
         instr_lower  = str(instrument_name).lower()
         is_flowmeter = any(kw in instr_lower for kw in FLOW_KEYWORDS)
 
@@ -348,15 +361,16 @@ def _write_fi_fixed(ws, rows: List[Dict[str, Any]]) -> None:
                 flow_m3h = _extract_first_number(row_dict.get("Design Flow", "0"))
                 v_final, d_final = _calculate_optimized_velocity(dia_mm, flow_m3h)
 
-                ws[f"U{r}"].value = v_final
-                ws[f"V{r}"].value = d_final
+                # Velocity columns shift left by one: old U/V → new T/U
+                ws[f"T{r}"].value = v_final
+                ws[f"U{r}"].value = d_final
 
-                for col in ("U", "V"):
+                for col in ("T", "U"):
                     ws[f"{col}{r}"].alignment = CENTER_WRAP
                     ws[f"{col}{r}"].border    = THIN
 
             except (ValueError, ZeroDivisionError):
-                for col in ("U", "V"):
+                for col in ("T", "U"):
                     cell           = ws[f"{col}{r}"]
                     cell.value     = "ERR"
                     cell.alignment = CENTER_WRAP
