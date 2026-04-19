@@ -3,96 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CIS Automation Input - {{ project.name }}</title>
+  <title>CIS Automation — {{ project.display_name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* ── Toast ─────────────────────────────────────────────────────────── */
+    #toast-rack {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 999; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      font-family: var(--mono); font-size: 12px;
+      padding: 10px 16px; border-radius: 8px;
+      border: 1px solid; min-width: 260px; max-width: 360px;
+      pointer-events: all;
+      animation: slideIn .2s ease;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast-success { background:rgba(62,207,142,.12); border-color:rgba(62,207,142,.4); color:var(--green); }
+    .toast-error   { background:rgba(255,95,95,.12);  border-color:rgba(255,95,95,.4);  color:var(--red);   }
+    .toast-info    { background:rgba(79,143,255,.12); border-color:rgba(79,143,255,.4); color:var(--accent);}
+    .toast-warn    { background:rgba(245,166,35,.12); border-color:rgba(245,166,35,.4); color:var(--amber); }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0);    }
+    }
+
+    /* ── Step dot badge ─────────────────────────────────────────────────── */
+    .wp-step { position: relative; }
+    .step-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: var(--accent); color: #fff;
+      font-family: var(--mono); font-size: 9px; font-weight: 700;
+      padding: 1px 5px; border-radius: 8px;
+      display: none;
+    }
+    .step-badge.visible { display: block; }
+
+    /* ── Save button ────────────────────────────────────────────────────── */
+    .btn-save {
+      font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid var(--green);
+      border-radius: 7px; color: var(--green);
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-save:hover { background: rgba(62,207,142,.12); }
+    .btn-save:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Doc-number gate ────────────────────────────────────────────────── */
+    .dl-gate-hint {
+      font-size: 10.5px; color: var(--amber);
+      margin-top: 5px; display: none;
+    }
+    .dl-gate-hint.visible { display: block; }
+  </style>
 </head>
 <body>
 
+<!-- ── Topbar ─────────────────────────────────────────────────────────────── -->
 <div class="topbar">
   <div class="brand-mark">AI</div>
   <div>
-    <div class="brand-title">Automation de Instrumentation</div>
-    <div class="brand-sub">CIS Workbook Generator</div>
+    <div class="brand-title">{{ project.display_name }}</div>
+    <div class="brand-sub">{{ location.display }} — CIS Workbook Generator</div>
   </div>
-  
-  <a href="{{ url_for('cis.project_dashboard', project_id=project.id) }}" style="margin-left: 20px; font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:4px 10px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
-    &larr; Back to {{ project.name }}
-  </a>
+
+  <a href="{{ url_for('cis.project_dashboard', project_id=project.id) }}"
+     style="margin-left:20px;font-family:var(--mono);font-size:11px;color:var(--accent);
+            text-decoration:none;border:1px solid rgba(79,143,255,.3);
+            padding:4px 10px;border-radius:6px;transition:all .15s"
+     onmouseover="this.style.background='var(--accent-dim)'"
+     onmouseout="this.style.background='transparent'">← Dashboard</a>
 
   <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
     {% if current_user.is_admin %}
-      <a href="{{ url_for('admin.dashboard') }}" style="font-family:var(--mono);font-size:11px;color:var(--amber);text-decoration:none;border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">⚙ Admin</a>
+      <a href="{{ url_for('admin.dashboard') }}"
+         style="font-family:var(--mono);font-size:11px;color:var(--amber);text-decoration:none;
+                border:1px solid rgba(245,166,35,.3);padding:4px 10px;border-radius:6px">⚙ Admin</a>
     {% endif %}
-    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3)">{{ current_user.username }}</span>
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3)">
+      {{ current_user.username }}
+    </span>
     <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" style="font-family:var(--mono);font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-3);cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">Sign out</button>
+      <button type="submit"
+              style="font-family:var(--mono);font-size:11px;padding:4px 10px;background:transparent;
+                     border:1px solid var(--border);border-radius:6px;color:var(--text-3);cursor:pointer"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">
+        Sign out
+      </button>
     </form>
   </div>
 </div>
 
+<!-- ── Toast rack ─────────────────────────────────────────────────────────── -->
+<div id="toast-rack"></div>
+
 <main class="main">
 <form id="cisForm">
 
+  <!-- ── Wizard progress bar ──────────────────────────────────────────────── -->
   <div class="wizard-progress">
+
     <div class="wp-step active" data-step="0" onclick="goToStep(0)">
       <div class="wp-dot">1</div>
-      <div><div class="wp-label">Document Header</div><div class="wp-sub">Project &amp; revision info</div></div>
+      <div>
+        <div class="wp-label">Document Header</div>
+        <div class="wp-sub">Project &amp; revision info</div>
+      </div>
     </div>
     <div class="wp-connector" id="con-0"></div>
+
     <div class="wp-step" data-step="1" onclick="goToStep(1)">
-      <div class="wp-dot">2</div>
-      <div><div class="wp-label">Field Instruments</div><div class="wp-sub">Section 1 — process data</div></div>
+      <div style="position:relative;display:inline-block">
+        <div class="wp-dot">2</div>
+        <span class="step-badge" id="badge-fi"></span>
+      </div>
+      <div>
+        <div class="wp-label">Field Instruments</div>
+        <div class="wp-sub">Section 1 — process data</div>
+      </div>
     </div>
     <div class="wp-connector" id="con-1"></div>
+
     <div class="wp-step" data-step="2" onclick="goToStep(2)">
-      <div class="wp-dot">3</div>
-      <div><div class="wp-label">Electrical Equipment</div><div class="wp-sub">Section 2 — drives &amp; incomers</div></div>
+      <div style="position:relative;display:inline-block">
+        <div class="wp-dot">3</div>
+        <span class="step-badge" id="badge-el"></span>
+      </div>
+      <div>
+        <div class="wp-label">Electrical Equipment</div>
+        <div class="wp-sub">Section 2 — drives &amp; incomers</div>
+      </div>
     </div>
     <div class="wp-connector" id="con-2"></div>
+
     <div class="wp-step" data-step="3" onclick="goToStep(3)">
-      <div class="wp-dot">4</div>
-      <div><div class="wp-label">Motor Operated Valves</div><div class="wp-sub">Section 3 — MOVs</div></div>
+      <div style="position:relative;display:inline-block">
+        <div class="wp-dot">4</div>
+        <span class="step-badge" id="badge-mov"></span>
+      </div>
+      <div>
+        <div class="wp-label">Motor Operated Valves</div>
+        <div class="wp-sub">Section 3 — MOVs</div>
+      </div>
     </div>
     <div class="wp-connector" id="con-3"></div>
+
     <div class="wp-step" data-step="4" onclick="goToStep(4)">
       <div class="wp-dot">5</div>
-      <div><div class="wp-label">Download</div><div class="wp-sub">Generate &amp; export files</div></div>
+      <div>
+        <div class="wp-label">Download</div>
+        <div class="wp-sub">Doc numbers &amp; export</div>
+      </div>
     </div>
+
   </div>
 
+  <!-- ══ Step 0 — Document Header ══════════════════════════════════════════ -->
   <div class="step-panel active" id="step-0">
     <div class="section">
       <div class="section-title">Document Header</div>
       <div class="hdr-grid">
+
         <div class="field f-12">
-          <label for="projectName">Project Name (Auto-filled)</label>
-          <textarea id="projectName" name="projectName" rows="2" style="background:var(--surface-3); opacity: 0.8;" readonly>{{ project.name }}</textarea>
+          <label>Project Name</label>
+          <textarea name="projectName" rows="2"
+                    style="background:var(--surface-3);opacity:.8" readonly>{{ project.name }}</textarea>
         </div>
         <div class="field f-4">
-          <label for="client">Client</label>
-          <input id="client" name="client" value="{{ project.client }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
+          <label>Client</label>
+          <input name="client" value="{{ project.client }}"
+                 style="background:var(--surface-3);opacity:.8" readonly />
         </div>
         <div class="field f-4">
-          <label for="consultant">Consultant</label>
-          <input id="consultant" name="consultant" value="{{ project.consultant or '' }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
+          <label>Consultant</label>
+          <input name="consultant" value="{{ project.consultant or '' }}"
+                 style="background:var(--surface-3);opacity:.8" readonly />
         </div>
         <div class="field f-4">
-          <label for="location">Location</label>
-          <input id="location" name="location" value="{{ project.location or '' }}" style="background:var(--surface-3); opacity: 0.8;" readonly />
+          <label>Location</label>
+          <input name="location" value="{{ location.display }}"
+                 style="background:var(--surface-3);opacity:.8" readonly />
         </div>
-        
+
         <div class="field f-4">
-          <label for="date">Date</label>
+          <label for="date">Date <span style="color:var(--red)">*</span></label>
           <input id="date" type="date" name="date" required />
         </div>
         <div class="field f-2">
-          <label for="preparedBy">Prepared By</label>
-          <input id="preparedBy" name="preparedBy" value="{{ current_user.username }}" required />
+          <label for="preparedBy">Prepared By <span style="color:var(--red)">*</span></label>
+          <input id="preparedBy" name="preparedBy"
+                 value="{{ current_user.username }}" required />
         </div>
         <div class="field f-2">
           <label for="checkedBy">Checked By</label>
@@ -103,9 +212,10 @@
           <input id="approvedBy" name="approvedBy" />
         </div>
         <div class="field f-2">
-          <label for="revision">Revision</label>
+          <label for="revision">Revision <span style="color:var(--red)">*</span></label>
           <input id="revision" name="revision" required />
         </div>
+
       </div>
     </div>
     <div class="wizard-nav">
@@ -114,25 +224,25 @@
     </div>
   </div>
 
+  <!-- ══ Step 1 — Field Instruments ════════════════════════════════════════ -->
   <div class="step-panel" id="step-1">
     <div class="section">
       <div class="section-title">Section 1 — Field Instruments</div>
-      <div class="doc-number-row">
-        <div class="field" style="max-width:360px">
-          <label for="fiDocNumber">Document Number</label>
-          <input id="fiDocNumber" name="fiDocNumber" placeholder="e.g. PRJ-IL-001" required />
-        </div>
-      </div>
       <div class="sub-head">
         <span class="badge">Section 1</span>
         <span class="sub-title">Field Instruments</span>
       </div>
       <div class="sg-toolbar">
         <button type="button" class="btn" id="fiAdd5">+ 5 rows</button>
+        <button type="button" class="btn" id="fiAdd1">+ 1 row</button>
         <span class="sg-legend">
           <span class="sg-legend-dot" style="background:var(--g0)"></span>
           <span class="sg-legend-dot" style="background:var(--g1)"></span>
           Color bar = same tag group
+        </span>
+        <span id="fiCount"
+              style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--text-3)">
+          0 rows
         </span>
       </div>
       <div id="fiGrid" class="simple-grid"></div>
@@ -144,24 +254,24 @@
     </div>
   </div>
 
+  <!-- ══ Step 2 — Electrical Equipment ════════════════════════════════════ -->
   <div class="step-panel" id="step-2">
     <div class="section">
       <div class="section-title">Section 2 — Electrical Equipment</div>
-      <div class="doc-number-row">
-        <div class="field" style="max-width:360px">
-          <label for="elDocNumber">Document Number</label>
-          <input id="elDocNumber" name="elDocNumber" placeholder="e.g. PRJ-IL-002" required />
-        </div>
-      </div>
       <div class="sub-head">
         <span class="badge">Section 2</span>
         <span class="sub-title">Agitators, Drives, Incomers, Bus Couplers, Transformers and UPS</span>
       </div>
       <div class="sg-toolbar">
         <button type="button" class="btn" id="elAdd5">+ 5 rows</button>
+        <button type="button" class="btn" id="elAdd1">+ 1 row</button>
         <span class="sg-legend">
           <span class="sg-legend-dot" style="background:var(--g0)"></span>
           Color bar = same tag group
+        </span>
+        <span id="elCount"
+              style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--text-3)">
+          0 rows
         </span>
       </div>
       <div id="elGrid" class="simple-grid"></div>
@@ -173,120 +283,167 @@
     </div>
   </div>
 
+  <!-- ══ Step 3 — MOVs ══════════════════════════════════════════════════════ -->
   <div class="step-panel" id="step-3">
     <div class="section">
       <div class="section-title">Section 3 — Motor Operated Valves</div>
-      <div class="doc-number-row">
-        <div class="field" style="max-width:360px">
-          <label for="movDocNumber">Document Number</label>
-          <input id="movDocNumber" name="movDocNumber" placeholder="e.g. PRJ-IL-003" required />
-        </div>
-      </div>
       <div class="sub-head">
         <span class="badge">Section 3</span>
         <span class="sub-title">Motor Operated Valves</span>
       </div>
       <div class="sg-toolbar">
         <button type="button" class="btn" id="movAdd5">+ 5 rows</button>
+        <button type="button" class="btn" id="movAdd1">+ 1 row</button>
         <span class="sg-legend">
           <span class="sg-legend-dot" style="background:var(--g0)"></span>
           Color bar = same tag group
+        </span>
+        <span id="movCount"
+              style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--text-3)">
+          0 rows
         </span>
       </div>
       <div id="movGrid" class="simple-grid"></div>
     </div>
     <div class="wizard-nav">
       <button type="button" class="btn-nav btn-back" onclick="prevStep()">← Back</button>
-      <span class="nav-hint">Step 4 of 5 — Review and validate</span>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="btn-validate" onclick="previewData()">✓ Validate</button>
+      <span class="nav-hint">Step 4 of 5 — Save or validate data</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" class="btn-validate" onclick="validateData()">✓ Validate</button>
+        <button type="button" class="btn-save"     id="saveBtn" onclick="saveData()">
+          💾 Save &amp; Submit Data
+        </button>
         <button type="button" class="btn-nav btn-next" onclick="nextStep()">Next →</button>
       </div>
     </div>
   </div>
 
+  <!-- ══ Step 4 — Download ══════════════════════════════════════════════════ -->
   <div class="step-panel" id="step-4">
     <div class="section">
-      <div class="section-title">Download Generated Files</div>
+      <div class="section-title">Download Generated Documents</div>
 
-      <div style="margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">IO List Document Info</div>
-        <div class="field" style="max-width:360px">
-          <label for="ioDocNumber">Document Number</label>
-          <input id="ioDocNumber" name="ioDocNumber" placeholder="e.g. PRJ-IOL-001" />
-        </div>
-      </div>
-
-      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:20px">
-        All documents are generated from the data you entered and will be saved to the project history.
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:22px">
+        Enter a document number for each file before downloading.
+        All downloads are saved as a new revision in the project history.
       </p>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
 
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(79,143,255,.15);border:1px solid rgba(79,143,255,.3);display:grid;place-items:center;font-size:16px">📋</div>
+        <!-- Instrument List -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);
+                    border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:8px;
+                        background:rgba(79,143,255,.15);border:1px solid rgba(79,143,255,.3);
+                        display:grid;place-items:center;font-size:16px;flex-shrink:0">📋</div>
             <div>
               <div style="font-weight:600;font-size:13px">Instrument List</div>
-              <div style="font-size:11px;color:var(--text-3)">Field instruments, electrical &amp; MOV data</div>
+              <div style="font-size:11px;color:var(--text-3)">
+                Field instruments, electrical &amp; MOV data
+              </div>
             </div>
           </div>
-          <button type="button" class="dl-btn"
-            data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Instrument List') }}"
-            style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
-            ⬇ Save & Download List
+          <div class="field" style="margin-bottom:10px">
+            <label for="fiDocNumber">Document Number <span style="color:var(--red)">*</span></label>
+            <input id="fiDocNumber" name="fiDocNumber"
+                   placeholder="e.g. PRJ-IL-001"
+                   oninput="checkDocGate('il')" />
+          </div>
+          <div class="dl-gate-hint" id="il-hint">Enter a document number to enable download.</div>
+          <button type="button" class="dl-btn" id="il-btn"
+                  data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Instrument List') }}"
+                  style="--dl-color:#4f8fff;--dl-dim:#1e3a6e" disabled>
+            ⬇ Save &amp; Download Instrument List
           </button>
         </div>
 
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.3);display:grid;place-items:center;font-size:16px">🔌</div>
+        <!-- IO List -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);
+                    border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:8px;
+                        background:rgba(62,207,142,.15);border:1px solid rgba(62,207,142,.3);
+                        display:grid;place-items:center;font-size:16px;flex-shrink:0">🔌</div>
             <div>
               <div style="font-weight:600;font-size:13px">IO List</div>
               <div style="font-size:11px;color:var(--text-3)">Input / output signal schedule</div>
             </div>
           </div>
-          <button type="button" class="dl-btn"
-            data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='IO List') }}"
-            style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
-            ⬇ Save & Download IO
+          <div class="field" style="margin-bottom:10px">
+            <label for="ioDocNumber">Document Number <span style="color:var(--red)">*</span></label>
+            <input id="ioDocNumber" name="ioDocNumber"
+                   placeholder="e.g. PRJ-IOL-001"
+                   oninput="checkDocGate('io')" />
+          </div>
+          <div class="dl-gate-hint" id="io-hint">Enter a document number to enable download.</div>
+          <button type="button" class="dl-btn" id="io-btn"
+                  data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='IO List') }}"
+                  style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)" disabled>
+            ⬇ Save &amp; Download IO List
           </button>
         </div>
 
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);display:grid;place-items:center;font-size:16px">🗂</div>
+        <!-- Cable Schedule -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);
+                    border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:8px;
+                        background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);
+                        display:grid;place-items:center;font-size:16px;flex-shrink:0">🗂</div>
             <div>
               <div style="font-weight:600;font-size:13px">Cable Schedule</div>
               <div style="font-size:11px;color:var(--text-3)">Cable tags, routing &amp; termination</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="/download/cable-schedule" style="--dl-color:#f5a623;--dl-dim:rgba(245,166,35,.12)">
+          <div class="field" style="margin-bottom:10px">
+            <label for="csDocNumber">Document Number <span style="color:var(--red)">*</span></label>
+            <input id="csDocNumber" name="csDocNumber"
+                   placeholder="e.g. PRJ-CS-001"
+                   oninput="checkDocGate('cs')" />
+          </div>
+          <div class="dl-gate-hint" id="cs-hint">Enter a document number to enable download.</div>
+          <button type="button" class="dl-btn" id="cs-btn"
+                  data-endpoint="#"
+                  style="--dl-color:#f5a623;--dl-dim:rgba(245,166,35,.12)" disabled>
             ⬇ Download Cable Schedule
           </button>
         </div>
 
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(201,126,255,.12);border:1px solid rgba(201,126,255,.3);display:grid;place-items:center;font-size:16px">🔗</div>
+        <!-- Cable Interconnection -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);
+                    border-radius:12px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:8px;
+                        background:rgba(201,126,255,.12);border:1px solid rgba(201,126,255,.3);
+                        display:grid;place-items:center;font-size:16px;flex-shrink:0">🔗</div>
             <div>
               <div style="font-weight:600;font-size:13px">Cable Interconnection</div>
               <div style="font-size:11px;color:var(--text-3)">End-to-end wiring connections</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="/download/cable-interconnection" style="--dl-color:#c97eff;--dl-dim:rgba(201,126,255,.12)">
+          <div class="field" style="margin-bottom:10px">
+            <label for="ciDocNumber">Document Number <span style="color:var(--red)">*</span></label>
+            <input id="ciDocNumber" name="ciDocNumber"
+                   placeholder="e.g. PRJ-CIS-001"
+                   oninput="checkDocGate('ci')" />
+          </div>
+          <div class="dl-gate-hint" id="ci-hint">Enter a document number to enable download.</div>
+          <button type="button" class="dl-btn" id="ci-btn"
+                  data-endpoint="#"
+                  style="--dl-color:#c97eff;--dl-dim:rgba(201,126,255,.12)" disabled>
             ⬇ Download Interconnection Schedule
           </button>
         </div>
 
-      </div>
+      </div><!-- /grid -->
 
       <div id="dlStatus" style="margin-top:16px;min-height:24px;font-size:12px"></div>
     </div>
 
     <div class="wizard-nav">
       <button type="button" class="btn-nav btn-back" onclick="prevStep()">← Back</button>
-      <span class="nav-hint">Step 5 of 5 — Download your files</span>
+      <span class="nav-hint">Step 5 of 5 — Enter doc numbers &amp; download</span>
       <span></span>
     </div>
   </div>
@@ -295,13 +452,46 @@
 </main>
 
 <script>
-// ── Wizard ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Toast system
+// ═══════════════════════════════════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 4000) {
+  const rack  = document.getElementById('toast-rack');
+  const icons = { success:'✓', error:'✗', warn:'⚠', info:'ℹ' };
+  const el    = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  rack.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 320);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Unsaved changes guard
+// ═══════════════════════════════════════════════════════════════════════════
+let _dirty = false;
+function markDirty()   { _dirty = true;  }
+function markClean()   { _dirty = false; }
+window.addEventListener('beforeunload', e => {
+  if (_dirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Wizard
+// ═══════════════════════════════════════════════════════════════════════════
 let currentStep = 0;
 const TOTAL_STEPS = 5;
 
 function goToStep(n) {
   if (n < 0 || n >= TOTAL_STEPS) return;
 
+  // Forward navigation: validate required fields in current panel
   if (n > currentStep) {
     const panel = document.getElementById(`step-${currentStep}`);
     for (const el of panel.querySelectorAll('[required]')) {
@@ -309,19 +499,22 @@ function goToStep(n) {
         el.focus();
         el.style.borderColor = 'var(--red)';
         el.addEventListener('input', () => el.style.borderColor = '', { once: true });
+        toast('Please fill in all required fields before proceeding.', 'warn');
         return;
       }
     }
   }
 
-  document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === n));
+  document.querySelectorAll('.step-panel').forEach((p, i) =>
+    p.classList.toggle('active', i === n)
+  );
 
   document.querySelectorAll('.wp-step').forEach((s, i) => {
     s.classList.remove('active', 'done');
     if (i === n)    s.classList.add('active');
     else if (i < n) s.classList.add('done');
     const dot = s.querySelector('.wp-dot');
-    dot.textContent = i < n ? '✓' : i + 1;
+    if (dot) dot.textContent = i < n ? '✓' : i + 1;
   });
 
   for (let i = 0; i < TOTAL_STEPS - 1; i++) {
@@ -335,17 +528,22 @@ function goToStep(n) {
 function nextStep() { goToStep(currentStep + 1); }
 function prevStep() { goToStep(currentStep - 1); }
 
-// ── Group colors ────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Group colors
+// ═══════════════════════════════════════════════════════════════════════════
 const GROUP_COLORS = ['--g0','--g1','--g2','--g3','--g4','--g5','--g6','--g7'];
 
-// ── SimpleGrid ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// SimpleGrid
+// ═══════════════════════════════════════════════════════════════════════════
 class SimpleGrid {
   constructor(host, columns, initialRows = 5) {
     this.host = host; this.columns = columns; this.rows = 0;
     this.head = document.createElement('div'); this.head.className = 'sg-head';
     this.body = document.createElement('div'); this.body.className = 'sg-body';
     host.innerHTML = '';
-    host.appendChild(this.head); host.appendChild(this.body);
+    host.appendChild(this.head);
+    host.appendChild(this.body);
     const t = columns.map(c => c.width || '140px').join(' ');
     this.head.style.cssText = `display:grid;grid-template-columns:${t};`;
     this.body.style.cssText = `display:grid;grid-template-columns:${t};`;
@@ -366,26 +564,28 @@ class SimpleGrid {
       const text = (e.clipboardData || window.clipboardData).getData('text');
       if (!text) return;
       e.preventDefault();
-      const lines = text.split(/\r?\n/);
+      const lines  = text.split(/\r?\n/);
       if (lines.at(-1).trim() === '') lines.pop();
       const matrix = lines.map(l => l.includes('\t') ? l.split('\t') : l.split(','));
-      const need = startR + matrix.length - this.rows;
+      const need   = startR + matrix.length - this.rows;
       if (need > 0) this.addRows(need);
       for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[i].length && (startC+j) < this.columns.length; j++) {
           const dest = this._cell(startR+i, startC+j); if (!dest) continue;
-          const sel = dest.querySelector('select');
-          const val = matrix[i][j].trim();
+          const sel  = dest.querySelector('select');
+          const val  = matrix[i][j].trim();
           if (sel) { if (Array.from(sel.options).map(o=>o.value).includes(val)) sel.value = val; }
           else dest.textContent = val;
         }
       }
       this._refreshGrouping();
+      markDirty();
     });
 
     this.body.addEventListener('keydown', (e) => {
       const active = document.activeElement;
-      const cell = active?.closest?.('.sg-cell') ?? (active?.classList.contains('sg-cell') ? active : null);
+      const cell   = active?.closest?.('.sg-cell') ??
+                     (active?.classList.contains('sg-cell') ? active : null);
       if (!cell) return;
       const r = +cell.dataset.r, c = +cell.dataset.c;
 
@@ -405,9 +605,11 @@ class SimpleGrid {
         if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.columns.length) return;
         const next = this._cell(nr, nc); if (!next) return;
         e.preventDefault();
-        const ns = next.querySelector('select'); if (ns) ns.focus(); else next.focus();
+        const ns = next.querySelector('select');
+        if (ns) ns.focus(); else next.focus();
         return;
       }
+
       if (e.key === 'Tab') {
         e.preventDefault();
         const dir = e.shiftKey ? -1 : 1;
@@ -416,28 +618,29 @@ class SimpleGrid {
         if (nc >= this.columns.length) { nc = 0; nr++; }
         if (nr < 0 || nr >= this.rows) return;
         const next = this._cell(nr, nc); if (!next) return;
-        const ns = next.querySelector('select'); if (ns) ns.focus(); else next.focus();
+        const ns = next.querySelector('select');
+        if (ns) ns.focus(); else next.focus();
       }
     });
 
-    this.body.addEventListener('input',  () => this._refreshGrouping());
-    this.body.addEventListener('change', () => this._refreshGrouping());
+    this.body.addEventListener('input',  () => { this._refreshGrouping(); markDirty(); });
+    this.body.addEventListener('change', () => { this._refreshGrouping(); markDirty(); });
   }
 
   addRows(n = 5) {
     for (let i = 0; i < n; i++) {
-      const r = this.rows;
+      const r     = this.rows;
       const rowEl = document.createElement('div');
       rowEl.className = 'sg-row'; rowEl.dataset.r = r;
       rowEl.style.cssText = 'display:contents';
       for (let c = 0; c < this.columns.length; c++) {
-        const cell = document.createElement('div');
+        const cell  = document.createElement('div');
         cell.className = 'sg-cell'; cell.dataset.r = r; cell.dataset.c = c;
         const colDef = this.columns[c];
         if (colDef.options) {
           const sel = document.createElement('select'); sel.className = 'sg-select';
           sel.appendChild(new Option('',''));
-          colDef.options.forEach(o => sel.appendChild(new Option(o,o)));
+          colDef.options.forEach(o => sel.appendChild(new Option(o, o)));
           sel.addEventListener('focus', () => cell.style.outline = '2px solid var(--accent)');
           sel.addEventListener('blur',  () => cell.style.outline = '');
           cell.appendChild(sel);
@@ -472,9 +675,12 @@ class SimpleGrid {
       }
       prevTag = tag || null;
     }
+    updateCounts();
   }
 
-  _cell(r, c) { return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`); }
+  _cell(r, c) {
+    return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`);
+  }
 
   getData() {
     const out = [];
@@ -482,9 +688,10 @@ class SimpleGrid {
       const obj = {}; let nonEmpty = false;
       for (let c = 0; c < this.columns.length; c++) {
         const cell = this._cell(r, c); if (!cell) continue;
-        const sel = cell.querySelector('select');
-        const v = sel ? sel.value.trim() : (cell.textContent || '').trim();
-        obj[this.columns[c].key] = v; if (v) nonEmpty = true;
+        const sel  = cell.querySelector('select');
+        const v    = sel ? sel.value.trim() : (cell.textContent || '').trim();
+        obj[this.columns[c].key] = v;
+        if (v) nonEmpty = true;
       }
       if (nonEmpty) out.push(obj);
     }
@@ -492,7 +699,9 @@ class SimpleGrid {
   }
 }
 
-// ── Column definitions ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Column definitions
+// ═══════════════════════════════════════════════════════════════════════════
 const sigTypeOptions = ['4-20mA', 'Potential Free Contact', '24V DC'];
 const sigOptions     = ['DI', 'DO', 'AI', 'AO'];
 
@@ -541,16 +750,50 @@ const movCols = [
   { key:'signal',      header:'Signal',              width:'90px',  options: sigOptions },
 ];
 
-// ── Grid instances ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Grid instances
+// ═══════════════════════════════════════════════════════════════════════════
 const fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5);
 const elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5);
 const movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
 
 document.getElementById('fiAdd5').addEventListener('click',  () => fiGrid.addRows(5));
+document.getElementById('fiAdd1').addEventListener('click',  () => fiGrid.addRows(1));
 document.getElementById('elAdd5').addEventListener('click',  () => elGrid.addRows(5));
+document.getElementById('elAdd1').addEventListener('click',  () => elGrid.addRows(1));
 document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
+document.getElementById('movAdd1').addEventListener('click', () => movGrid.addRows(1));
 
-// ── Serialization ───────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Row count badges
+// ═══════════════════════════════════════════════════════════════════════════
+function updateCounts() {
+  const fi  = fiGrid.getData().length;
+  const el  = elGrid.getData().length;
+  const mov = movGrid.getData().length;
+
+  const bFi  = document.getElementById('badge-fi');
+  const bEl  = document.getElementById('badge-el');
+  const bMov = document.getElementById('badge-mov');
+  const cFi  = document.getElementById('fiCount');
+  const cEl  = document.getElementById('elCount');
+  const cMov = document.getElementById('movCount');
+
+  bFi.textContent  = fi;
+  bEl.textContent  = el;
+  bMov.textContent = mov;
+  bFi.classList.toggle('visible',  fi  > 0);
+  bEl.classList.toggle('visible',  el  > 0);
+  bMov.classList.toggle('visible', mov > 0);
+
+  cFi.textContent  = `${fi} row${fi  !== 1 ? 's' : ''}`;
+  cEl.textContent  = `${el} row${el  !== 1 ? 's' : ''}`;
+  cMov.textContent = `${mov} row${mov !== 1 ? 's' : ''}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Serialization
+// ═══════════════════════════════════════════════════════════════════════════
 function getFormDataWithGrids(formEl) {
   const data    = new FormData(formEl);
   const packPFL = (p, f, l) => `${p||''}/${f||''}/${l||''}`;
@@ -588,41 +831,106 @@ function getFormDataWithGrids(formEl) {
   return data;
 }
 
-// ── CSRF token helper ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// CSRF helper
+// ═══════════════════════════════════════════════════════════════════════════
 function getCsrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
-// ── Validate ────────────────────────────────────────────────────────────────
-window.previewData = async function () {
-  const data = getFormDataWithGrids(document.getElementById('cisForm'));
+// ═══════════════════════════════════════════════════════════════════════════
+// Validate
+// ═══════════════════════════════════════════════════════════════════════════
+window.validateData = async function () {
   try {
-    // In index.html — replace the existing previewData fetch target:
+    const data = getFormDataWithGrids(document.getElementById('cisForm'));
     const res  = await fetch("{{ url_for('cis.preview') }}", {
-        method: 'POST', body: data,
-        headers: { 'X-CSRFToken': getCsrf() },
+      method: 'POST', body: data,
+      headers: { 'X-CSRFToken': getCsrf() },
     });
-    // And update the success/error branch to read json.ok instead of res.ok:
+    const json = await res.json();
     if (json.ok) {
-        alert('✓ ' + json.message);
+      toast('✓ ' + json.message, 'success', 5000);
     } else {
-        alert('Validation Failed:\n\n' + (json.errors || [json.message || 'Unknown error']).join('\n'));
+      const msgs = (json.errors || [json.message || 'Unknown error']).join('\n');
+      toast('Validation failed — check console for details.', 'error', 6000);
+      console.warn('Validation errors:\n' + msgs);
     }
-  } catch (err) { console.error(err); alert('Network or server error during validation.'); }
+  } catch (err) {
+    console.error(err);
+    toast('Network or server error during validation.', 'error');
+  }
 };
 
-// ── Download buttons (Step 5) ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Save & Submit Data (draft)
+// ═══════════════════════════════════════════════════════════════════════════
+window.saveData = async function () {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '💾 Saving…';
+  try {
+    const data = getFormDataWithGrids(document.getElementById('cisForm'));
+    const res  = await fetch(
+      "{{ url_for('cis.save_draft', project_id=project.id, loc_id=location.id) }}",
+      { method: 'POST', body: data, headers: { 'X-CSRFToken': getCsrf() } }
+    );
+    const json = await res.json();
+    if (json.ok) {
+      markClean();
+      toast('Data saved successfully. You can continue editing or download.', 'success', 5000);
+    } else {
+      toast('Save failed: ' + (json.error || 'Unknown error'), 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Network error during save.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Save & Submit Data';
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Doc number gate
+// ═══════════════════════════════════════════════════════════════════════════
+const GATE_MAP = {
+  il: { inputId: 'fiDocNumber', btnId: 'il-btn', hintId: 'il-hint' },
+  io: { inputId: 'ioDocNumber', btnId: 'io-btn', hintId: 'io-hint' },
+  cs: { inputId: 'csDocNumber', btnId: 'cs-btn', hintId: 'cs-hint' },
+  ci: { inputId: 'ciDocNumber', btnId: 'ci-btn', hintId: 'ci-hint' },
+};
+
+function checkDocGate(key) {
+  const { inputId, btnId, hintId } = GATE_MAP[key];
+  const val  = document.getElementById(inputId)?.value.trim();
+  const btn  = document.getElementById(btnId);
+  const hint = document.getElementById(hintId);
+  const ok   = !!val;
+  if (btn)  btn.disabled = !ok;
+  if (hint) hint.classList.toggle('visible', !ok);
+}
+
+// Show hints on load so user knows what's needed
+Object.keys(GATE_MAP).forEach(k => checkDocGate(k));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Download buttons
+// ═══════════════════════════════════════════════════════════════════════════
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.dl-btn');
-  if (!btn) return;
+  if (!btn || btn.disabled) return;
 
   const endpoint = btn.dataset.endpoint;
-  const status   = document.getElementById('dlStatus');
-  const origText = btn.textContent;
+  if (!endpoint || endpoint === '#') {
+    toast('This document type is not yet implemented.', 'warn');
+    return;
+  }
 
-  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.disabled   = true;
   btn.textContent = 'Generating…';
-  if (status) status.innerHTML = '<span style="color:var(--text-3)">⏳ Generating file…</span>';
+  toast('Generating file — please wait…', 'info', 3000);
 
   try {
     const data = getFormDataWithGrids(document.getElementById('cisForm'));
@@ -631,7 +939,8 @@ document.addEventListener('click', async (e) => {
       headers: { 'X-CSRFToken': getCsrf() },
     });
 
-    if (res.ok && res.headers.get('content-type')?.includes('spreadsheetml')) {
+    const ct = res.headers.get('content-type') || '';
+    if (res.ok && ct.includes('spreadsheetml')) {
       const blob     = await res.blob();
       const filename = res.headers.get('content-disposition')
         ?.match(/filename="?([^";\n]+)"?/)?.[1] || 'download.xlsx';
@@ -640,144 +949,78 @@ document.addEventListener('click', async (e) => {
       });
       document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(a.href);
-      if (status) status.innerHTML = `<span style="color:var(--green)">✓ ${filename} downloaded successfully.</span>`;
+      markClean();
+      toast(`✓ ${filename} downloaded.`, 'success', 6000);
     } else {
-      const json = await res.json();
-      const msg  = json.message || json.error || 'Not yet implemented.';
-      if (status) status.innerHTML = `<span style="color:var(--amber)">⚠ ${msg}</span>`;
+      const json = await res.json().catch(() => ({}));
+      toast((json.error || json.message || 'Server error.'), 'error');
     }
   } catch (err) {
     console.error(err);
-    if (status) status.innerHTML = '<span style="color:var(--red)">✗ Network error. Please try again.</span>';
+    toast('Network error. Please try again.', 'error');
   } finally {
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = origText;
   }
 });
 
-
-// ── Pre-fill grids from last saved revision (if any) ────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Pre-fill grids from last saved revision
+// ═══════════════════════════════════════════════════════════════════════════
 (function preloadGrids() {
   const raw = {{ previous_data | tojson if previous_data else 'null' }};
   if (!raw) return;
 
-  /**
-   * Pour a list of row-dicts into a SimpleGrid instance.
-   * colMap: { gridColumnKey -> payloadDictKey }
-   * Each grid column's `key` is the JS-side key set in fiCols/elCols/movCols.
-   * Each payload dict key is what was saved by _build_payload / _build_fi / _build_flat.
-   */
   function fillGrid(grid, rows, colMap) {
     if (!rows || !rows.length) return;
-
-    // Ensure enough rows exist
     const need = rows.length - grid.rows;
     if (need > 0) grid.addRows(need);
-
     rows.forEach((rowDict, ri) => {
       grid.columns.forEach((colDef, ci) => {
         const payloadKey = colMap[colDef.key];
         if (!payloadKey) return;
-        const val = rowDict[payloadKey] ?? '';
+        const val  = rowDict[payloadKey] ?? '';
         const cell = grid._cell(ri, ci);
         if (!cell) return;
         const sel = cell.querySelector('select');
-        if (sel) {
-          sel.value = val;   // no-op if value not in options — safe
-        } else {
-          cell.textContent = val;
-        }
+        if (sel) sel.value = val;
+        else     cell.textContent = val;
       });
     });
-
     grid._refreshGrouping();
   }
 
-  // ── Field Instruments ──────────────────────────────────────────────────────
-  // fiCols key  →  payload dict key (from _build_fi)
   const fiMap = {
-    tag:         'Tag No',
-    instrument:  'Instrument Name',
-    service:     'Service Description',
-    lineSize:    'Line Size',
-    medium:      'Medium',
-    typeSpec:    'Specification',
-    processConn: 'Process Conn',
-    workP:       'Work Press',
-    workF:       'Work Flow',
-    workL:       'Work Level',
-    desP:        'Design Press',
-    desF:        'Design Flow',
-    desL:        'Design Level',
-    setPoint:    'Set-point',
-    range:       'Range',
-    uom:         'UOM',
-    signalType:  'Signal Type',
-    source:      'Source',
-    destination: 'Destination',
-    signal:      'Signal',
+    tag:'Tag No', instrument:'Instrument Name', service:'Service Description',
+    lineSize:'Line Size', medium:'Medium', typeSpec:'Specification',
+    processConn:'Process Conn', workP:'Work Press', workF:'Work Flow',
+    workL:'Work Level', desP:'Design Press', desF:'Design Flow',
+    desL:'Design Level', setPoint:'Set-point', range:'Range', uom:'UOM',
+    signalType:'Signal Type', source:'Source', destination:'Destination',
+    signal:'Signal',
   };
-  fillGrid(fiGrid, raw.field_instruments || [], fiMap);
-
-  // ── Electrical Equipment ───────────────────────────────────────────────────
-  // elCols key  →  payload dict key (from _build_flat)
   const elMap = {
-    tag:         'Tag No',
-    instrument:  'Instrument Name',
-    service:     'Service Description',
-    signalType:  'Signal Type',
-    source:      'Source',
-    destination: 'Destination',
-    sigDesc:     'Signal Description',
-    signal:      'Signal',
+    tag:'Tag No', instrument:'Instrument Name', service:'Service Description',
+    signalType:'Signal Type', source:'Source', destination:'Destination',
+    sigDesc:'Signal Description', signal:'Signal',
   };
-  fillGrid(elGrid, raw.electrical || [], elMap);
 
-  // ── MOVs ──────────────────────────────────────────────────────────────────
-  // movCols key  →  payload dict key (from _build_flat)
-  const movMap = {
-    tag:         'Tag No',
-    instrument:  'Instrument Name',
-    service:     'Service Description',
-    signalType:  'Signal Type',
-    source:      'Source',
-    destination: 'Destination',
-    sigDesc:     'Signal Description',
-    signal:      'Signal',
-  };
-  fillGrid(movGrid, raw.mov || [], movMap);
+  fillGrid(fiGrid,  raw.field_instruments || [], fiMap);
+  fillGrid(elGrid,  raw.electrical        || [], elMap);
+  fillGrid(movGrid, raw.mov               || [], elMap);
 
-  // ── Header fields from last revision ─────────────────────────────────────
-  // Only pre-fill the editable header fields (not the readonly project fields).
+  // Editable header fields
   const hdr = raw.header || {};
-  const docMeta = {
-    date:        hdr.date        || '',
-    checkedBy:   hdr.checkedBy   || '',
-    approvedBy:  hdr.approvedBy  || '',
-    revision:    hdr.revision    || '',
-  };
-  for (const [id, val] of Object.entries(docMeta)) {
+  ['date','checkedBy','approvedBy','revision'].forEach(id => {
     const el = document.getElementById(id);
-    if (el && val) el.value = val;
-  }
+    if (el && hdr[id]) el.value = hdr[id];
+  });
 
-  // Doc numbers per section
-  const docNums = {
-    fiDocNumber:  (raw.fi_meta  || {}).docNumber || '',
-    elDocNumber:  (raw.el_meta  || {}).docNumber || '',
-    movDocNumber: (raw.mov_meta || {}).docNumber || '',
-    ioDocNumber:  (raw.io_meta  || {}).docNumber || '',
-  };
-  for (const [id, val] of Object.entries(docNums)) {
-    const el = document.getElementById(id);
-    if (el && val) el.value = val;
-  }
-
+  updateCounts();
   console.info(
-    '[CIS] Pre-filled from last revision — ' +
-    `FI:${(raw.field_instruments||[]).length} ` +
-    `EL:${(raw.electrical||[]).length} ` +
-    `MOV:${(raw.mov||[]).length}`
+    `[CIS] Pre-filled — FI:${(raw.field_instruments||[]).length}` +
+    ` EL:${(raw.electrical||[]).length}` +
+    ` MOV:${(raw.mov||[]).length}`
   );
 })();
 </script>

@@ -400,16 +400,11 @@ def index():
 @cis_bp.route("/project/<int:project_id>")
 @login_required
 def project_dashboard(project_id):
-    """
-    Project dashboard — shows all locations as tabs, with the revision
-    history filtered to the selected location.
-    """
     project   = Project.query.get_or_404(project_id)
     locations = ProjectLocation.query.filter_by(
         project_id=project.id
     ).order_by(ProjectLocation.name).all()
 
-    # Optional ?loc= filter
     loc_id   = request.args.get("loc", type=int)
     location = None
     if loc_id:
@@ -417,16 +412,23 @@ def project_dashboard(project_id):
             id=loc_id, project_id=project.id
         ).first()
 
+    base_q = DocumentRevision.query.filter_by(project_id=project.id)
     if location:
-        revisions = DocumentRevision.query.filter_by(
-            project_id=project.id,
-            location_id=location.id,
-        ).order_by(DocumentRevision.created_at.desc()).all()
-    else:
-        # Show all revisions when no location filter is active
-        revisions = DocumentRevision.query.filter_by(
-            project_id=project.id,
-        ).order_by(DocumentRevision.created_at.desc()).all()
+        base_q = base_q.filter_by(location_id=location.id)
+
+    # Published revisions shown in history table
+    revisions = (
+        base_q.filter_by(status="published")
+        .order_by(DocumentRevision.created_at.desc())
+        .all()
+    )
+
+    # Draft indicator — one per location at most
+    drafts = (
+        base_q.filter_by(status="draft")
+        .order_by(DocumentRevision.created_at.desc())
+        .all()
+    )
 
     return render_template(
         "project_dashboard.html",
@@ -434,25 +436,32 @@ def project_dashboard(project_id):
         locations=locations,
         active_location=location,
         revisions=revisions,
+        drafts=drafts,
     )
 
 
 @cis_bp.route("/project/<int:project_id>/location/<int:loc_id>/edit-docs")
 @login_required
 def edit_docs(project_id, loc_id):
-    """
-    Data entry form — scoped to a specific location.
-    Pre-fills grids from the latest revision at this location.
-    """
     project  = Project.query.get_or_404(project_id)
     location = ProjectLocation.query.filter_by(
         id=loc_id, project_id=project_id
     ).first_or_404()
 
+    # Prefer unsaved draft — it reflects the most recent work.
+    # Fall back to latest published revision if no draft exists.
     latest_rev = DocumentRevision.query.filter_by(
-        project_id=project.id,
-        location_id=location.id,
-    ).order_by(DocumentRevision.id.desc()).first()
+        project_id  = project.id,
+        location_id = location.id,
+        status      = "draft",
+    ).first()
+
+    if not latest_rev:
+        latest_rev = DocumentRevision.query.filter_by(
+            project_id  = project.id,
+            location_id = location.id,
+            status      = "published",
+        ).order_by(DocumentRevision.id.desc()).first()
 
     previous_data = latest_rev.data_payload if latest_rev else None
 
@@ -494,15 +503,62 @@ def preview():
 
 
 @cis_bp.route(
+    "/project/<int:project_id>/location/<int:loc_id>/save-draft",
+    methods=["POST"],
+)
+@login_required
+def save_draft(project_id, loc_id):
+    """
+    Save all grid + header data as a draft revision.
+    Only one draft is kept per project+location — each save overwrites
+    the previous draft so the history table stays clean.
+    No file is generated.
+    """
+    project  = Project.query.get_or_404(project_id)
+    location = ProjectLocation.query.filter_by(
+        id=loc_id, project_id=project_id
+    ).first_or_404()
+
+    try:
+        payload = _build_payload(request.form)
+
+        existing_draft = DocumentRevision.query.filter_by(
+            project_id  = project.id,
+            location_id = location.id,
+            status      = "draft",
+        ).first()
+
+        if existing_draft:
+            existing_draft.data_payload = payload
+            existing_draft.user_id      = current_user.id
+            existing_draft.created_at   = datetime.now(timezone.utc)
+        else:
+            draft = DocumentRevision(
+                project_id      = project.id,
+                user_id         = current_user.id,
+                location_id     = location.id,
+                doc_type        = "Draft",
+                revision_number = 0,
+                data_payload    = payload,
+                status          = "draft",
+            )
+            db.session.add(draft)
+
+        db.session.commit()
+        return jsonify({"ok": True, "message": "Data saved successfully."}), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@cis_bp.route(
     "/project/<int:project_id>/location/<int:loc_id>/submit-doc/<doc_type>",
     methods=["POST"],
 )
 @login_required
 def submit_and_save(project_id, loc_id, doc_type):
-    """
-    Save form data as a new revision scoped to a location,
-    then stream the generated Excel file back to the browser.
-    """
     try:
         project  = Project.query.get_or_404(project_id)
         location = ProjectLocation.query.filter_by(
@@ -511,14 +567,15 @@ def submit_and_save(project_id, loc_id, doc_type):
 
         payload = _build_payload(request.form)
 
-        # Revision number is scoped per project + location + doc_type
-        latest_rev = DocumentRevision.query.filter_by(
+        # Revision numbers count only published revisions per doc_type
+        latest_published = DocumentRevision.query.filter_by(
             project_id  = project.id,
             location_id = location.id,
             doc_type    = doc_type,
+            status      = "published",
         ).order_by(DocumentRevision.revision_number.desc()).first()
 
-        next_rev_num = (latest_rev.revision_number + 1) if latest_rev else 0
+        next_rev_num = (latest_published.revision_number + 1) if latest_published else 0
 
         new_rev = DocumentRevision(
             project_id      = project.id,
@@ -527,6 +584,7 @@ def submit_and_save(project_id, loc_id, doc_type):
             doc_type        = doc_type,
             revision_number = next_rev_num,
             data_payload    = payload,
+            status          = "published",
         )
         db.session.add(new_rev)
         db.session.commit()
@@ -542,13 +600,10 @@ def submit_and_save(project_id, loc_id, doc_type):
             return jsonify({"error": "Unknown document type."}), 400
 
         output.seek(0)
-
-        # Filename includes location code for easy identification
         loc_tag  = location.code.strip() if location.code else location.name[:12].replace(" ", "_")
         filename = (
             f"{project.display_name.replace(' ', '_')}"
-            f"_{loc_tag}"
-            f"_{prefix}"
+            f"_{loc_tag}_{prefix}"
             f"_Rev{next_rev_num}"
             f"_{datetime.now().strftime('%Y%m%d')}.xlsx"
         )

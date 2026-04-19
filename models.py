@@ -175,12 +175,17 @@ class DocumentRevision(db.Model):
     doc_type        = db.Column(db.String(50),  nullable=False)
     revision_number = db.Column(db.Integer,     nullable=False, default=0)
     data_payload    = db.Column(db.JSON,        nullable=False)
+    status          = db.Column(db.String(16),  nullable=False, default="published")
+    # 'draft'     — saved via Save & Submit, no file generated,
+    #               only one draft kept per project+location (overwritten each save)
+    # 'published' — triggered by a download action, accumulates as numbered revisions
     created_at      = db.Column(db.DateTime,    default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return (
             f"<DocRev {self.doc_type!r} "
             f"Rev:{self.revision_number} "
+            f"Status:{self.status} "
             f"Proj:{self.project_id} "
             f"Loc:{self.location_id}>"
         )
