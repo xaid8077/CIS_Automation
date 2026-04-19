@@ -1,59 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Select Project | WAP Central</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects — CIS Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('cis.index') }}">Centralized Data Repository</a>
-        <div class="ms-auto d-flex gap-3 align-items-center">
-            <span class="navbar-text text-white">Hello, {{ current_user.username }}</span>
-            {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-info btn-sm">Admin Panel</a>
-            {% endif %}
-            <form action="{{ url_for('auth.logout') }}" method="POST" class="m-0">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
-            </form>
-        </div>
-    </div>
-</nav>
+<body>
 
-<div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="fw-bold text-secondary">Available Projects</h2>
-            <p class="text-muted">Select a project to view document history or generate new revisions.</p>
-        </div>
-    </div>
+<div class="topbar">
+  <div class="brand-mark">AI</div>
+  <div>
+    <div class="brand-title">Automation de Instrumentation</div>
+    <div class="brand-sub">CIS Workbook Generator</div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.dashboard') }}"
+         style="font-family:var(--mono);font-size:11px;color:var(--amber);
+                text-decoration:none;border:1px solid rgba(245,166,35,.3);
+                padding:4px 10px;border-radius:6px">⚙ Admin</a>
+    {% endif %}
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--text-3)">
+      {{ current_user.username }}
+    </span>
+    <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+              style="font-family:var(--mono);font-size:11px;padding:4px 10px;
+                     background:transparent;border:1px solid var(--border);
+                     border-radius:6px;color:var(--text-3);cursor:pointer;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">
+        Sign out
+      </button>
+    </form>
+  </div>
+</div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for p in projects %}
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 border-top border-primary border-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">{{ p.name }}</h5>
-                    <p class="card-text mb-1"><small class="text-muted">Client:</small> {{ p.client }}</p>
-                    {% if p.location %}
-                    <p class="card-text"><small class="text-muted">Location:</small> {{ p.location }}</p>
-                    {% endif %}
-                </div>
-                <div class="card-footer bg-transparent border-0 text-end pb-3">
-                    <a href="{{ url_for('cis.project_dashboard', project_id=p.id) }}" class="btn btn-primary">Open Project Workspace &rarr;</a>
-                </div>
-            </div>
+<div class="page-wrap">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div style="padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:12.5px;
+          {%- if cat=='danger'  %}background:rgba(255,95,95,.12);border:1px solid rgba(255,95,95,.3);color:#ff8f8f
+          {%- elif cat=='success' %}background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.3);color:var(--green)
+          {%- elif cat=='warning' %}background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--amber)
+          {%- else %}background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:#7eb8ff{%- endif %}">
+          {{ msg }}
         </div>
-        {% else %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                No projects are currently available. {% if current_user.is_admin %}Please create one in the Admin Panel.{% else %}Please contact your administrator to set up a project.{% endif %}
-            </div>
-        </div>
-        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Page header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+    <div>
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text)">
+        Project Repositories
+      </div>
+      <div style="font-size:12.5px;color:var(--text-3);margin-top:4px">
+        Select a project to view its document workspace.
+      </div>
     </div>
+    {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.dashboard') }}" class="btn-primary"
+         style="text-decoration:none;padding:8px 16px;font-size:11.5px">
+        + New Project
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Project cards -->
+  {% if projects %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+    {% for p in projects %}
+    <div class="d-card"
+         style="cursor:pointer;transition:border-color .2s"
+         onclick="window.location='{{ url_for('cis.project_dashboard', project_id=p.id) }}'"
+         onmouseover="this.style.borderColor='var(--accent)'"
+         onmouseout="this.style.borderColor='var(--border)'">
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+        <div style="min-width:0">
+          <!-- Nickname (large) — full name as subtitle if nickname set -->
+          <div style="font-family:var(--mono);font-size:15px;font-weight:700;
+                      color:var(--text);line-height:1.3;word-break:break-word">
+            {{ p.display_name }}
+          </div>
+          {% if p.nickname %}
+          <div style="font-size:10.5px;color:var(--text-3);margin-top:3px;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+               title="{{ p.name }}">
+            {{ p.name }}
+          </div>
+          {% endif %}
+        </div>
+        <span class="tag tag-blue" style="flex-shrink:0">{{ p.revisions|length }} rev</span>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:5px">
+        <span>🏢 {{ p.client }}</span>
+        {% if p.consultant %}<span>👷 {{ p.consultant }}</span>{% endif %}
+        <span>📍
+          {% if p.locations %}
+            {{ p.locations|length }} location{{ 's' if p.locations|length != 1 }}
+          {% else %}
+            <span style="color:var(--red)">No locations — contact Admin</span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft);
+                  display:flex;justify-content:flex-end">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--accent)">
+          Open Workspace →
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="d-card" style="text-align:center;padding:52px 24px">
+    <div style="font-size:36px;margin-bottom:14px">📂</div>
+    <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:6px">
+      No projects yet
+    </div>
+    <div style="font-size:12.5px;color:var(--text-3)">
+      {% if current_user.is_admin %}
+        Create your first project from the
+        <a href="{{ url_for('admin.dashboard') }}" style="color:var(--accent)">Admin Panel</a>.
+      {% else %}
+        Contact your administrator to set up a project.
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 </body>
 </html>

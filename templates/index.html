@@ -231,7 +231,9 @@
               <div style="font-size:11px;color:var(--text-3)">Field instruments, electrical &amp; MOV data</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, doc_type='Instrument List') }}" style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
+          <button type="button" class="dl-btn"
+            data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Instrument List') }}"
+            style="--dl-color:#4f8fff;--dl-dim:#1e3a6e">
             ⬇ Save & Download List
           </button>
         </div>
@@ -244,7 +246,9 @@
               <div style="font-size:11px;color:var(--text-3)">Input / output signal schedule</div>
             </div>
           </div>
-          <button type="button" class="dl-btn" data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, doc_type='IO List') }}" style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
+          <button type="button" class="dl-btn"
+            data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='IO List') }}"
+            style="--dl-color:#3ecf8e;--dl-dim:rgba(62,207,142,.15)">
             ⬇ Save & Download IO
           </button>
         </div>
@@ -593,16 +597,17 @@ function getCsrf() {
 window.previewData = async function () {
   const data = getFormDataWithGrids(document.getElementById('cisForm'));
   try {
-    const res  = await fetch('/preview', {
-      method: 'POST', body: data,
-      headers: { 'X-CSRFToken': getCsrf() },
+    // In index.html — replace the existing previewData fetch target:
+    const res  = await fetch("{{ url_for('cis.preview') }}", {
+        method: 'POST', body: data,
+        headers: { 'X-CSRFToken': getCsrf() },
     });
-    const json = await res.json();
-    if (!res.ok) {
-      alert(json.errors?.length ? 'Validation Failed:\n\n' + json.errors.join('\n') : json.message || 'Preview failed.');
-      return;
+    // And update the success/error branch to read json.ok instead of res.ok:
+    if (json.ok) {
+        alert('✓ ' + json.message);
+    } else {
+        alert('Validation Failed:\n\n' + (json.errors || [json.message || 'Unknown error']).join('\n'));
     }
-    alert(json.message || 'Validation passed — data is clean.');
   } catch (err) { console.error(err); alert('Network or server error during validation.'); }
 };
 
@@ -649,6 +654,132 @@ document.addEventListener('click', async (e) => {
     btn.textContent = origText;
   }
 });
+
+
+// ── Pre-fill grids from last saved revision (if any) ────────────────────────
+(function preloadGrids() {
+  const raw = {{ previous_data | tojson if previous_data else 'null' }};
+  if (!raw) return;
+
+  /**
+   * Pour a list of row-dicts into a SimpleGrid instance.
+   * colMap: { gridColumnKey -> payloadDictKey }
+   * Each grid column's `key` is the JS-side key set in fiCols/elCols/movCols.
+   * Each payload dict key is what was saved by _build_payload / _build_fi / _build_flat.
+   */
+  function fillGrid(grid, rows, colMap) {
+    if (!rows || !rows.length) return;
+
+    // Ensure enough rows exist
+    const need = rows.length - grid.rows;
+    if (need > 0) grid.addRows(need);
+
+    rows.forEach((rowDict, ri) => {
+      grid.columns.forEach((colDef, ci) => {
+        const payloadKey = colMap[colDef.key];
+        if (!payloadKey) return;
+        const val = rowDict[payloadKey] ?? '';
+        const cell = grid._cell(ri, ci);
+        if (!cell) return;
+        const sel = cell.querySelector('select');
+        if (sel) {
+          sel.value = val;   // no-op if value not in options — safe
+        } else {
+          cell.textContent = val;
+        }
+      });
+    });
+
+    grid._refreshGrouping();
+  }
+
+  // ── Field Instruments ──────────────────────────────────────────────────────
+  // fiCols key  →  payload dict key (from _build_fi)
+  const fiMap = {
+    tag:         'Tag No',
+    instrument:  'Instrument Name',
+    service:     'Service Description',
+    lineSize:    'Line Size',
+    medium:      'Medium',
+    typeSpec:    'Specification',
+    processConn: 'Process Conn',
+    workP:       'Work Press',
+    workF:       'Work Flow',
+    workL:       'Work Level',
+    desP:        'Design Press',
+    desF:        'Design Flow',
+    desL:        'Design Level',
+    setPoint:    'Set-point',
+    range:       'Range',
+    uom:         'UOM',
+    signalType:  'Signal Type',
+    source:      'Source',
+    destination: 'Destination',
+    signal:      'Signal',
+  };
+  fillGrid(fiGrid, raw.field_instruments || [], fiMap);
+
+  // ── Electrical Equipment ───────────────────────────────────────────────────
+  // elCols key  →  payload dict key (from _build_flat)
+  const elMap = {
+    tag:         'Tag No',
+    instrument:  'Instrument Name',
+    service:     'Service Description',
+    signalType:  'Signal Type',
+    source:      'Source',
+    destination: 'Destination',
+    sigDesc:     'Signal Description',
+    signal:      'Signal',
+  };
+  fillGrid(elGrid, raw.electrical || [], elMap);
+
+  // ── MOVs ──────────────────────────────────────────────────────────────────
+  // movCols key  →  payload dict key (from _build_flat)
+  const movMap = {
+    tag:         'Tag No',
+    instrument:  'Instrument Name',
+    service:     'Service Description',
+    signalType:  'Signal Type',
+    source:      'Source',
+    destination: 'Destination',
+    sigDesc:     'Signal Description',
+    signal:      'Signal',
+  };
+  fillGrid(movGrid, raw.mov || [], movMap);
+
+  // ── Header fields from last revision ─────────────────────────────────────
+  // Only pre-fill the editable header fields (not the readonly project fields).
+  const hdr = raw.header || {};
+  const docMeta = {
+    date:        hdr.date        || '',
+    checkedBy:   hdr.checkedBy   || '',
+    approvedBy:  hdr.approvedBy  || '',
+    revision:    hdr.revision    || '',
+  };
+  for (const [id, val] of Object.entries(docMeta)) {
+    const el = document.getElementById(id);
+    if (el && val) el.value = val;
+  }
+
+  // Doc numbers per section
+  const docNums = {
+    fiDocNumber:  (raw.fi_meta  || {}).docNumber || '',
+    elDocNumber:  (raw.el_meta  || {}).docNumber || '',
+    movDocNumber: (raw.mov_meta || {}).docNumber || '',
+    ioDocNumber:  (raw.io_meta  || {}).docNumber || '',
+  };
+  for (const [id, val] of Object.entries(docNums)) {
+    const el = document.getElementById(id);
+    if (el && val) el.value = val;
+  }
+
+  console.info(
+    '[CIS] Pre-filled from last revision — ' +
+    `FI:${(raw.field_instruments||[]).length} ` +
+    `EL:${(raw.electrical||[]).length} ` +
+    `MOV:${(raw.mov||[]).length}`
+  );
+})();
 </script>
 </body>
 </html>

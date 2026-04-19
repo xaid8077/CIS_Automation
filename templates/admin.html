@@ -1,125 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard | WAP Central</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — CIS Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('cis.index') }}">Data Repository</a>
-        <div class="ms-auto d-flex gap-3">
-            <span class="navbar-text">Logged in as {{ current_user.username }}</span>
-            <form action="{{ url_for('auth.logout') }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
-            </form>
-        </div>
-    </div>
-</nav>
+<body>
 
-<div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Project Repositories</h5>
-                </div>
-                <div class="card-body">
-                    <h6>Create New Project</h6>
-                    <form action="{{ url_for('admin.create_project') }}" method="POST" class="mb-4">
-                        {{ project_form.hidden_tag() }}
-                        <div class="mb-2">
-                            {{ project_form.name.label }}
-                            {{ project_form.name(class="form-control") }}
-                        </div>
-                        <div class="mb-2">
-                            {{ project_form.client.label }}
-                            {{ project_form.client(class="form-control") }}
-                        </div>
-                        <div class="mb-2">
-                            {{ project_form.consultant.label }}
-                            {{ project_form.consultant(class="form-control") }}
-                        </div>
-                        <div class="mb-3">
-                            {{ project_form.location.label }}
-                            {{ project_form.location(class="form-control") }}
-                        </div>
-                        {{ project_form.submit(class="btn btn-primary w-100") }}
-                    </form>
-
-                    <hr>
-                    <h6>Existing Projects</h6>
-                    <ul class="list-group">
-                        {% for p in projects %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ p.name }}</strong><br>
-                                <small class="text-muted">{{ p.client }}</small>
-                            </div>
-                            <span class="badge bg-secondary">{{ p.revisions|length }} Revisions</span>
-                        </li>
-                        {% else %}
-                        <li class="list-group-item text-muted">No projects created yet.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">User Management</h5>
-                </div>
-                <div class="card-body">
-                    <h6>Create New User</h6>
-                    <form action="{{ url_for('admin.create_user') }}" method="POST" class="mb-4">
-                        {{ user_form.hidden_tag() }}
-                        <div class="row mb-2">
-                            <div class="col">{{ user_form.username(class="form-control") }}</div>
-                            <div class="col">{{ user_form.email(class="form-control") }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col">{{ user_form.password(class="form-control") }}</div>
-                            <div class="col">{{ user_form.password2(class="form-control") }}</div>
-                        </div>
-                        <div class="mb-3">
-                            {{ user_form.role(class="form-select") }}
-                        </div>
-                        {{ user_form.submit(class="btn btn-secondary w-100") }}
-                    </form>
-
-                    <hr>
-                    <h6>System Users</h6>
-                    <ul class="list-group">
-                        {% for u in users %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ u.username }}</strong> ({{ u.role }})<br>
-                                <small class="text-muted">{{ u.email }}</small>
-                            </div>
-                            {% if u.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-danger">Disabled</span>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- ── Topbar ─────────────────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="brand-mark">AI</div>
+  <div>
+    <div class="brand-title">Admin Panel</div>
+    <div class="brand-sub">CIS Automation</div>
+  </div>
+  <a href="{{ url_for('cis.index') }}"
+     style="margin-left:20px;font-family:var(--mono);font-size:11px;color:var(--accent);
+            text-decoration:none;border:1px solid rgba(79,143,255,.3);
+            padding:4px 10px;border-radius:6px;transition:all .15s"
+     onmouseover="this.style.background='var(--accent-dim)'"
+     onmouseout="this.style.background='transparent'">← Projects</a>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--amber)">
+      ⚙ {{ current_user.username }}
+    </span>
+    <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+              style="font-family:var(--mono);font-size:11px;padding:4px 10px;
+                     background:transparent;border:1px solid var(--border);
+                     border-radius:6px;color:var(--text-3);cursor:pointer"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">
+        Sign out
+      </button>
+    </form>
+  </div>
 </div>
+
+<div class="page-wrap">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div style="padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:12.5px;
+          {%- if cat=='danger'  %}background:rgba(255,95,95,.12);border:1px solid rgba(255,95,95,.3);color:#ff8f8f
+          {%- elif cat=='success' %}background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.3);color:var(--green)
+          {%- elif cat=='warning' %}background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--amber)
+          {%- else %}background:rgba(79,143,255,.1);border:1px solid rgba(79,143,255,.3);color:#7eb8ff{%- endif %}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ══ Top row: Create Project + Create User ══════════════════════════════ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+    <!-- Create Project -->
+    <div class="d-card">
+      <div class="d-card-header"><span>＋ Create Project</span></div>
+      <form method="POST" action="{{ url_for('admin.create_project') }}">
+        {{ project_form.hidden_tag() }}
+        <div class="field" style="margin-bottom:10px">
+          {{ project_form.name.label }}
+          {{ project_form.name(class="") }}
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          {{ project_form.nickname.label }}
+          {{ project_form.nickname(class="") }}
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          {{ project_form.client.label }}
+          {{ project_form.client(class="") }}
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          {{ project_form.consultant.label }}
+          {{ project_form.consultant(class="") }}
+        </div>
+        {{ project_form.submit(class="btn-primary",
+           style="width:100%;padding:9px;font-size:12px") }}
+      </form>
+    </div>
+
+    <!-- Create User -->
+    <div class="d-card">
+      <div class="d-card-header"><span>＋ Create User</span></div>
+      <form method="POST" action="{{ url_for('admin.create_user') }}">
+        {{ user_form.hidden_tag() }}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="field">
+            {{ user_form.username.label }}
+            {{ user_form.username(class="") }}
+          </div>
+          <div class="field">
+            {{ user_form.email.label }}
+            {{ user_form.email(class="") }}
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="field">
+            {{ user_form.password.label }}
+            {{ user_form.password(class="") }}
+          </div>
+          <div class="field">
+            {{ user_form.password2.label }}
+            {{ user_form.password2(class="") }}
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          {{ user_form.role.label }}
+          <select name="role" class="sg-select"
+                  style="background:var(--surface-2);border:1px solid var(--border);
+                         border-radius:6px;padding:7px 10px;color:var(--text);
+                         font-family:var(--sans);font-size:12.5px;width:100%">
+            {% for val, label in user_form.role.choices %}
+              <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {{ user_form.submit(class="btn-primary",
+           style="width:100%;padding:9px;font-size:12px") }}
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ Project management table ══════════════════════════════════════════ -->
+  <div class="d-card" style="margin-bottom:20px">
+    <div class="d-card-header"><span>📁 Projects</span></div>
+
+    {% if projects %}
+    <div style="overflow-x:auto">
+      <table class="d-table">
+        <thead>
+          <tr>
+            <th>Project Name</th>
+            <th>Nickname</th>
+            <th>Client</th>
+            <th>Locations</th>
+            <th>Revisions</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p in projects %}
+        <tr>
+          <td>
+            <div style="font-weight:600;color:var(--text);font-size:12.5px">
+              {{ p.display_name }}
+            </div>
+            {% if p.nickname %}
+              <div style="font-size:10.5px;color:var(--text-3)">{{ p.name }}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.nickname %}
+              <span class="tag tag-purple">{{ p.nickname }}</span>
+            {% else %}
+              <span style="color:var(--text-3);font-size:11px">—</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;color:var(--text-2)">{{ p.client }}</td>
+          <td>
+            {% if p.locations %}
+              <div style="display:flex;flex-wrap:wrap;gap:4px">
+                {% for loc in p.locations %}
+                  <span class="tag tag-gray" style="display:inline-flex;align-items:center;gap:4px">
+                    {{ loc.display }}
+                    <!-- Delete location -->
+                    <form method="POST"
+                          action="{{ url_for('admin.delete_location', project_id=p.id, loc_id=loc.id) }}"
+                          style="margin:0;display:inline"
+                          onsubmit="return confirm('Delete location \'{{ loc.display }}\'? This cannot be undone if revisions exist.')">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              style="background:none;border:none;color:var(--red);
+                                     cursor:pointer;font-size:11px;padding:0 2px;
+                                     line-height:1" title="Delete location">✕</button>
+                    </form>
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span style="color:var(--red);font-size:11px">None</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="tag tag-blue">{{ p.revisions|length }}</span>
+          </td>
+          <td style="text-align:right">
+            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+              <!-- Set nickname -->
+              <button class="btn-secondary"
+                      style="font-size:10.5px;padding:4px 8px"
+                      onclick="openNickModal({{ p.id }}, '{{ p.nickname or '' }}',
+                               '{{ p.name | replace("'", "\\'") }}')">
+                ✏ Nickname
+              </button>
+              <!-- Add location -->
+              <button class="btn-secondary"
+                      style="font-size:10.5px;padding:4px 8px"
+                      onclick="openLocModal({{ p.id }},
+                               '{{ p.display_name | replace("'", "\\'") }}')">
+                ＋ Location
+              </button>
+              <!-- Open workspace -->
+              <a href="{{ url_for('cis.project_dashboard', project_id=p.id) }}"
+                 class="btn-secondary"
+                 style="font-size:10.5px;padding:4px 8px;text-decoration:none">
+                Open →
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div style="text-align:center;padding:28px;color:var(--text-3);font-size:12.5px">
+        No projects yet. Create one above.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ══ User management table ═════════════════════════════════════════════ -->
+  <div class="d-card">
+    <div class="d-card-header"><span>👤 System Users</span></div>
+    <div style="overflow-x:auto">
+      <table class="d-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="font-weight:600;color:var(--text)">{{ u.username }}</td>
+          <td style="font-size:12px;color:var(--text-2)">{{ u.email }}</td>
+          <td>
+            {% if u.role == 'admin' %}
+              <span class="tag tag-amber">admin</span>
+            {% else %}
+              <span class="tag tag-gray">user</span>
+            {% endif %}
+          </td>
+          <td style="font-size:11.5px;color:var(--text-3)">
+            {{ u.last_login.strftime('%d %b %Y, %H:%M') if u.last_login else '—' }}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="tag tag-green">Active</span>
+            {% else %}
+              <span class="tag tag-red">Disabled</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /.page-wrap -->
+
+<!-- ── Nickname modal ─────────────────────────────────────────────────────── -->
+<div id="nickModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+            z-index:200;place-items:center">
+  <div class="d-modal">
+    <h3 id="nickModalTitle">Set Nickname</h3>
+    <form id="nickForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                      letter-spacing:.06em;text-transform:uppercase">
+          Nickname <span style="color:var(--text-3)">(max 40 chars)</span>
+        </label>
+        <input id="nickInput" name="nickname" maxlength="40"
+               placeholder="Short display name…" />
+      </div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:6px">
+        Leave blank to remove the nickname and show the full project name.
+      </p>
+      <div class="d-modal-actions">
+        <button type="button" class="btn-secondary"
+                style="font-size:11.5px;padding:7px 14px"
+                onclick="closeNick()">Cancel</button>
+        <button type="submit" class="btn-primary"
+                style="font-size:11.5px;padding:7px 16px">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Add Location modal ─────────────────────────────────────────────────── -->
+<div id="locModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+            z-index:200;place-items:center">
+  <div class="d-modal">
+    <h3 id="locModalTitle">Add Location</h3>
+    <form id="locForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field" style="margin-bottom:10px">
+        <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                      letter-spacing:.06em;text-transform:uppercase">
+          Location Name
+        </label>
+        <input name="name" maxlength="150"
+               placeholder="e.g. Plant A — Intake Block" required />
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                      letter-spacing:.06em;text-transform:uppercase">
+          Short Code <span style="color:var(--text-3)">(optional)</span>
+        </label>
+        <input name="code" maxlength="20" placeholder="e.g. PA-INT" />
+      </div>
+      <div class="d-modal-actions">
+        <button type="button" class="btn-secondary"
+                style="font-size:11.5px;padding:7px 14px"
+                onclick="closeLoc()">Cancel</button>
+        <button type="submit" class="btn-primary"
+                style="font-size:11.5px;padding:7px 16px">Add Location</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── Nickname modal ────────────────────────────────────────────────────────────
+const nickModal = document.getElementById('nickModal');
+
+function openNickModal(projectId, currentNick, projectName) {
+  document.getElementById('nickModalTitle').textContent =
+    'Set Nickname — ' + projectName;
+  document.getElementById('nickInput').value = currentNick;
+  document.getElementById('nickForm').action =
+    '/admin/projects/' + projectId + '/nickname';
+  nickModal.style.display = 'grid';
+}
+function closeNick() { nickModal.style.display = 'none'; }
+nickModal.addEventListener('click', e => { if (e.target === nickModal) closeNick(); });
+
+// ── Location modal ────────────────────────────────────────────────────────────
+const locModal = document.getElementById('locModal');
+
+function openLocModal(projectId, projectName) {
+  document.getElementById('locModalTitle').textContent =
+    'Add Location — ' + projectName;
+  document.getElementById('locForm').action =
+    '/admin/projects/' + projectId + '/locations/add';
+  // Clear inputs
+  locModal.querySelectorAll('input[name="name"], input[name="code"]')
+    .forEach(el => el.value = '');
+  locModal.style.display = 'grid';
+}
+function closeLoc() { locModal.style.display = 'none'; }
+locModal.addEventListener('click', e => { if (e.target === locModal) closeLoc(); });
+
+// Escape closes whichever modal is open
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeNick(); closeLoc(); }
+});
+</script>
+
 </body>
 </html>

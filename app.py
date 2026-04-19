@@ -1,9 +1,15 @@
 """
 app.py
 ──────
-Application factory. Auth lives in the `auth` Blueprint.
-All CIS data routes require login. Admin dashboard requires role=admin.
-Now features Centralized Project Repositories and Document Revisions.
+Application factory.
+
+Changes vs previous version:
+  - Admin routes for nickname editing and location management
+  - cis_bp routes updated to handle location_id on DocumentRevision
+  - preview route added (was missing, caused silent 404)
+  - download_revision route added (re-generate from stored JSON)
+  - edit_docs now receives location object so template can display it
+  - submit_and_save now records location_id
 """
 
 import os
@@ -15,17 +21,20 @@ from io import BytesIO
 from flask import (
     Flask, Blueprint, render_template, request,
     redirect, url_for, flash, jsonify, send_file,
-    abort, session
+    abort, session,
 )
 from flask_login import (
     login_user, logout_user, login_required,
-    current_user
+    current_user,
 )
 
-from config      import get_config
-from extensions  import db, login_manager, csrf, limiter
-from models      import User, Project, DocumentRevision
-from forms       import LoginForm, RegisterForm, EditUserForm, ProjectForm
+from config     import get_config
+from extensions import db, login_manager, csrf, limiter
+from models     import User, Project, ProjectLocation, DocumentRevision
+from forms      import (
+    LoginForm, RegisterForm, EditUserForm,
+    ProjectForm, ProjectNicknameForm, ProjectLocationForm,
+)
 from utils.excel_writer import write_workbook, write_io_workbook
 from utils.validator    import validate_payload
 
@@ -49,6 +58,7 @@ def admin_required(f):
 # ─────────────────────────────────────────────────────────────────────────────
 
 auth_bp = Blueprint("auth", __name__)
+
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute")
@@ -89,6 +99,7 @@ def login():
 
     return render_template("login.html", form=form)
 
+
 @auth_bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
@@ -104,15 +115,26 @@ def logout():
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+
 @admin_bp.route("/")
 @admin_required
 def dashboard():
-    users = User.query.order_by(User.created_at.desc()).all()
-    projects = Project.query.order_by(Project.created_at.desc()).all()
-    user_form = RegisterForm()
-    project_form = ProjectForm()
-    return render_template("admin.html", users=users, projects=projects, 
-                           user_form=user_form, project_form=project_form)
+    users         = User.query.order_by(User.created_at.desc()).all()
+    projects      = Project.query.order_by(Project.created_at.desc()).all()
+    user_form     = RegisterForm()
+    project_form  = ProjectForm()
+    nickname_form = ProjectNicknameForm()
+    loc_form      = ProjectLocationForm()
+    return render_template(
+        "admin.html",
+        users=users,
+        projects=projects,
+        user_form=user_form,
+        project_form=project_form,
+        nickname_form=nickname_form,
+        loc_form=loc_form,
+    )
+
 
 @admin_bp.route("/users/create", methods=["POST"])
 @admin_required
@@ -129,22 +151,6 @@ def create_user():
         db.session.add(user)
         db.session.commit()
         flash(f"User '{user.username}' created.", "success")
-    return redirect(url_for("admin.dashboard"))
-
-@admin_bp.route("/projects/create", methods=["POST"])
-@admin_required
-def create_project():
-    form = ProjectForm()
-    if form.validate_on_submit():
-        project = Project(
-            name       = form.name.data,
-            client     = form.client.data,
-            consultant = form.consultant.data,
-            location   = form.location.data
-        )
-        db.session.add(project)
-        db.session.commit()
-        flash(f"Project '{project.name}' created successfully.", "success")
     else:
         for errs in form.errors.values():
             for err in errs:
@@ -152,25 +158,142 @@ def create_project():
     return redirect(url_for("admin.dashboard"))
 
 
+@admin_bp.route("/projects/create", methods=["POST"])
+@admin_required
+def create_project():
+    form = ProjectForm()
+    if form.validate_on_submit():
+        project = Project(
+            name       = form.name.data.strip(),
+            nickname   = form.nickname.data.strip() if form.nickname.data else None,
+            client     = form.client.data.strip(),
+            consultant = form.consultant.data.strip() if form.consultant.data else None,
+        )
+        db.session.add(project)
+        db.session.commit()
+        flash(f"Project '{project.display_name}' created.", "success")
+    else:
+        for errs in form.errors.values():
+            for err in errs:
+                flash(err, "danger")
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/projects/<int:project_id>/nickname", methods=["POST"])
+@admin_required
+def set_nickname(project_id):
+    """Set or update a project's nickname."""
+    project = Project.query.get_or_404(project_id)
+    form    = ProjectNicknameForm()
+    if form.validate_on_submit():
+        raw = form.nickname.data.strip() if form.nickname.data else ""
+        project.nickname = raw if raw else None
+        db.session.commit()
+        flash(
+            f"Nickname for '{project.name}' updated to "
+            f"'{project.display_name}'.",
+            "success",
+        )
+    else:
+        for errs in form.errors.values():
+            for err in errs:
+                flash(err, "danger")
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/projects/<int:project_id>/locations/add", methods=["POST"])
+@admin_required
+def add_location(project_id):
+    """Add a new location to a project."""
+    project = Project.query.get_or_404(project_id)
+    form    = ProjectLocationForm()
+    if form.validate_on_submit():
+        # Check uniqueness within the project
+        existing = ProjectLocation.query.filter_by(
+            project_id=project.id,
+            name=form.name.data.strip(),
+        ).first()
+        if existing:
+            flash(
+                f"Location '{form.name.data.strip()}' already exists "
+                f"in project '{project.display_name}'.",
+                "warning",
+            )
+        else:
+            loc = ProjectLocation(
+                project_id = project.id,
+                name       = form.name.data.strip(),
+                code       = form.code.data.strip() if form.code.data else None,
+            )
+            db.session.add(loc)
+            db.session.commit()
+            flash(
+                f"Location '{loc.display}' added to "
+                f"'{project.display_name}'.",
+                "success",
+            )
+    else:
+        for errs in form.errors.values():
+            for err in errs:
+                flash(err, "danger")
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route(
+    "/projects/<int:project_id>/locations/<int:loc_id>/delete",
+    methods=["POST"],
+)
+@admin_required
+def delete_location(project_id, loc_id):
+    """
+    Delete a location — only allowed if no revisions reference it.
+    This prevents orphaned revision records.
+    """
+    loc = ProjectLocation.query.filter_by(
+        id=loc_id, project_id=project_id
+    ).first_or_404()
+
+    if loc.revisions:
+        flash(
+            f"Cannot delete '{loc.display}' — it has "
+            f"{len(loc.revisions)} revision(s) attached. "
+            "Delete the revisions first or archive the location.",
+            "danger",
+        )
+    else:
+        name = loc.display
+        db.session.delete(loc)
+        db.session.commit()
+        flash(f"Location '{name}' deleted.", "success")
+
+    return redirect(url_for("admin.dashboard"))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# CIS Blueprint (Project-centric now)
+# CIS Blueprint
 # ─────────────────────────────────────────────────────────────────────────────
 
 cis_bp = Blueprint("cis", __name__)
 
-# ── Payload Builders ──────────────────────────────────────────────────────────
-def _clean(v): return v.strip() if isinstance(v, str) else v
-def _get_list(form, key): return [_clean(v) for v in form.getlist(key)]
+
+# ── Payload builders ──────────────────────────────────────────────────────────
+
+def _clean(v):
+    return v.strip() if isinstance(v, str) else v
+
+def _get_list(form, key):
+    return [_clean(v) for v in form.getlist(key)]
+
 def _unpack_pfl(packed, idx):
     raw   = packed[idx] if idx < len(packed) else ""
     parts = raw.split("/")
     parts += [""] * (3 - len(parts))
     return parts[:3]
 
+
 def _build_fi(form):
     tags         = _get_list(form, "fiTagNo[]")
     instruments  = _get_list(form, "fiInstrument[]")
-    # ... (Keep all your existing payload extraction logic exactly the same) ...
     services     = _get_list(form, "fiServiceDescription[]")
     line_sizes   = _get_list(form, "fiLineSize[]")
     mediums      = _get_list(form, "fiMedium[]")
@@ -185,6 +308,7 @@ def _build_fi(form):
     sources      = _get_list(form, "fiSource[]")
     destinations = _get_list(form, "fiDestination[]")
     signals      = _get_list(form, "fiSignal[]")
+
     rows = []
     for i in range(len(tags)):
         w = _unpack_pfl(working_vals, i)
@@ -194,21 +318,23 @@ def _build_fi(form):
             "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
             "Service Description": services[i]     if i < len(services)     else "",
             "Line Size":           line_sizes[i]   if i < len(line_sizes)   else "",
-            "Medium":              mediums[i]      if i < len(mediums)      else "",
-            "Specification":       specs[i]        if i < len(specs)        else "",
-            "Process Conn":        conns[i]        if i < len(conns)        else "",
+            "Medium":              mediums[i]       if i < len(mediums)      else "",
+            "Specification":       specs[i]         if i < len(specs)        else "",
+            "Process Conn":        conns[i]         if i < len(conns)        else "",
             "Work Press":  w[0], "Work Flow": w[1], "Work Level": w[2],
-            "Design Press":d[0], "Design Flow":d[1],"Design Level":d[2],
+            "Design Press":d[0], "Design Flow":d[1], "Design Level":d[2],
             "Set-point":           set_points[i]   if i < len(set_points)   else "",
-            "Range":               ranges[i]       if i < len(ranges)       else "",
-            "UOM":                 uoms[i]         if i < len(uoms)         else "",
+            "Range":               ranges[i]        if i < len(ranges)       else "",
+            "UOM":                 uoms[i]          if i < len(uoms)         else "",
             "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
-            "Source":              sources[i]      if i < len(sources)      else "",
-            "Destination":         destinations[i] if i < len(destinations) else "",
-            "Signal":              signals[i]      if i < len(signals)      else "",
+            "Source":              sources[i]       if i < len(sources)      else "",
+            "Destination":         destinations[i]  if i < len(destinations) else "",
+            "Signal":              signals[i]       if i < len(signals)      else "",
         }
-        if any(row.values()): rows.append(row)
+        if any(row.values()):
+            rows.append(row)
     return rows
+
 
 def _build_flat(form, prefix):
     tags         = _get_list(form, f"{prefix}TagNo[]")
@@ -219,20 +345,23 @@ def _build_flat(form, prefix):
     destinations = _get_list(form, f"{prefix}Destination[]")
     sig_descs    = _get_list(form, f"{prefix}SigDesc[]")
     signals      = _get_list(form, f"{prefix}Signal[]")
+
     rows = []
     for i in range(len(tags)):
         row = {
-            "Tag No": tags[i] if i < len(tags) else "",
-            "Instrument Name": instruments[i] if i < len(instruments) else "",
-            "Service Description": services[i] if i < len(services) else "",
-            "Signal Type": sig_types[i] if i < len(sig_types) else "",
-            "Source": sources[i] if i < len(sources) else "",
-            "Destination": destinations[i] if i < len(destinations) else "",
-            "Signal Description": sig_descs[i] if i < len(sig_descs) else "",
-            "Signal": signals[i] if i < len(signals) else "",
+            "Tag No":              tags[i]         if i < len(tags)         else "",
+            "Instrument Name":     instruments[i]  if i < len(instruments)  else "",
+            "Service Description": services[i]     if i < len(services)     else "",
+            "Signal Type":         sig_types[i]    if i < len(sig_types)    else "",
+            "Source":              sources[i]       if i < len(sources)      else "",
+            "Destination":         destinations[i]  if i < len(destinations) else "",
+            "Signal Description":  sig_descs[i]    if i < len(sig_descs)    else "",
+            "Signal":              signals[i]       if i < len(signals)      else "",
         }
-        if any(row.values()): rows.append(row)
+        if any(row.values()):
+            rows.append(row)
     return rows
+
 
 def _build_header(form):
     return {k: form.get(k, "") for k in [
@@ -240,8 +369,10 @@ def _build_header(form):
         "date", "preparedBy", "checkedBy", "approvedBy", "revision",
     ]}
 
+
 def _build_section_meta(form, prefix):
     return {"docNumber": _clean(form.get(f"{prefix}DocNumber", ""))}
+
 
 def _build_payload(form):
     return {
@@ -261,57 +392,145 @@ def _build_payload(form):
 @cis_bp.route("/")
 @login_required
 def index():
-    """Display list of projects user can access."""
+    """Project list — entry point after login."""
     projects = Project.query.order_by(Project.created_at.desc()).all()
     return render_template("project_list.html", projects=projects)
+
 
 @cis_bp.route("/project/<int:project_id>")
 @login_required
 def project_dashboard(project_id):
-    """View a specific project and its document history."""
-    project = Project.query.get_or_404(project_id)
-    revisions = DocumentRevision.query.filter_by(project_id=project.id).order_by(DocumentRevision.created_at.desc()).all()
-    return render_template("project_dashboard.html", project=project, revisions=revisions)
+    """
+    Project dashboard — shows all locations as tabs, with the revision
+    history filtered to the selected location.
+    """
+    project   = Project.query.get_or_404(project_id)
+    locations = ProjectLocation.query.filter_by(
+        project_id=project.id
+    ).order_by(ProjectLocation.name).all()
 
-@cis_bp.route("/project/<int:project_id>/edit-docs")
-@login_required
-def edit_docs(project_id):
-    """The main data entry interface, pre-loaded with project details."""
-    project = Project.query.get_or_404(project_id)
-    # Here you could potentially fetch the latest payload from DB and pass it to template
-    # to pre-fill the form, fulfilling the "leverage later" requirement.
-    latest_rev = DocumentRevision.query.filter_by(project_id=project.id).order_by(DocumentRevision.id.desc()).first()
-    previous_data = latest_rev.data_payload if latest_rev else None
-    
-    return render_template("index.html", project=project, previous_data=previous_data)
+    # Optional ?loc= filter
+    loc_id   = request.args.get("loc", type=int)
+    location = None
+    if loc_id:
+        location = ProjectLocation.query.filter_by(
+            id=loc_id, project_id=project.id
+        ).first()
 
-@cis_bp.route("/project/<int:project_id>/submit-doc/<doc_type>", methods=["POST"])
-@login_required
-def submit_and_save(project_id, doc_type):
-    """Saves the form data as a revision, then downloads the requested document."""
-    try:
-        project = Project.query.get_or_404(project_id)
-        payload = _build_payload(request.form)
-        
-        # Determine Revision Number
-        latest_rev = DocumentRevision.query.filter_by(
-            project_id=project.id, doc_type=doc_type
-        ).order_by(DocumentRevision.revision_number.desc()).first()
-        
-        next_rev_num = (latest_rev.revision_number + 1) if latest_rev else 0
-        
-        # Save payload to database
-        new_rev = DocumentRevision(
+    if location:
+        revisions = DocumentRevision.query.filter_by(
             project_id=project.id,
-            user_id=current_user.id,
-            doc_type=doc_type,
-            revision_number=next_rev_num,
-            data_payload=payload
+            location_id=location.id,
+        ).order_by(DocumentRevision.created_at.desc()).all()
+    else:
+        # Show all revisions when no location filter is active
+        revisions = DocumentRevision.query.filter_by(
+            project_id=project.id,
+        ).order_by(DocumentRevision.created_at.desc()).all()
+
+    return render_template(
+        "project_dashboard.html",
+        project=project,
+        locations=locations,
+        active_location=location,
+        revisions=revisions,
+    )
+
+
+@cis_bp.route("/project/<int:project_id>/location/<int:loc_id>/edit-docs")
+@login_required
+def edit_docs(project_id, loc_id):
+    """
+    Data entry form — scoped to a specific location.
+    Pre-fills grids from the latest revision at this location.
+    """
+    project  = Project.query.get_or_404(project_id)
+    location = ProjectLocation.query.filter_by(
+        id=loc_id, project_id=project_id
+    ).first_or_404()
+
+    latest_rev = DocumentRevision.query.filter_by(
+        project_id=project.id,
+        location_id=location.id,
+    ).order_by(DocumentRevision.id.desc()).first()
+
+    previous_data = latest_rev.data_payload if latest_rev else None
+
+    return render_template(
+        "index.html",
+        project=project,
+        location=location,
+        previous_data=previous_data,
+    )
+
+
+@cis_bp.route("/preview", methods=["POST"])
+@login_required
+def preview():
+    """
+    Validate payload without writing to DB or generating a file.
+    Called by the JS previewData() function.
+    """
+    try:
+        payload = _build_payload(request.form)
+        errors  = validate_payload(payload)
+        if errors:
+            return jsonify({"ok": False, "errors": errors}), 422
+        row_counts = {
+            "field_instruments": len(payload["field_instruments"]),
+            "electrical":        len(payload["electrical"]),
+            "mov":               len(payload["mov"]),
+        }
+        msg = (
+            f"Validation passed — "
+            f"{row_counts['field_instruments']} field instrument(s), "
+            f"{row_counts['electrical']} electrical equipment row(s), "
+            f"{row_counts['mov']} MOV row(s)."
+        )
+        return jsonify({"ok": True, "message": msg}), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"ok": False, "errors": [str(e)]}), 500
+
+
+@cis_bp.route(
+    "/project/<int:project_id>/location/<int:loc_id>/submit-doc/<doc_type>",
+    methods=["POST"],
+)
+@login_required
+def submit_and_save(project_id, loc_id, doc_type):
+    """
+    Save form data as a new revision scoped to a location,
+    then stream the generated Excel file back to the browser.
+    """
+    try:
+        project  = Project.query.get_or_404(project_id)
+        location = ProjectLocation.query.filter_by(
+            id=loc_id, project_id=project_id
+        ).first_or_404()
+
+        payload = _build_payload(request.form)
+
+        # Revision number is scoped per project + location + doc_type
+        latest_rev = DocumentRevision.query.filter_by(
+            project_id  = project.id,
+            location_id = location.id,
+            doc_type    = doc_type,
+        ).order_by(DocumentRevision.revision_number.desc()).first()
+
+        next_rev_num = (latest_rev.revision_number + 1) if latest_rev else 0
+
+        new_rev = DocumentRevision(
+            project_id      = project.id,
+            user_id         = current_user.id,
+            location_id     = location.id,
+            doc_type        = doc_type,
+            revision_number = next_rev_num,
+            data_payload    = payload,
         )
         db.session.add(new_rev)
         db.session.commit()
 
-        # Generate the Excel File
         output = BytesIO()
         if doc_type == "Instrument List":
             write_workbook(payload, output)
@@ -320,19 +539,97 @@ def submit_and_save(project_id, doc_type):
             write_io_workbook(payload, output)
             prefix = "IO_List"
         else:
-            return jsonify({"success": False, "error": "Unknown document type"}), 400
+            return jsonify({"error": "Unknown document type."}), 400
 
         output.seek(0)
-        filename = f"{project.name.replace(' ', '_')}_{prefix}_Rev{next_rev_num}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-        
-        return send_file(
-            output, as_attachment=True, download_name=filename,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+        # Filename includes location code for easy identification
+        loc_tag  = location.code.strip() if location.code else location.name[:12].replace(" ", "_")
+        filename = (
+            f"{project.display_name.replace(' ', '_')}"
+            f"_{loc_tag}"
+            f"_{prefix}"
+            f"_Rev{next_rev_num}"
+            f"_{datetime.now().strftime('%Y%m%d')}.xlsx"
         )
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument"
+                ".spreadsheetml.sheet"
+            ),
+        )
+
     except Exception as e:
         traceback.print_exc()
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+
+@cis_bp.route(
+    "/project/<int:project_id>/revision/<int:rev_id>/download",
+    methods=["GET"],
+)
+@login_required
+def download_revision(project_id, rev_id):
+    """
+    Re-generate and stream an Excel file from a stored revision payload.
+    Pure read — no DB write.
+    """
+    project = Project.query.get_or_404(project_id)
+    rev     = DocumentRevision.query.filter_by(
+        id=rev_id, project_id=project_id
+    ).first_or_404()
+
+    try:
+        payload = rev.data_payload
+        output  = BytesIO()
+
+        if rev.doc_type == "Instrument List":
+            write_workbook(payload, output)
+            prefix = "Instrument_List"
+        elif rev.doc_type == "IO List":
+            write_io_workbook(payload, output)
+            prefix = "IO_List"
+        else:
+            return jsonify({
+                "error": f"Re-download not supported for '{rev.doc_type}'."
+            }), 400
+
+        output.seek(0)
+
+        loc_tag = ""
+        if rev.location:
+            loc_tag = "_" + (
+                rev.location.code.strip()
+                if rev.location.code
+                else rev.location.name[:12].replace(" ", "_")
+            )
+
+        filename = (
+            f"{project.display_name.replace(' ', '_')}"
+            f"{loc_tag}"
+            f"_{prefix}"
+            f"_Rev{rev.revision_number}"
+            f"_{rev.created_at.strftime('%Y%m%d')}.xlsx"
+        )
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument"
+                ".spreadsheetml.sheet"
+            ),
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -350,7 +647,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -360,13 +657,19 @@ def create_app():
         db.create_all()
 
     @app.errorhandler(403)
-    def forbidden(e): return render_template("errors/403.html"), 403
+    def forbidden(e):
+        return render_template("errors/403.html"), 403
+
     @app.errorhandler(404)
-    def not_found(e): return render_template("errors/404.html"), 404
+    def not_found(e):
+        return render_template("errors/404.html"), 404
+
     @app.errorhandler(500)
-    def server_error(e): return render_template("errors/500.html"), 500
+    def server_error(e):
+        return render_template("errors/500.html"), 500
 
     return app
+
 
 app = create_app()
 

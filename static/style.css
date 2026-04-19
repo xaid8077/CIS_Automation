@@ -303,3 +303,321 @@ body {
 ::-webkit-scrollbar-track        { background: transparent; }
 ::-webkit-scrollbar-thumb        { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover  { background: var(--text-3); }
+
+/* ============================================================
+   Wizard — Step Progress Bar
+   ============================================================ */
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  padding: 20px 4px 24px;
+  overflow-x: auto;
+}
+
+.wp-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: background .15s;
+}
+.wp-step:hover { background: var(--surface-2); }
+
+.wp-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--border);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: all .2s;
+}
+
+.wp-label {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  transition: color .15s;
+}
+
+.wp-sub {
+  font-size: 10.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* Active step */
+.wp-step.active .wp-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.wp-step.active .wp-label { color: var(--accent); }
+
+/* Completed step */
+.wp-step.done .wp-dot {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.wp-step.done .wp-label { color: var(--green); }
+
+/* Connector line between steps */
+.wp-connector {
+  flex: 1;
+  height: 2px;
+  min-width: 24px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background .3s;
+  flex-shrink: 0;
+}
+.wp-connector.done { background: var(--green); }
+
+
+/* ============================================================
+   Wizard — Step Panels
+   ============================================================ */
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+
+/* ============================================================
+   Wizard — Navigation Footer
+   ============================================================ */
+.wizard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.nav-hint {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.btn-nav {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .15s;
+  border: 1px solid var(--border);
+}
+
+.btn-back {
+  background: transparent;
+  color: var(--text-2);
+}
+.btn-back:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-next {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+.btn-next:hover { filter: brightness(1.1); }
+
+.btn-validate {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--green);
+  border-radius: 7px;
+  color: var(--green);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-validate:hover {
+  background: rgba(62, 207, 142, .12);
+}
+
+
+/* ============================================================
+   Doc number row (above each grid)
+   ============================================================ */
+.doc-number-row {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+
+/* ============================================================
+   Download buttons (Step 5)
+   ============================================================ */
+.dl-btn {
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--dl-color) 40%, transparent);
+  background: color-mix(in srgb, var(--dl-color) 12%, transparent);
+  color: var(--dl-color);
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+.dl-btn:hover {
+  background: color-mix(in srgb, var(--dl-color) 22%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--dl-color) 25%, transparent);
+}
+.dl-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+
+/* ============================================================
+   Dark-theme page shell
+   Used by project_list, project_dashboard, admin pages
+   ============================================================ */
+
+/* Topbar shared with index.html */
+.page-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+}
+
+/* Dark card */
+.d-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.d-card-header {
+  font-family: var(--mono); font-weight: 600; font-size: 12px;
+  color: var(--text-3); letter-spacing: .06em; text-transform: uppercase;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Dark table */
+.d-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.d-table th {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--text-3); letter-spacing: .06em; text-transform: uppercase;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.d-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text);
+  vertical-align: middle;
+}
+.d-table tbody tr:hover td { background: var(--surface-2); }
+.d-table tbody tr:last-child td { border-bottom: none; }
+
+/* Stat tiles */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-num {
+  font-family: var(--mono); font-size: 28px; font-weight: 700;
+  color: var(--accent); line-height: 1;
+}
+.stat-label {
+  font-size: 11px; color: var(--text-3); margin-top: 4px;
+}
+
+/* Badge variants */
+.tag {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px;
+  letter-spacing: .03em;
+}
+.tag-blue   { background: var(--accent-dim);           color: var(--accent); }
+.tag-green  { background: rgba(62,207,142,.15);        color: var(--green);  }
+.tag-amber  { background: rgba(245,166,35,.15);        color: var(--amber);  }
+.tag-purple { background: rgba(201,126,255,.15);       color: #c97eff;       }
+.tag-red    { background: rgba(255,95,95,.15);         color: var(--red);    }
+.tag-gray   { background: var(--surface-3);            color: var(--text-3); }
+
+/* Location pill */
+.loc-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px; color: var(--text-2);
+  text-decoration: none;
+  transition: all .15s;
+  cursor: pointer;
+}
+.loc-pill:hover,
+.loc-pill.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.loc-pill .loc-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.loc-pill.active .loc-dot { background: var(--accent); }
+
+/* Dark modal overlay */
+.d-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 200;
+  display: grid; place-items: center;
+}
+.d-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+}
+.d-modal h3 {
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  color: var(--text); margin-bottom: 18px;
+}
+.d-modal .field { margin-bottom: 14px; }
+.d-modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 20px;
+}
