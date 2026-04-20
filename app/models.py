@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
 from flask_login import UserMixin
-from extensions import db
+from app.extensions import db
 
 _ph = PasswordHasher(
     time_cost=3,

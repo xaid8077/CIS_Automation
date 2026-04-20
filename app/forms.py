@@ -13,7 +13,7 @@ from wtforms.validators import (
     DataRequired, Email, Length, Optional,
     EqualTo, ValidationError
 )
-from models import User, Project, ROLES
+from app.models import User, Project, ROLES
 
 
 # ─────────────────────────────────────────────────────────────────────────────
