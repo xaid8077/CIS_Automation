@@ -101,7 +101,7 @@ STANDARD_DN = [
 V_MIN = 0.2
 V_MAX = 5.0
 
-DOC_NUMBER_ROW       = 44
+DOC_NUMBER_ROW       = 43
 DOC_NUMBER_START_COL = 4   # column D
 
 
