@@ -195,10 +195,22 @@
           </td>
           <td style="text-align:right">
             <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+              <!-- Edit project -->
+              <button class="btn-secondary"
+                      style="font-size:10.5px;padding:4px 8px"
+                      onclick="openEditProjectModal(
+                        {{ p.id }},
+                        '{{ p.name       | replace("'", "\\'") }}',
+                        '{{ p.nickname   | replace("'", "\\'") if p.nickname   else "" }}',
+                        '{{ p.client     | replace("'", "\\'") }}',
+                        '{{ p.consultant | replace("'", "\\'") if p.consultant else "" }}'
+                      )">
+                ✏ Edit
+              </button>
               <!-- Set nickname -->
               <button class="btn-secondary"
                       style="font-size:10.5px;padding:4px 8px"
-                      onclick="openNickModal({{ p.id }}, '{{ p.nickname or '' }}',
+                      onclick="openNickModal({{ p.id }}, '{{ p.nickname or "" }}',
                                '{{ p.name | replace("'", "\\'") }}')">
                 ✏ Nickname
               </button>
@@ -304,6 +316,71 @@
   </div>
 </div>
 
+<!-- ── Edit Project modal ─────────────────────────────────────────────────── -->
+<div id="editProjectModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+            z-index:200;place-items:center">
+  <div class="d-modal" style="max-width:520px;width:calc(100% - 32px)">
+    <h3 id="editProjectModalTitle">Edit Project</h3>
+    <form id="editProjectForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field" style="margin-bottom:10px">
+        <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                      letter-spacing:.06em;text-transform:uppercase">
+          Project Name <span style="color:var(--red)">*</span>
+        </label>
+        <input id="editProjectName" name="name" required
+               placeholder="Full project name as it appears on documents" />
+        <span style="font-size:10.5px;color:var(--text-3)">
+          No length limit — use the exact name needed on documents.
+        </span>
+      </div>
+
+      <div class="field" style="margin-bottom:10px">
+        <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                      letter-spacing:.06em;text-transform:uppercase">
+          Nickname <span style="color:var(--text-3)">(max 40 chars — short display name)</span>
+        </label>
+        <input id="editProjectNickname" name="nickname" maxlength="40"
+               placeholder="Leave blank to use full project name" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div class="field">
+          <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                        letter-spacing:.06em;text-transform:uppercase">
+            Client <span style="color:var(--red)">*</span>
+          </label>
+          <input id="editProjectClient" name="client" required
+                 placeholder="Client name" />
+        </div>
+        <div class="field">
+          <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                        letter-spacing:.06em;text-transform:uppercase">
+            Consultant <span style="color:var(--text-3)">(optional)</span>
+          </label>
+          <input id="editProjectConsultant" name="consultant"
+                 placeholder="Consultant name" />
+        </div>
+      </div>
+
+      <p style="font-size:11px;color:var(--amber);margin-bottom:14px">
+        ⚠ Changing the project name updates all future documents for this project.
+        Existing revision files already downloaded are not affected.
+      </p>
+
+      <div class="d-modal-actions">
+        <button type="button" class="btn-secondary"
+                style="font-size:11.5px;padding:7px 14px"
+                onclick="closeEditProject()">Cancel</button>
+        <button type="submit" class="btn-primary"
+                style="font-size:11.5px;padding:7px 16px">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ── Add Location modal ─────────────────────────────────────────────────── -->
 <div id="locModal"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
@@ -361,7 +438,6 @@ function openLocModal(projectId, projectName) {
     'Add Location — ' + projectName;
   document.getElementById('locForm').action =
     '/admin/projects/' + projectId + '/locations/add';
-  // Clear inputs
   locModal.querySelectorAll('input[name="name"], input[name="code"]')
     .forEach(el => el.value = '');
   locModal.style.display = 'grid';
@@ -369,9 +445,32 @@ function openLocModal(projectId, projectName) {
 function closeLoc() { locModal.style.display = 'none'; }
 locModal.addEventListener('click', e => { if (e.target === locModal) closeLoc(); });
 
-// Escape closes whichever modal is open
+// ── Edit Project modal ────────────────────────────────────────────────────────
+const editProjectModal = document.getElementById('editProjectModal');
+
+function openEditProjectModal(projectId, name, nickname, client, consultant) {
+  document.getElementById('editProjectModalTitle').textContent =
+    'Edit Project — ' + (nickname || name);
+  document.getElementById('editProjectName').value       = name;
+  document.getElementById('editProjectNickname').value   = nickname;
+  document.getElementById('editProjectClient').value     = client;
+  document.getElementById('editProjectConsultant').value = consultant;
+  document.getElementById('editProjectForm').action      =
+    '/admin/projects/' + projectId + '/edit';
+  editProjectModal.style.display = 'grid';
+}
+function closeEditProject() { editProjectModal.style.display = 'none'; }
+editProjectModal.addEventListener('click', e => {
+  if (e.target === editProjectModal) closeEditProject();
+});
+
+// ── Single Escape handler for all three modals ────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeNick(); closeLoc(); }
+  if (e.key === 'Escape') {
+    closeNick();
+    closeLoc();
+    closeEditProject();
+  }
 });
 </script>
 

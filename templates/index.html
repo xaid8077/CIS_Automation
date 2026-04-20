@@ -1092,11 +1092,21 @@ document.addEventListener('click', async (e) => {
   fillGrid(movGrid, raw.mov               || [], elMap);
 
   // Editable header fields
+  // Editable header fields
   const hdr = raw.header || {};
   ['date','checkedBy','approvedBy','revision'].forEach(id => {
     const el = document.getElementById(id);
     if (el && hdr[id]) el.value = hdr[id];
   });
+
+  // Pre-fill document numbers from previous revision so the user
+  // does not have to retype them when starting a new revision.
+  const fiDocNum = (raw.fi_meta  || {}).docNumber || '';
+  const ioDocNum = (raw.io_meta  || {}).docNumber || '';
+  const fiInput  = document.getElementById('fiDocNumber');
+  const ioInput  = document.getElementById('ioDocNumber');
+  if (fiInput && fiDocNum) { fiInput.value = fiDocNum; checkDocGate('il'); }
+  if (ioInput && ioDocNum) { ioInput.value = ioDocNum; checkDocGate('io'); }
 
   updateCounts();
   console.info(

@@ -2,11 +2,6 @@
 forms.py
 ────────
 Flask-WTF forms.
-
-Changes vs previous version:
-  - ProjectForm         : adds nickname field
-  - ProjectNicknameForm : standalone form for admin-only nickname editing
-  - ProjectLocationForm : create / edit a location under a project
 """
 
 from flask_wtf import FlaskForm
@@ -33,9 +28,9 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-    username  = StringField("Username",         validators=[DataRequired(), Length(min=3, max=64)])
-    email     = StringField("Email",            validators=[DataRequired(), Email(), Length(max=120)])
-    password  = PasswordField("Password",       validators=[DataRequired(), Length(min=8, max=128)])
+    username  = StringField("Username",           validators=[DataRequired(), Length(min=3, max=64)])
+    email     = StringField("Email",              validators=[DataRequired(), Email(), Length(max=120)])
+    password  = PasswordField("Password",         validators=[DataRequired(), Length(min=8, max=128)])
     password2 = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo("password")])
     role      = SelectField("Role", choices=[(r, r.capitalize()) for r in ROLES], default="user")
     submit    = SubmitField("Create User")
@@ -63,7 +58,7 @@ class ProjectForm(FlaskForm):
     """Admin-only: create a new project repository."""
     name       = StringField(
         "Project Name",
-        validators=[DataRequired(), Length(max=150)],
+        validators=[DataRequired()],           # no length cap
         render_kw={"placeholder": "e.g., Chandrawal Water Treatment Plant"},
     )
     nickname   = StringField(
@@ -73,12 +68,12 @@ class ProjectForm(FlaskForm):
     )
     client     = StringField(
         "Client",
-        validators=[DataRequired(), Length(max=150)],
+        validators=[DataRequired()],
         render_kw={"placeholder": "e.g., Delhi Jal Board"},
     )
     consultant = StringField(
         "Consultant",
-        validators=[Optional(), Length(max=150)],
+        validators=[Optional()],
         render_kw={"placeholder": "Optional"},
     )
     submit     = SubmitField("Create Project")
@@ -86,6 +81,35 @@ class ProjectForm(FlaskForm):
     def validate_name(self, field):
         if Project.query.filter_by(name=field.data).first():
             raise ValidationError("A project with this name already exists.")
+
+
+class EditProjectNameForm(FlaskForm):
+    """
+    Admin-only: edit a project's full name (and optionally nickname/client/
+    consultant) after creation.  No length cap on name so long project titles
+    used in engineering documents are not truncated.
+    """
+    name       = StringField(
+        "Project Name",
+        validators=[DataRequired()],
+        render_kw={"placeholder": "Full project name as it appears on documents"},
+    )
+    nickname   = StringField(
+        "Nickname",
+        validators=[Optional(), Length(max=40)],
+        render_kw={"placeholder": "Short display name (max 40 chars)"},
+    )
+    client     = StringField(
+        "Client",
+        validators=[DataRequired()],
+        render_kw={"placeholder": "Client name"},
+    )
+    consultant = StringField(
+        "Consultant",
+        validators=[Optional()],
+        render_kw={"placeholder": "Consultant (optional)"},
+    )
+    submit     = SubmitField("Save Changes")
 
 
 class ProjectNicknameForm(FlaskForm):
@@ -101,6 +125,19 @@ class ProjectNicknameForm(FlaskForm):
     submit   = SubmitField("Save Nickname")
 
 
+class RevisionDocNumbersForm(FlaskForm):
+    """
+    Admin-only: update the document numbers stored in an existing revision's
+    data_payload without regenerating the file.  Useful for correcting a
+    doc number after a revision has already been published.
+    """
+    fi_doc_number  = StringField("IL Doc Number",  validators=[Optional()])
+    el_doc_number  = StringField("EL Doc Number",  validators=[Optional()])
+    mov_doc_number = StringField("MOV Doc Number", validators=[Optional()])
+    io_doc_number  = StringField("IO Doc Number",  validators=[Optional()])
+    submit         = SubmitField("Update Doc Numbers")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Project Location
 # ─────────────────────────────────────────────────────────────────────────────
@@ -108,12 +145,10 @@ class ProjectNicknameForm(FlaskForm):
 class ProjectLocationForm(FlaskForm):
     """
     Admin-only: add a location to a project.
-    Users can select a location when generating documents but cannot
-    create, edit, or delete locations.
     """
     name = StringField(
         "Location Name",
-        validators=[DataRequired(), Length(max=150)],
+        validators=[DataRequired()],
         render_kw={"placeholder": "e.g., Plant A – Intake Block"},
     )
     code = StringField(

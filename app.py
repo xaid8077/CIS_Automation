@@ -32,9 +32,10 @@ from flask_login import (
 from config     import get_config
 from extensions import db, login_manager, csrf, limiter
 from models     import User, Project, ProjectLocation, DocumentRevision
-from forms      import (
+from forms import (
     LoginForm, RegisterForm, EditUserForm,
-    ProjectForm, ProjectNicknameForm, ProjectLocationForm,
+    ProjectForm, EditProjectNameForm, ProjectNicknameForm,
+    ProjectLocationForm, RevisionDocNumbersForm,
 )
 from utils.excel_writer import write_workbook, write_io_workbook
 from utils.validator    import validate_payload
@@ -280,7 +281,90 @@ def delete_location(project_id, loc_id):
 
     return redirect(url_for("admin.dashboard"))
 
+@admin_bp.route("/projects/<int:project_id>/edit", methods=["POST"])
+@admin_required
+def edit_project(project_id):
+    """
+    Edit a project's full name, nickname, client, and consultant.
+    No length cap on name — engineering project names can be long.
+    Checks uniqueness only when the name actually changes.
+    """
+    project = Project.query.get_or_404(project_id)
+    form    = EditProjectNameForm()
 
+    if form.validate_on_submit():
+        new_name = form.name.data.strip()
+
+        # Uniqueness check — only relevant if the name changed
+        if new_name != project.name:
+            clash = Project.query.filter_by(name=new_name).first()
+            if clash:
+                flash(
+                    f"Another project already has the name '{new_name}'.",
+                    "danger",
+                )
+                return redirect(url_for("admin.dashboard"))
+
+        project.name       = new_name
+        project.nickname   = (form.nickname.data.strip()   or None) if form.nickname.data   else None
+        project.client     = form.client.data.strip()
+        project.consultant = (form.consultant.data.strip() or None) if form.consultant.data else None
+
+        db.session.commit()
+        flash(f"Project updated: '{project.display_name}'.", "success")
+    else:
+        for errs in form.errors.values():
+            for err in errs:
+                flash(err, "danger")
+
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route(
+    "/projects/<int:project_id>/revisions/<int:rev_id>/doc-numbers",
+    methods=["POST"],
+)
+@admin_required
+def edit_revision_doc_numbers(project_id, rev_id):
+    """
+    Update document numbers stored inside an existing revision's data_payload.
+    Does NOT regenerate the Excel file — only the stored JSON is patched.
+    Useful for correcting a doc number after a revision has been published.
+    """
+    rev  = DocumentRevision.query.filter_by(
+        id=rev_id, project_id=project_id
+    ).first_or_404()
+    form = RevisionDocNumbersForm()
+
+    if form.validate_on_submit():
+        # data_payload is a JSON column — mutate a copy so SQLAlchemy
+        # detects the change reliably (avoids in-place mutation gotcha).
+        payload = dict(rev.data_payload)
+
+        def _patch_meta(key, value):
+            if value is not None:
+                meta          = dict(payload.get(key) or {})
+                meta["docNumber"] = value.strip()
+                payload[key]  = meta
+
+        _patch_meta("fi_meta",  form.fi_doc_number.data)
+        _patch_meta("el_meta",  form.el_doc_number.data)
+        _patch_meta("mov_meta", form.mov_doc_number.data)
+        _patch_meta("io_meta",  form.io_doc_number.data)
+
+        rev.data_payload = payload
+        db.session.commit()
+        flash(
+            f"Document numbers updated for revision {rev.revision_number} "
+            f"({rev.doc_type}).",
+            "success",
+        )
+    else:
+        for errs in form.errors.values():
+            for err in errs:
+                flash(err, "danger")
+
+    return redirect(url_for("admin.dashboard"))
 # ─────────────────────────────────────────────────────────────────────────────
 # CIS Blueprint
 # ─────────────────────────────────────────────────────────────────────────────

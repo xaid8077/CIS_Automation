@@ -299,7 +299,7 @@
           </td>
 
           <td style="text-align:right">
-            <div style="display:flex;gap:6px;justify-content:flex-end">
+            <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
               <a href="{{ url_for('cis.download_revision', project_id=project.id, rev_id=rev.id) }}"
                  class="btn-secondary"
                  style="font-size:11px;padding:5px 10px;text-decoration:none">
@@ -310,6 +310,21 @@
                       data-label="{{ rev.doc_type }} - Rev {{ rev.revision_number }}">
                 { } Data
               </button>
+              {% if current_user.is_admin %}
+              <button class="btn-secondary"
+                      style="font-size:11px;padding:5px 10px;cursor:pointer;
+                             border-color:rgba(245,166,35,.4);color:var(--amber)"
+                      onclick="openDocNumModal(
+                        {{ project.id }},
+                        {{ rev.id }},
+                        '{{ rev.doc_type | replace("'", "\\'") }}',
+                        {{ rev.revision_number }},
+                        '{{ rev.data_payload.get('fi_meta',  {}).get('docNumber', '') | replace("'", "\\'") }}',
+                        '{{ rev.data_payload.get('io_meta',  {}).get('docNumber', '') | replace("'", "\\'") }}'
+                      )">
+                ✏ Doc#
+              </button>
+              {% endif %}
               <template class="payload-template">{{ rev.data_payload | tojson }}</template>
             </div>
           </td>
@@ -341,7 +356,7 @@
 
 </div><!-- /.page-wrap -->
 
-<!-- JSON viewer modal -->
+<!-- ── JSON viewer modal ───────────────────────────────────────────────────── -->
 <div id="jsonModal"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
             z-index:200;place-items:center">
@@ -353,14 +368,60 @@
                 max-height:55vh;overflow:auto;font-family:var(--mono);
                 white-space:pre-wrap;word-break:break-all"></pre>
     <div class="d-modal-actions">
-      <button class="btn-secondary" onclick="closeModal()"
+      <button class="btn-secondary" onclick="closeJsonModal()"
               style="font-size:11.5px;padding:7px 14px">Close</button>
     </div>
   </div>
 </div>
 
+<!-- ── Edit Doc Numbers modal — admin only ─────────────────────────────────── -->
+<div id="docNumModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+            z-index:200;place-items:center">
+  <div class="d-modal" style="max-width:480px;width:calc(100% - 32px)">
+    <h3 id="docNumModalTitle">Edit Document Numbers</h3>
+    <p style="font-size:11.5px;color:var(--text-3);margin-bottom:16px">
+      Updates the stored payload only.
+      Previously downloaded files are not affected.
+    </p>
+    <form id="docNumForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div style="margin-bottom:10px">
+        <div class="field">
+          <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                        letter-spacing:.06em;text-transform:uppercase">
+            Instrument List Doc Number
+          </label>
+          <input id="docNumFI" name="fi_doc_number"
+                 placeholder="e.g. PRJ-IL-001" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="field">
+          <label style="font-size:10.5px;font-weight:600;color:var(--text-3);
+                        letter-spacing:.06em;text-transform:uppercase">
+            IO List Doc Number
+          </label>
+          <input id="docNumIO" name="io_doc_number"
+                 placeholder="e.g. PRJ-IOL-001" />
+        </div>
+      </div>
+
+      <div class="d-modal-actions">
+        <button type="button" class="btn-secondary"
+                style="font-size:11.5px;padding:7px 14px"
+                onclick="closeDocNumModal()">Cancel</button>
+        <button type="submit" class="btn-primary"
+                style="font-size:11.5px;padding:7px 16px">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-// Filter buttons
+// ── Filter buttons ────────────────────────────────────────────────────────────
 document.querySelectorAll('.rev-filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.rev-filter').forEach(b => b.classList.remove('active'));
@@ -372,26 +433,54 @@ document.querySelectorAll('.rev-filter').forEach(btn => {
   });
 });
 
-// JSON modal
-const modal = document.getElementById('jsonModal');
+// ── JSON viewer modal ─────────────────────────────────────────────────────────
+const jsonModal = document.getElementById('jsonModal');
 
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const payload = btn.parentElement?.querySelector('.payload-template')?.textContent || '';
+    const tpl = btn.closest('div')?.querySelector('.payload-template');
+    const payload = tpl ? tpl.textContent : '';
     try {
-      const parsed = JSON.parse(payload);
-      document.getElementById('modalPre').textContent = JSON.stringify(parsed, null, 2);
+      document.getElementById('modalPre').textContent =
+        JSON.stringify(JSON.parse(payload), null, 2);
     } catch {
       document.getElementById('modalPre').textContent = payload;
     }
     document.getElementById('modalLabel').textContent = btn.dataset.label;
-    modal.style.display = 'grid';
+    jsonModal.style.display = 'grid';
   });
 });
 
-function closeModal() { modal.style.display = 'none'; }
-modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function closeJsonModal() { jsonModal.style.display = 'none'; }
+jsonModal.addEventListener('click', e => {
+  if (e.target === jsonModal) closeJsonModal();
+});
+
+// ── Edit Doc Numbers modal ────────────────────────────────────────────────────
+const docNumModal = document.getElementById('docNumModal');
+
+function openDocNumModal(projectId, revId, docType, revNum, fiNum, ioNum) {
+  document.getElementById('docNumModalTitle').textContent =
+    'Edit Doc Numbers \u2014 ' + docType + ' Rev ' + revNum;
+  document.getElementById('docNumFI').value = fiNum || '';
+  document.getElementById('docNumIO').value = ioNum || '';
+  document.getElementById('docNumForm').action =
+    '/admin/projects/' + projectId + '/revisions/' + revId + '/doc-numbers';
+  docNumModal.style.display = 'grid';
+}
+
+function closeDocNumModal() { docNumModal.style.display = 'none'; }
+docNumModal.addEventListener('click', e => {
+  if (e.target === docNumModal) closeDocNumModal();
+});
+
+// ── Single Escape handler for all modals ──────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeJsonModal();
+    closeDocNumModal();
+  }
+});
 </script>
 
 </body>
