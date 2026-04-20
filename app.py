@@ -129,15 +129,18 @@ def logout():
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
+# REPLACE the existing dashboard() route with:
 @admin_bp.route("/")
 @admin_required
 def dashboard():
-    users         = User.query.order_by(User.created_at.desc()).all()
-    projects      = Project.query.order_by(Project.created_at.desc()).all()
-    user_form     = RegisterForm()
-    project_form  = ProjectForm()
-    nickname_form = ProjectNicknameForm()
-    loc_form      = ProjectLocationForm()
+    users             = User.query.order_by(User.created_at.desc()).all()
+    projects          = Project.query.order_by(Project.created_at.desc()).all()
+    user_form         = RegisterForm()
+    project_form      = ProjectForm()
+    nickname_form     = ProjectNicknameForm()
+    edit_project_form = EditProjectNameForm()
+    loc_form          = ProjectLocationForm()
+    rev_doc_form      = RevisionDocNumbersForm()
     return render_template(
         "admin.html",
         users=users,
@@ -145,7 +148,9 @@ def dashboard():
         user_form=user_form,
         project_form=project_form,
         nickname_form=nickname_form,
+        edit_project_form=edit_project_form,
         loc_form=loc_form,
+        rev_doc_form=rev_doc_form,
     )
 
 
