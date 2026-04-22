@@ -220,14 +220,12 @@ class Project(db.Model):
     __tablename__ = "projects"
 
     id         = db.Column(db.Integer,     primary_key=True)
-    name       = db.Column(db.String(150), unique=True, nullable=False)
+    name       = db.Column(db.Text,        unique=True, nullable=False)   # ← was String(150)
     nickname   = db.Column(db.String(40),  nullable=True)
     client     = db.Column(db.String(150), nullable=False)
     consultant = db.Column(db.String(150), nullable=True)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-    )
+    location   = db.Column(db.String(150), nullable=True)
+    created_at = db.Column(db.DateTime,    default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     locations = db.relationship(

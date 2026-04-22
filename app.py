@@ -94,4 +94,5 @@ def create_app() -> Flask:
 app = create_app()
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(debug=(os.environ.get("FLASK_ENV") == "development"))
