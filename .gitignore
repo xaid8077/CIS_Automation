@@ -1,3 +1,31 @@
+# ── Secrets — NEVER commit these ─────────────────────────────────────────────
 .env
+.env.*
+!.env.example          # allow a safe example template to be committed
+
+# ── Python cache ──────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+
+# ── SQLite dev databases (if ever used locally) ───────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── IDE / OS noise ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/

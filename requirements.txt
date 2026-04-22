@@ -1,0 +1,58 @@
+# requirements.txt
+# Pin major versions; let patch versions float for security fixes.
+
+# ── Core framework ────────────────────────────────────────────────
+flask>=3.0.0,<4.0.0
+werkzeug>=3.0.0,<4.0.0
+
+# ── Database ──────────────────────────────────────────────────────
+flask-sqlalchemy>=3.1.0,<4.0.0
+psycopg2-binary>=2.9.9,<3.0.0      # PostgreSQL adapter
+
+# ── Migrations ────────────────────────────────────────────────────
+flask-migrate>=4.0.5,<5.0.0        # Alembic wrapper for Flask
+
+# ── Auth ──────────────────────────────────────────────────────────
+flask-login>=0.6.3,<1.0.0          # Session-based (web UI)
+flask-jwt-extended>=4.6.0,<5.0.0   # JWT (API)
+argon2-cffi>=23.1.0,<24.0.0        # Password hashing
+
+# ── Forms & CSRF ──────────────────────────────────────────────────
+flask-wtf>=1.2.1,<2.0.0
+wtforms>=3.1.0,<4.0.0
+email-validator>=2.1.0,<3.0.0      # Required by wtforms Email()
+
+# ── Rate limiting ─────────────────────────────────────────────────
+flask-limiter>=3.5.0,<4.0.0
+
+# ── Validation / serialisation ────────────────────────────────────
+marshmallow>=3.20.0,<4.0.0
+
+# ── Excel generation ──────────────────────────────────────────────
+openpyxl>=3.1.2,<4.0.0
+
+# ── Environment ───────────────────────────────────────────────────
+python-dotenv>=1.0.0,<2.0.0
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+flask>=3.0
+flask-sqlalchemy>=3.1
+flask-login>=0.6
+flask-wtf>=1.2
+flask-limiter>=3.5
+email-validator>=2.1          # required by WTForms Email() validator
+
+# ── PostgreSQL driver ─────────────────────────────────────────────────────────
+# psycopg2-binary includes the C extension pre-compiled — no libpq-dev needed.
+# Use psycopg2 (without -binary) on a production Linux server where you can
+# install system libs, for better performance and stability.
+psycopg2-binary>=2.9
+
+# ── Password hashing ──────────────────────────────────────────────────────────
+argon2-cffi>=23.1
+
+# ── Excel generation ──────────────────────────────────────────────────────────
+openpyxl>=3.1
+
+# ── Environment variable loading ──────────────────────────────────────────────
+python-dotenv>=1.0

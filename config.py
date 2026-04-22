@@ -4,59 +4,76 @@ config.py
 Environment-based configuration.
 Load the correct class by setting FLASK_ENV=development|production|testing.
 
-All secrets MUST come from environment variables in production.
-Never commit a real SECRET_KEY or DATABASE_URL to version control.
+All secrets MUST come from environment variables — never commit a real
+SECRET_KEY or DATABASE_URL to version control.
 """
 
 import os
 from datetime import timedelta
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 
 class Base:
     # ── Core ──────────────────────────────────────────────────────────────────
-    SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-before-production")
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024   # 16 MB upload limit
 
+    # ── SQLAlchemy connection pool ─────────────────────────────────────────────
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,    # discard stale connections automatically
+        "pool_recycle":  1800,    # recycle connections every 30 min
+        "pool_size":     5,
+        "max_overflow":  10,
+    }
+
     # ── Session cookies ───────────────────────────────────────────────────────
-    # HttpOnly: JS cannot read the cookie (blocks XSS theft).
-    # Samesite: blocks CSRF from cross-site requests.
-    # Secure defaults to True here so any env class that forgets to override
-    # it stays safe.  Development and Testing explicitly set it to False.
     SESSION_COOKIE_HTTPONLY  = True
     SESSION_COOKIE_SAMESITE  = "Lax"
-    SESSION_COOKIE_SECURE    = True   # overridden to False in dev/testing below
+    SESSION_COOKIE_SECURE    = True
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
     # ── CSRF ──────────────────────────────────────────────────────────────────
-    WTF_CSRF_TIME_LIMIT = 3600   # token expires after 1 hour
+    WTF_CSRF_TIME_LIMIT = 3600
 
     # ── Rate limiting ─────────────────────────────────────────────────────────
     RATELIMIT_DEFAULT          = "200 per day;50 per hour"
-    RATELIMIT_STORAGE_URL      = "memory://"   # swap for redis:// in prod
+    RATELIMIT_STORAGE_URL      = "memory://"
     RATELIMIT_STRATEGY         = "fixed-window"
     RATELIMIT_HEADERS_ENABLED  = True
 
 
 class Development(Base):
-    DEBUG  = True
+    DEBUG   = True
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///cis_dev.db"
+        "DATABASE_URL", "postgresql://postgres:postgres@localhost:6543/cis_automation?sslmode=disable"
     )
-    SESSION_COOKIE_SECURE = False   # HTTP is fine locally
+    SESSION_COOKIE_SECURE = False
+
+    @classmethod
+    def validate(cls):
+        if not cls.SQLALCHEMY_DATABASE_URI:
+            raise EnvironmentError(
+                "DATABASE_URL is not set. "
+                "Add it to your .env file:\n"
+                "  DATABASE_URL=postgresql://postgres:Minecraft%40007@localhost:6543/cis_automation"
+            )
 
 
 class Production(Base):
-    DEBUG  = False
+    DEBUG   = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")   # must be set
-    # SESSION_COOKIE_SECURE inherited as True from Base — no override needed.
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     WTF_CSRF_SSL_STRICT     = True
 
     @classmethod
     def validate(cls):
-        """Call at startup to catch missing env vars early."""
         missing = []
         if cls.SECRET_KEY == "change-me-before-production":
             missing.append("SECRET_KEY")
@@ -73,6 +90,9 @@ class Testing(Base):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED        = False
     SESSION_COOKIE_SECURE   = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+    }
 
 
 _map = {
@@ -81,9 +101,9 @@ _map = {
     "testing":     Testing,
 }
 
+
 def get_config():
     env = os.environ.get("FLASK_ENV", "development").lower()
     cfg = _map.get(env, Development)
-    if env == "production":
-        cfg.validate()
+    cfg.validate()
     return cfg
