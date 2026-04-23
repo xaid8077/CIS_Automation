@@ -105,7 +105,7 @@
 
 <!-- ── Toast rack ─────────────────────────────────────────────────────────── -->
 <div id="toast-rack"></div>
-
+<div id="parse-indicator">⏳ Parsing clipboard…</div>
 <main class="main">
 <form id="cisForm"
       data-preview-endpoint="{{ url_for('cis.preview') }}"
@@ -547,79 +547,313 @@ let elGrid;
 let movGrid;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SimpleGrid
+// SimpleGrid — Virtual Scrolling Edition
+//
+// Data model
+// ──────────
+//   this._data   : Array<Object>  — every row, whether visible or not.
+//                  Keys match column[i].key exactly.
+//   this.rows    : getter → this._data.length  (kept for back-compat)
+//
+// DOM pool
+// ────────
+//   POOL_SIZE    : number of real DOM rows alive at any time (~2× viewport).
+//   _pool[]      : NodeList of .sg-row elements, absolutely positioned.
+//   _sizer       : 0-height element whose height equals totalRows × ROW_H,
+//                  so the browser knows the real scrollable height.
+//
+// On every 'scroll' event _render() decides which data rows are visible,
+// maps each into a pooled DOM row, moves that row to the correct top,
+// and fills its cells.  Rows outside the window are simply moved off-screen.
 // ═══════════════════════════════════════════════════════════════════════════
+
 class SimpleGrid {
-  constructor(host, columns, initialRows = 5) {
-    this.host = host; this.columns = columns; this.rows = 0;
-    this.head = document.createElement('div'); this.head.className = 'sg-head';
-    this.body = document.createElement('div'); this.body.className = 'sg-body';
+
+  // ── Constants ─────────────────────────────────────────────────────────────
+  static ROW_H    = 28;    // px — must match .sg-cell height in CSS
+  static HEAD_H   = 30;    // px — must match .sg-hcell height in CSS
+  static POOL_SIZE = 60;   // DOM rows in the pool (covers ~2 viewport heights)
+  static BATCH    = 8;     // rows added per "+ N rows" click block
+
+
+  // ── Constructor ───────────────────────────────────────────────────────────
+  constructor(host, columns, initialRows = 5, gridId = '') {
+    this.host    = host;
+    this.columns = columns;
+    this._gridId = gridId;
+    this._data   = [];        // source-of-truth; DOM is a view over this
+    this._scrollTop = 0;
+    this._firstVisible = 0;   // index of topmost rendered data row
+
+    // ── Clear host ──────────────────────────────────────────────────────────
     host.innerHTML = '';
-    host.appendChild(this.head);
-    host.appendChild(this.body);
-    const t = columns.map(c => c.width || '140px').join(' ');
-    this.head.style.cssText = `display:grid;grid-template-columns:${t};`;
-    this.body.style.cssText = `display:grid;grid-template-columns:${t};`;
+
+    // ── Column widths string ─────────────────────────────────────────────────
+    this._colTemplate = columns.map(c => c.width || '140px').join(' ');
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    const head = document.createElement('div');
+    head.className = 'sg-head';
+    head.style.cssText =
+      `display:grid;grid-template-columns:${this._colTemplate};` +
+      `position:sticky;top:0;z-index:2;`;
     for (const col of columns) {
       const h = document.createElement('div');
-      h.className = 'sg-hcell'; h.textContent = col.header;
-      this.head.appendChild(h);
+      h.className   = 'sg-hcell';
+      h.textContent = col.header;
+      head.appendChild(h);
     }
-    this.addRows(initialRows);
-    this._bindEvents();
+    host.appendChild(head);
+
+    // ── Scroll viewport ──────────────────────────────────────────────────────
+    // .sg-body is the scrollable container (max-height set in CSS via .simple-grid).
+    // We add position:relative so pooled rows can use position:absolute inside.
+    this._viewport = document.createElement('div');
+    this._viewport.className = 'sg-body';
+    this._viewport.style.cssText =
+      'position:relative;overflow:hidden;';   // overflow hidden — host scrolls
+    host.appendChild(this._viewport);
+
+    // ── Sizer ────────────────────────────────────────────────────────────────
+    // Invisible element whose sole job is to set the true scroll height.
+    this._sizer = document.createElement('div');
+    this._sizer.style.cssText =
+      'position:absolute;top:0;left:0;width:1px;pointer-events:none;';
+    this._viewport.appendChild(this._sizer);
+
+    // ── DOM pool ─────────────────────────────────────────────────────────────
+    this._pool = [];
+    for (let p = 0; p < SimpleGrid.POOL_SIZE; p++) {
+      const row = this._buildPoolRow();
+      this._pool.push(row);
+      this._viewport.appendChild(row);
+    }
+
+    // ── Seed initial blank data rows ─────────────────────────────────────────
+    this._seedBlankRows(initialRows);
+    this._updateSizer();
+    this._render(0);
+
+    // ── Events ───────────────────────────────────────────────────────────────
+    this._bindScrollEvent();
+    this._bindEditEvents();
+    this._bindKeyNav();
   }
 
-  _bindEvents() {
-    this.body.addEventListener('paste', (e) => {
-      const cell = e.target.closest?.('.sg-cell') ?? e.target;
-      if (!cell?.classList.contains('sg-cell')) return;
-      const startR = +cell.dataset.r, startC = +cell.dataset.c;
+
+  // ── get rows (back-compat) ────────────────────────────────────────────────
+  get rows() { return this._data.length; }
+
+
+  // ═══ Pool construction ═══════════════════════════════════════════════════
+
+  _buildPoolRow() {
+    const row = document.createElement('div');
+    row.className = 'sg-row';
+    row.style.cssText =
+      `display:grid;grid-template-columns:${this._colTemplate};` +
+      `position:absolute;left:0;right:0;height:${SimpleGrid.ROW_H}px;top:-9999px;`;
+    row.dataset.poolRow = '1';
+
+    for (let c = 0; c < this.columns.length; c++) {
+      const cell = document.createElement('div');
+      cell.className   = 'sg-cell';
+      cell.dataset.c   = c;   // col index — stable
+      cell.dataset.r   = -1;  // data-row index — set in _render
+
+      const colDef = this.columns[c];
+      if (colDef.options) {
+        const sel = document.createElement('select');
+        sel.className = 'sg-select';
+        sel.appendChild(new Option('', ''));
+        colDef.options.forEach(o => sel.appendChild(new Option(o, o)));
+        sel.addEventListener('focus', () => {
+          cell.style.outline = '2px solid var(--accent)';
+        });
+        sel.addEventListener('blur', () => {
+          cell.style.outline = '';
+        });
+        sel.addEventListener('change', () => {
+          const ri = +cell.dataset.r;
+          if (ri < 0 || ri >= this._data.length) return;
+          this._data[ri][colDef.key] = sel.value;
+          this._refreshGrouping();
+          markDirty();
+        });
+        cell.appendChild(sel);
+      } else {
+        cell.contentEditable = 'true';
+        cell.addEventListener('input', () => {
+          const ri = +cell.dataset.r;
+          if (ri < 0 || ri >= this._data.length) return;
+          this._data[ri][colDef.key] = cell.textContent.trim();
+          this._refreshGroupingRow(ri);
+          markDirty();
+        });
+        // blur saves too (handles tab/arrow exit without input firing again)
+        cell.addEventListener('blur', () => {
+          const ri = +cell.dataset.r;
+          if (ri < 0 || ri >= this._data.length) return;
+          this._data[ri][colDef.key] = cell.textContent.trim();
+        });
+      }
+      row.appendChild(cell);
+    }
+    return row;
+  }
+
+
+  // ═══ Scroll + render ══════════════════════════════════════════════════════
+
+  _bindScrollEvent() {
+    // Scroll on the outer .simple-grid host (which has overflow:auto in CSS).
+    // We read scrollTop from the host and pass it into _render.
+    let _rafPending = false;
+    this.host.addEventListener('scroll', () => {
+      if (_rafPending) return;
+      _rafPending = true;
+      requestAnimationFrame(() => {
+        _rafPending = false;
+        this._render(this.host.scrollTop - SimpleGrid.HEAD_H);
+      });
+    }, { passive: true });
+  }
+
+  _updateSizer() {
+    const totalH = this._data.length * SimpleGrid.ROW_H;
+    this._sizer.style.height  = totalH + 'px';
+    this._viewport.style.height = totalH + 'px';
+  }
+
+  /**
+   * Core virtual render.
+   * @param {number} scrollTop  Pixels scrolled inside the viewport (≥ 0).
+   */
+  _render(scrollTop) {
+    const st          = Math.max(0, scrollTop);
+    const viewH       = this.host.clientHeight - SimpleGrid.HEAD_H;
+    const firstIdx    = Math.floor(st / SimpleGrid.ROW_H);
+    const visibleCnt  = Math.ceil(viewH / SimpleGrid.ROW_H);
+    // Render one extra row above and below to prevent flicker on fast scroll
+    const renderStart = Math.max(0, firstIdx - 1);
+    const renderEnd   = Math.min(this._data.length, renderStart + SimpleGrid.POOL_SIZE - 1);
+
+    this._firstVisible = firstIdx;
+
+    for (let p = 0; p < SimpleGrid.POOL_SIZE; p++) {
+      const dataIdx = renderStart + p;
+      const poolRow = this._pool[p];
+
+      if (dataIdx >= renderEnd) {
+        // Park unused rows off-screen
+        poolRow.style.top = '-9999px';
+        continue;
+      }
+
+      const rowData = this._data[dataIdx];
+      const topPx   = dataIdx * SimpleGrid.ROW_H;
+      poolRow.style.top = topPx + 'px';
+
+      // Apply group stripe colours
+      const gc = rowData._groupColor || '';
+      const ge = rowData._groupEven  || false;
+      poolRow.style.background = ge ? 'rgba(255,255,255,.015)' : '';
+
+      // Fill each cell
+      const cells = poolRow.querySelectorAll('.sg-cell');
+      cells.forEach((cell, ci) => {
+        const colDef = this.columns[ci];
+        if (!colDef) return;
+
+        cell.dataset.r = dataIdx;    // keep data-r current
+
+        const val = rowData[colDef.key] ?? '';
+
+        if (colDef.options) {
+          const sel = cell.querySelector('select');
+          if (sel && sel.value !== val) sel.value = val;
+        } else {
+          // Only rewrite if different — avoids collapsing caret position
+          // when the user is mid-edit on a visible cell
+          if (cell.textContent !== val) cell.textContent = val;
+        }
+
+        // Group colour bar on col 0
+        if (ci === 0) {
+          if (gc) {
+            cell.setAttribute('data-group-bar', '');
+            cell.style.setProperty('--group-color', `var(${gc})`);
+            cell.style.borderLeft = `3px solid var(${gc})`;
+          } else {
+            cell.removeAttribute('data-group-bar');
+            cell.style.borderLeft = '';
+          }
+        }
+      });
+    }
+  }
+
+
+  // ═══ Edit events ══════════════════════════════════════════════════════════
+
+  _bindEditEvents() {
+    // Paste — delegate to Web Worker if available
+    this.host.addEventListener('paste', (e) => {
+      const cell = e.target.closest('.sg-cell');
+      if (!cell) return;
+
+      const startR = +cell.dataset.r;
+      const startC = +cell.dataset.c;
+      if (startR < 0) return;
+
       const text = (e.clipboardData || window.clipboardData).getData('text');
       if (!text) return;
       e.preventDefault();
-      const lines  = text.split(/\r?\n/);
-      if (lines[lines.length - 1].trim() === '') lines.pop();
-      const matrix = lines.map(l => l.includes('\t') ? l.split('\t') : l.split(','));
-      const need   = startR + matrix.length - this.rows;
-      if (need > 0) this.addRows(need);
-      for (let i = 0; i < matrix.length; i++) {
-        for (let j = 0; j < matrix[i].length && (startC+j) < this.columns.length; j++) {
-          const dest = this._cell(startR+i, startC+j); if (!dest) continue;
-          const sel  = dest.querySelector('select');
-          const val  = matrix[i][j].trim();
-          if (sel) { if (Array.from(sel.options).map(o=>o.value).includes(val)) sel.value = val; }
-          else dest.textContent = val;
-        }
+
+      if (window._parserWorker) {
+        const ind = document.getElementById('parse-indicator');
+        if (ind) ind.style.display = 'block';
+        window._parserWorker.postMessage({
+          type: 'parse', text, startR, startC, gridId: this._gridId,
+        });
+      } else {
+        const lines  = text.split(/\r?\n|\r/);
+        if (lines[lines.length - 1].trim() === '') lines.pop();
+        const matrix = lines.map(l =>
+          l.includes('\t') ? l.split('\t') : l.split(',')
+        );
+        this._applyMatrix(startR, startC, matrix);
       }
-      this._refreshGrouping();
-      markDirty();
     });
+  }
 
-    this.body.addEventListener('keydown', (e) => {
+  _bindKeyNav() {
+    this.host.addEventListener('keydown', (e) => {
       const active = document.activeElement;
-      const cell   = active?.closest?.('.sg-cell') ??
-                     (active?.classList.contains('sg-cell') ? active : null);
+      const cell   = active?.closest?.('.sg-cell');
       if (!cell) return;
-      const r = +cell.dataset.r, c = +cell.dataset.c;
 
-      if (['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)) {
+      const r = +cell.dataset.r;
+      const c = +cell.dataset.c;
+
+      const NAV = ['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'];
+      if (NAV.includes(e.key)) {
         if (cell.contentEditable === 'true') {
           const sel = window.getSelection();
-          if (!sel || sel.rangeCount === 0) return;
-          const range = sel.getRangeAt(0);
-          if (e.key === 'ArrowLeft'  && !(range.startOffset === 0 && range.collapsed)) return;
-          if (e.key === 'ArrowRight' && !(range.endOffset === cell.textContent.length && range.collapsed)) return;
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            if (e.key === 'ArrowLeft'  && !(range.startOffset === 0 && range.collapsed)) return;
+            if (e.key === 'ArrowRight' && !(range.endOffset === cell.textContent.length && range.collapsed)) return;
+          }
         }
         let nr = r, nc = c;
         if (e.key === 'ArrowRight') nc++;
         if (e.key === 'ArrowLeft')  nc--;
         if (e.key === 'ArrowDown')  nr++;
         if (e.key === 'ArrowUp')    nr--;
-        if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.columns.length) return;
-        const next = this._cell(nr, nc); if (!next) return;
+        if (nr < 0 || nr >= this._data.length || nc < 0 || nc >= this.columns.length) return;
         e.preventDefault();
-        const ns = next.querySelector('select');
-        if (ns) ns.focus(); else next.focus();
+        this._focusCell(nr, nc);
         return;
       }
 
@@ -627,90 +861,206 @@ class SimpleGrid {
         e.preventDefault();
         const dir = e.shiftKey ? -1 : 1;
         let nc = c + dir, nr = r;
-        if (nc < 0) { nc = this.columns.length - 1; nr--; }
-        if (nc >= this.columns.length) { nc = 0; nr++; }
-        if (nr < 0 || nr >= this.rows) return;
-        const next = this._cell(nr, nc); if (!next) return;
-        const ns = next.querySelector('select');
-        if (ns) ns.focus(); else next.focus();
+        if (nc < 0)                    { nc = this.columns.length - 1; nr--; }
+        if (nc >= this.columns.length) { nc = 0;                       nr++; }
+        if (nr < 0 || nr >= this._data.length) return;
+        this._focusCell(nr, nc);
       }
     });
+  }
 
-    this.body.addEventListener('input',  () => { this._refreshGrouping(); markDirty(); });
-    this.body.addEventListener('change', () => { this._refreshGrouping(); markDirty(); });
+  /**
+   * Scroll the target row into view, then focus its cell.
+   * Used by keyboard navigation — the target row may not be in the pool yet.
+   */
+  _focusCell(dataR, dataC) {
+    // Scroll the row into view if needed
+    const rowTop = dataR * SimpleGrid.ROW_H;
+    const rowBot = rowTop + SimpleGrid.ROW_H;
+    const vpTop  = this.host.scrollTop;
+    const vpBot  = vpTop + this.host.clientHeight - SimpleGrid.HEAD_H;
+
+    if (rowTop < vpTop) {
+      this.host.scrollTop = rowTop;
+    } else if (rowBot > vpBot) {
+      this.host.scrollTop = rowBot - (this.host.clientHeight - SimpleGrid.HEAD_H);
+    }
+
+    // After scroll, the pool is re-rendered synchronously via _render().
+    // Find the pooled row that now owns dataR.
+    this._render(this.host.scrollTop - SimpleGrid.HEAD_H);
+
+    const targetCell = this.host.querySelector(
+      `.sg-cell[data-r="${dataR}"][data-c="${dataC}"]`
+    );
+    if (!targetCell) return;
+    const sel = targetCell.querySelector('select');
+    if (sel) sel.focus();
+    else     targetCell.focus();
+  }
+
+
+  // ═══ Data manipulation ════════════════════════════════════════════════════
+
+  _blankRow() {
+    const obj = {};
+    for (const col of this.columns) obj[col.key] = '';
+    obj._groupColor = '';
+    obj._groupEven  = false;
+    return obj;
+  }
+
+  _seedBlankRows(n) {
+    for (let i = 0; i < n; i++) this._data.push(this._blankRow());
   }
 
   addRows(n = 5) {
-    for (let i = 0; i < n; i++) {
-      const r     = this.rows;
-      const rowEl = document.createElement('div');
-      rowEl.className = 'sg-row'; rowEl.dataset.r = r;
-      rowEl.style.cssText = 'display:contents';
-      for (let c = 0; c < this.columns.length; c++) {
-        const cell  = document.createElement('div');
-        cell.className = 'sg-cell'; cell.dataset.r = r; cell.dataset.c = c;
-        const colDef = this.columns[c];
-        if (colDef.options) {
-          const sel = document.createElement('select'); sel.className = 'sg-select';
-          sel.appendChild(new Option('',''));
-          colDef.options.forEach(o => sel.appendChild(new Option(o, o)));
-          sel.addEventListener('focus', () => cell.style.outline = '2px solid var(--accent)');
-          sel.addEventListener('blur',  () => cell.style.outline = '');
-          cell.appendChild(sel);
-        } else {
-          cell.contentEditable = 'true';
-        }
-        rowEl.appendChild(cell);
-      }
-      this.body.appendChild(rowEl);
-      this.rows++;
-    }
+    for (let i = 0; i < n; i++) this._data.push(this._blankRow());
+    this._updateSizer();
     this._refreshGrouping();
+    // Preserve scroll position — _render is called by _refreshGrouping
   }
 
+  /**
+   * Write a 2-D matrix of strings into the data model starting at (startR, startC).
+   * Called by both the sync paste fallback and the Web Worker result handler.
+   */
+  _applyMatrix(startR, startC, matrix) {
+    const need = (startR + matrix.length) - this._data.length;
+    if (need > 0) {
+      for (let i = 0; i < need; i++) this._data.push(this._blankRow());
+    }
+
+    for (let i = 0; i < matrix.length; i++) {
+      const row = this._data[startR + i];
+      if (!row) continue;
+      for (let j = 0; j < matrix[i].length && (startC + j) < this.columns.length; j++) {
+        const colDef = this.columns[startC + j];
+        if (colDef) row[colDef.key] = matrix[i][j].trim();
+      }
+    }
+
+    this._updateSizer();
+    this._refreshGrouping();
+    markDirty();
+  }
+
+
+  // ═══ Grouping (colour stripes) ════════════════════════════════════════════
+
   _refreshGrouping() {
-    let prevTag = null, groupIndex = -1, groupEven = false;
-    for (let r = 0; r < this.rows; r++) {
-      const c0 = this._cell(r, 0); if (!c0) continue;
-      const tag = (c0.textContent || '').trim();
-      const rowEl = this.body.querySelector(`.sg-row[data-r="${r}"]`);
+    let prevTag    = null;
+    let groupIndex = -1;
+    let groupEven  = false;
+
+    for (let r = 0; r < this._data.length; r++) {
+      const row = this._data[r];
+      const tag = (row[this.columns[0].key] || '').trim();
+
       if (tag && tag === prevTag) {
-        c0.removeAttribute('data-group-bar');
-        if (rowEl) { rowEl.classList.remove('sg-row-group-start'); rowEl.dataset.groupEven = groupEven; }
+        row._groupColor = this._data[r - 1]._groupColor;
+        row._groupEven  = groupEven;
       } else if (tag) {
-        groupIndex = (groupIndex + 1) % GROUP_COLORS.length; groupEven = !groupEven;
-        c0.setAttribute('data-group-bar','');
-        c0.style.setProperty('--group-color', `var(${GROUP_COLORS[groupIndex]})`);
-        if (rowEl) { rowEl.classList.add('sg-row-group-start'); rowEl.dataset.groupEven = groupEven; }
+        groupIndex = (groupIndex + 1) % GROUP_COLORS.length;
+        groupEven  = !groupEven;
+        row._groupColor = GROUP_COLORS[groupIndex];
+        row._groupEven  = groupEven;
       } else {
-        c0.removeAttribute('data-group-bar');
-        if (rowEl) { rowEl.classList.remove('sg-row-group-start'); delete rowEl.dataset.groupEven; }
+        row._groupColor = '';
+        row._groupEven  = false;
       }
       prevTag = tag || null;
+    }
+
+    this._render(this.host.scrollTop - SimpleGrid.HEAD_H);
+    updateCounts();
+  }
+
+  /** Lightweight re-group of a single row — called on every keypress. */
+  _refreshGroupingRow(ri) {
+    const row    = this._data[ri];
+    if (!row) return;
+    const tag    = (row[this.columns[0].key] || '').trim();
+    const prev   = ri > 0 ? this._data[ri - 1] : null;
+    const prevTag = prev ? (prev[this.columns[0].key] || '').trim() : null;
+
+    if (tag && tag === prevTag) {
+      row._groupColor = prev._groupColor;
+      row._groupEven  = prev._groupEven;
+    } else if (tag) {
+      // Full re-group needed when a new unique tag appears mid-sequence
+      this._refreshGrouping();
+      return;
+    } else {
+      row._groupColor = '';
+      row._groupEven  = false;
+    }
+    // Re-render the single visible row if it's in the pool
+    const cell0 = this.host.querySelector(`.sg-cell[data-r="${ri}"][data-c="0"]`);
+    if (cell0) {
+      const gc = row._groupColor;
+      if (gc) {
+        cell0.setAttribute('data-group-bar', '');
+        cell0.style.setProperty('--group-color', `var(${gc})`);
+        cell0.style.borderLeft = `3px solid var(${gc})`;
+      } else {
+        cell0.removeAttribute('data-group-bar');
+        cell0.style.borderLeft = '';
+      }
     }
     updateCounts();
   }
 
-  _cell(r, c) {
-    return this.body.querySelector(`.sg-cell[data-r="${r}"][data-c="${c}"]`);
+
+  // ═══ Public: read data ════════════════════════════════════════════════════
+
+  /**
+   * Return only rows with at least one non-empty field.
+   * Internal _group* fields are excluded from the output.
+   */
+  getData() {
+    return this._data
+      .filter(row =>
+        this.columns.some(col => (row[col.key] || '').trim() !== '')
+      )
+      .map(row => {
+        const out = {};
+        for (const col of this.columns) out[col.key] = row[col.key] || '';
+        return out;
+      });
   }
 
-  getData() {
-    const out = [];
-    for (let r = 0; r < this.rows; r++) {
-      const obj = {}; let nonEmpty = false;
-      for (let c = 0; c < this.columns.length; c++) {
-        const cell = this._cell(r, c); if (!cell) continue;
-        const sel  = cell.querySelector('select');
-        const v    = sel ? sel.value.trim() : (cell.textContent || '').trim();
-        obj[this.columns[c].key] = v;
-        if (v) nonEmpty = true;
+  /**
+   * Load an array of plain dicts into the grid.
+   * Used by the pre-fill logic (previous revision restore).
+   *
+   * @param {Object[]} rows   Array of {key: value} objects.
+   * @param {Object}   colMap Maps column.key → payload field name.
+   */
+  loadRows(rows, colMap) {
+    // Ensure enough data slots exist
+    while (this._data.length < rows.length) this._data.push(this._blankRow());
+
+    rows.forEach((rowDict, ri) => {
+      const dataRow = this._data[ri];
+      for (const col of this.columns) {
+        const payloadKey = colMap[col.key];
+        if (payloadKey !== undefined) {
+          dataRow[col.key] = rowDict[payloadKey] ?? '';
+        }
       }
-      if (nonEmpty) out.push(obj);
-    }
-    return out;
+    });
+
+    this._updateSizer();
+    this._refreshGrouping();
   }
-}
+
+  // Legacy: keep _cell() returning null so any leftover call is a no-op
+  // rather than a hard crash during the transition period.
+  _cell(r, c) { return null; }
+
+} // ── end class SimpleGrid ──────────────────────────────────────────────────
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Column definitions
@@ -764,11 +1114,55 @@ const movCols = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Grid instances
+// Grid instances  — gridId routes worker results back to the right grid
 // ═══════════════════════════════════════════════════════════════════════════
-fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5);
-elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5);
-movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5);
+fiGrid  = new SimpleGrid(document.getElementById('fiGrid'),  fiCols,  5, 'fi');
+elGrid  = new SimpleGrid(document.getElementById('elGrid'),  elCols,  5, 'el');
+movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5, 'mov');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Web Worker — clipboard parser
+// Initialised after grid creation so result handler can reference the grid
+// instances directly.  Falls back to synchronous parsing on any error.
+// ═══════════════════════════════════════════════════════════════════════════
+window._parserWorker = null;
+
+(function initWorker() {
+  if (!window.Worker) return;   // SSR / very old browser
+
+  const _gridMap = { fi: fiGrid, el: elGrid, mov: movGrid };
+  const _ind     = document.getElementById('parse-indicator');
+
+  try {
+    const worker = new Worker(
+      "{{ url_for('static', filename='parserWorker.js') }}"
+    );
+
+    worker.onmessage = function (e) {
+      const { type, matrix, startR, startC, gridId } = e.data;
+      if (type !== 'result') return;
+
+      const grid = _gridMap[gridId];
+      if (grid) grid._applyMatrix(startR, startC, matrix);
+
+      // Hide the indicator regardless of whether the grid was found.
+      if (_ind) _ind.style.display = 'none';
+    };
+
+    worker.onerror = function (err) {
+      // Degrade gracefully: future pastes will hit the sync fallback.
+      console.warn('[CIS] parserWorker error — reverting to sync paste:', err.message);
+      window._parserWorker = null;
+      if (_ind) _ind.style.display = 'none';
+    };
+
+    window._parserWorker = worker;
+    console.info('[CIS] Clipboard Web Worker active.');
+
+  } catch (err) {
+    console.warn('[CIS] Could not start parserWorker:', err);
+  }
+})();
 
 document.getElementById('fiAdd5').addEventListener('click',  () => fiGrid.addRows(5));
 document.getElementById('fiAdd1').addEventListener('click',  () => fiGrid.addRows(1));
@@ -1050,28 +1444,12 @@ document.addEventListener('click', async (e) => {
 // ═══════════════════════════════════════════════════════════════════════════
 (function preloadGrids() {
   const rawEl = document.getElementById('previous-data');
-  const raw = rawEl ? JSON.parse(rawEl.textContent || 'null') : null;
+  const raw   = rawEl ? JSON.parse(rawEl.textContent || 'null') : null;
   if (!raw) return;
 
-  function fillGrid(grid, rows, colMap) {
-    if (!rows || !rows.length) return;
-    const need = rows.length - grid.rows;
-    if (need > 0) grid.addRows(need);
-    rows.forEach((rowDict, ri) => {
-      grid.columns.forEach((colDef, ci) => {
-        const payloadKey = colMap[colDef.key];
-        if (!payloadKey) return;
-        const val  = rowDict[payloadKey] ?? '';
-        const cell = grid._cell(ri, ci);
-        if (!cell) return;
-        const sel = cell.querySelector('select');
-        if (sel) sel.value = val;
-        else     cell.textContent = val;
-      });
-    });
-    grid._refreshGrouping();
-  }
-
+  // Column key → payload field name maps
+  // These map the grid's internal column keys (from *Cols definitions)
+  // to the keys that come back from the stored revision payload.
   const fiMap = {
     tag:'Tag No', instrument:'Instrument Name', service:'Service Description',
     lineSize:'Line Size', medium:'Medium', typeSpec:'Specification',
@@ -1087,22 +1465,21 @@ document.addEventListener('click', async (e) => {
     sigDesc:'Signal Description', signal:'Signal',
   };
 
-  fillGrid(fiGrid,  raw.field_instruments || [], fiMap);
-  fillGrid(elGrid,  raw.electrical        || [], elMap);
-  fillGrid(movGrid, raw.mov               || [], elMap);
+  // loadRows() writes directly into _data[] and re-renders — no DOM scraping
+  fiGrid.loadRows(raw.field_instruments || [], fiMap);
+  elGrid.loadRows(raw.electrical        || [], elMap);
+  movGrid.loadRows(raw.mov              || [], elMap);
 
-  // Editable header fields
-  // Editable header fields
+  // Restore editable header fields
   const hdr = raw.header || {};
   ['date','checkedBy','approvedBy','revision'].forEach(id => {
     const el = document.getElementById(id);
     if (el && hdr[id]) el.value = hdr[id];
   });
 
-  // Pre-fill document numbers from previous revision so the user
-  // does not have to retype them when starting a new revision.
-  const fiDocNum = (raw.fi_meta  || {}).docNumber || '';
-  const ioDocNum = (raw.io_meta  || {}).docNumber || '';
+  // Pre-fill doc numbers so user doesn't retype them for a new revision
+  const fiDocNum = (raw.fi_meta || {}).docNumber || '';
+  const ioDocNum = (raw.io_meta || {}).docNumber || '';
   const fiInput  = document.getElementById('fiDocNumber');
   const ioInput  = document.getElementById('ioDocNumber');
   if (fiInput && fiDocNum) { fiInput.value = fiDocNum; checkDocGate('il'); }
@@ -1110,9 +1487,10 @@ document.addEventListener('click', async (e) => {
 
   updateCounts();
   console.info(
-    `[CIS] Pre-filled — FI:${(raw.field_instruments||[]).length}` +
-    ` EL:${(raw.electrical||[]).length}` +
-    ` MOV:${(raw.mov||[]).length}`
+    `[CIS] Pre-filled (virtual grid) — ` +
+    `FI:${(raw.field_instruments||[]).length} ` +
+    `EL:${(raw.electrical||[]).length} ` +
+    `MOV:${(raw.mov||[]).length}`
   );
 })();
 </script>

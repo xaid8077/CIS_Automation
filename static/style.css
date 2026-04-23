@@ -621,3 +621,56 @@ body {
   display: flex; gap: 8px; justify-content: flex-end;
   margin-top: 20px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PERFORMANCE: CSS Containment
+   Applied to the grid so that cell edits never trigger a full-page reflow.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* Give the grid a scroll boundary (required for virtual scroll in Part 2)  */
+.simple-grid {
+  /* existing props stay — add: */
+  max-height: 580px;
+  overflow:   auto;
+  contain:    layout;           /* layout changes inside don't affect outside */
+}
+
+/* The render window (introduced in Part 2) — declare here so it renders    */
+/* correctly the moment Part 2 lands without a second CSS deploy.            */
+.sg-window {
+  contain: layout style;        /* style mutations (colors, borders) are local */
+}
+
+/* Individual cells — contain each cell so sibling cells don't reflow       */
+/* when contenteditable content changes length.                              */
+.sg-cell {
+  /* existing props stay — add: */
+  contain: layout style;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Paste-parsing overlay (shown while Web Worker processes clipboard data)
+   ──────────────────────────────────────────────────────────────────────── */
+#parse-indicator {
+  display:         none;          /* shown via JS while worker is busy */
+  position:        fixed;
+  bottom:          72px;
+  right:           24px;
+  background:      var(--surface);
+  border:          1px solid var(--border);
+  border-radius:   8px;
+  padding:         8px 16px;
+  font-family:     var(--mono);
+  font-size:       11px;
+  color:           var(--amber);
+  z-index:         998;
+  pointer-events:  none;
+  animation:       slideIn .15s ease;
+  box-shadow:      0 4px 20px rgba(0,0,0,.35);
+}
+
+/* Virtual grid pool rows — absolute positioning inside the viewport div */
+.sg-body .sg-row {
+  will-change: transform;    /* hint GPU layer for smooth scroll */
+  contain:     layout style; /* local to each row                */
+}
