@@ -13,7 +13,11 @@ No Excel generation, no direct DB writes (except through services),
 and no request parsing beyond extracting JSON live in this file.
 """
 
+# routes/cis.py
+import threading
 import traceback
+import uuid
+from datetime import datetime, timezone
 
 from flask import (
     Blueprint, render_template, request,
@@ -29,12 +33,61 @@ from utils.validator import validate_payload
 
 cis_bp = Blueprint("cis", __name__)
 
-# MIME type constant so it is not repeated across download routes.
 _XLSX_MIME = (
     "application/vnd.openxmlformats-officedocument"
     ".spreadsheetml.sheet"
 )
 
+# ─── Async job store ──────────────────────────────────────────────────────────
+#
+# Maps job_id (UUID hex) → job dict.
+# Only excel_service.generate() runs off the main thread; all DB writes
+# happen on the main thread so no Flask app-context push is ever needed
+# inside the worker.
+#
+# Job dict shape:
+#   status      : "pending" | "ready" | "error"
+#   stream      : BytesIO | None
+#   error       : str | None
+#   project_id  : int
+#   loc_id      : int
+#   user_id     : int
+#   doc_type    : str
+#   payload     : dict         (needed by job_download to create the revision)
+#   created_at  : datetime (UTC)
+
+_job_store: dict = {}
+_job_lock         = threading.Lock()
+_JOB_TTL_SECONDS  = 600          # 10 min — jobs older than this are swept
+
+
+def _sweep_old_jobs() -> None:
+    """Remove stale jobs. Called inside _job_lock before adding a new entry."""
+    now   = datetime.now(timezone.utc)
+    stale = [
+        jid for jid, j in _job_store.items()
+        if (now - j["created_at"]).total_seconds() > _JOB_TTL_SECONDS
+    ]
+    for jid in stale:
+        _job_store.pop(jid, None)
+
+
+def _worker_generate_excel(job_id: str, doc_type: str, payload: dict) -> None:
+    """
+    Background thread target.
+
+    Runs openpyxl entirely off the main thread.  No SQLAlchemy calls —
+    the DB write happens later in job_download() on the main thread.
+    """
+    try:
+        from services import excel_service
+        stream = excel_service.generate(doc_type, payload)
+        with _job_lock:
+            _job_store[job_id].update(status="ready", stream=stream)
+    except Exception as exc:
+        traceback.print_exc()
+        with _job_lock:
+            _job_store[job_id].update(status="error", error=str(exc))
 
 # ─── Project list ─────────────────────────────────────────────────────────────
 
@@ -217,19 +270,31 @@ def save_draft(project_id, loc_id):
 @login_required
 def submit_and_save(project_id, loc_id, doc_type):
     """
-    Validate, persist as a published revision, generate Excel, download.
+    Validate payload, queue Excel generation in a background thread, and
+    return 202 Accepted with a job_id for the client to poll.
+
+    The revision record is NOT created here — it is created in job_download()
+    once the file is ready and the user actually downloads it.  This keeps
+    all DB writes on the main thread and avoids app-context management inside
+    the worker thread.
 
     Returns
     -------
-    200 application/vnd.openxmlformats… — xlsx binary stream.
+    202 {"ok": True, "job_id": "...", "doc_type": "..."}  — job queued.
     400 {"error": "..."}  — unsupported doc_type.
     422 {"error": "..."}  — schema / business-rule validation failed.
-    500 {"error": "..."}  — unexpected server error.
+    500 {"error": "..."}  — unexpected error before thread spawn.
     """
     project  = Project.query.get_or_404(project_id)
     location = ProjectLocation.query.filter_by(
         id=loc_id, project_id=project_id
     ).first_or_404()
+
+    if doc_type not in document_service.SUPPORTED_DOC_TYPES:
+        return jsonify({
+            "error":     f"Unsupported document type '{doc_type}'.",
+            "supported": sorted(document_service.SUPPORTED_DOC_TYPES),
+        }), 400
 
     # ── Schema validation ─────────────────────────────────────────────────────
     try:
@@ -243,21 +308,133 @@ def submit_and_save(project_id, loc_id, doc_type):
     if errors:
         return jsonify({"ok": False, "errors": errors}), 422
 
-    # ── Generate + save ───────────────────────────────────────────────────────
+    # ── Create job entry and spawn worker thread ───────────────────────────────
+    job_id = uuid.uuid4().hex
+
+    with _job_lock:
+        _sweep_old_jobs()
+        _job_store[job_id] = {
+            "status":     "pending",
+            "stream":     None,
+            "error":      None,
+            "project_id": project.id,
+            "loc_id":     location.id,
+            "user_id":    current_user.id,
+            "doc_type":   doc_type,
+            "payload":    payload,
+            "created_at": datetime.now(timezone.utc),
+        }
+
+    thread = threading.Thread(
+        target  = _worker_generate_excel,
+        args    = (job_id, doc_type, payload),
+        daemon  = True,           # thread dies when the process exits
+        name    = f"xlsx-{job_id[:8]}",
+    )
+    thread.start()
+
+    return jsonify({
+        "ok":       True,
+        "job_id":   job_id,
+        "doc_type": doc_type,
+    }), 202
+
+
+@cis_bp.route("/job/<job_id>/status", methods=["GET"])
+@login_required
+def job_status(job_id):
+    """
+    Poll endpoint for the async Excel generation job.
+
+    Returns
+    -------
+    200 {"status": "pending" | "ready" | "error", "error": str | null}
+    403 — job belongs to a different user.
+    404 — job_id unknown or already consumed.
+    """
+    with _job_lock:
+        job = _job_store.get(job_id)
+
+    if job is None:
+        return jsonify({"status": "not_found"}), 404
+
+    if job["user_id"] != current_user.id:
+        abort(403)
+
+    return jsonify({
+        "status": job["status"],
+        "error":  job.get("error"),
+    }), 200
+
+
+@cis_bp.route("/job/<job_id>/download", methods=["GET"])
+@login_required
+def job_download(job_id):
+    """
+    Consume a completed job: create the revision record, stream the file,
+    and remove the job from the store.
+
+    The revision is created here (on the main thread) so the DB write is
+    safely inside the Flask app context with no thread-safety concerns.
+
+    Returns
+    -------
+    200 application/vnd.openxmlformats…  — xlsx binary stream.
+    403 — job belongs to a different user.
+    404 — job not found, not yet ready, or already downloaded.
+    500 — revision creation or streaming error.
+    """
+    with _job_lock:
+        job = _job_store.get(job_id)
+
+    if job is None:
+        return jsonify({"error": "Job not found or already downloaded."}), 404
+
+    if job["user_id"] != current_user.id:
+        abort(403)
+
+    if job["status"] != "ready":
+        return jsonify({
+            "error":  f"Job is not ready (status: {job['status']}).",
+            "status": job["status"],
+        }), 404
+
+    # ── Consume the job (pop before sending so double-download returns 404) ────
+    with _job_lock:
+        job = _job_store.pop(job_id, None)
+
+    if job is None:
+        # Lost a race with another request for the same job_id.
+        return jsonify({"error": "Job already consumed."}), 404
+
+    stream   = job["stream"]
+    doc_type = job["doc_type"]
+    payload  = job["payload"]
+
+    # ── Create the revision record on the main thread ─────────────────────────
     try:
-        stream, filename = document_service.generate_and_save(
+        project  = Project.query.get_or_404(job["project_id"])
+        location = ProjectLocation.query.filter_by(
+            id         = job["loc_id"],
+            project_id = job["project_id"],
+        ).first_or_404()
+
+        rev = revision_service.create_published_revision(
             project  = project,
             location = location,
-            user_id  = current_user.id,
+            user_id  = job["user_id"],
             doc_type = doc_type,
             payload  = payload,
         )
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+
+        filename = document_service._build_filename(
+            project, location, doc_type, rev.revision_number
+        )
     except Exception as exc:
         traceback.print_exc()
         return jsonify({"error": str(exc)}), 500
 
+    stream.seek(0)
     return send_file(
         stream,
         as_attachment = True,

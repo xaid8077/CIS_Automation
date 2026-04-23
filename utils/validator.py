@@ -16,16 +16,12 @@ def validate_payload(
         errors.append("Header: Project Name is required.")
 
     if require_doc_numbers:
-        # ── Per-document doc number required ──────────────────────────────────
-        for prefix, label in [
-            ("fi",  "Instrument List (Section 1)"),
-            ("el",  "Instrument List (Section 2)"),
-            ("mov", "Instrument List (Section 3)"),
-            ("io",  "IO List"),
-        ]:
-            meta = payload.get(f"{prefix}_meta", {})
-            if not meta.get("docNumber", "").strip():
-                errors.append(f"{label}: Document Number is required.")
+            # ── Per-document doc number required ──────────────────────────────────
+            fi_doc = payload.get("fi_meta", {}).get("docNumber", "").strip()
+            io_doc = payload.get("io_meta", {}).get("docNumber", "").strip()
+            
+            if not fi_doc and not io_doc:
+                errors.append("A Document Number is required to generate files.")
 
     # ── Section 1 — Field Instruments ────────────────────────────────────────
     fi_tags: Set[str] = set()

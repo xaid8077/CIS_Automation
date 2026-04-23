@@ -223,8 +223,9 @@
               </button>
               <!-- Open workspace -->
               <a href="{{ url_for('cis.project_dashboard', project_id=p.id) }}"
-                 class="btn-secondary"
-                 style="font-size:10.5px;padding:4px 8px;text-decoration:none">
+                class="btn-secondary"
+                data-pjax="false"
+                style="font-size:10.5px;padding:4px 8px;text-decoration:none">
                 Open →
               </a>
             </div>

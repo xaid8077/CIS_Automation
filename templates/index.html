@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- PJAX router — loaded before body so document/window listeners register once -->
+  <script defer src="{{ url_for('static', filename='pjax.js') }}"></script>
   <style>
     /* ── Toast ─────────────────────────────────────────────────────────── */
     #toast-rack {
@@ -482,11 +484,13 @@ function toast(msg, type = 'info', duration = 4000) {
 // ═══════════════════════════════════════════════════════════════════════════
 // Unsaved changes guard
 // ═══════════════════════════════════════════════════════════════════════════
-let _dirty = false;
-function markDirty()   { _dirty = true;  }
-function markClean()   { _dirty = false; }
+// window._dirty is checked by pjax.js before navigating away.
+// Must be on window (not a block-scoped `let`) to be readable cross-script.
+window._dirty = false;
+function markDirty()   { window._dirty = true;  }
+function markClean()   { window._dirty = false; }
 window.addEventListener('beforeunload', e => {
-  if (_dirty) {
+  if (window._dirty) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -591,12 +595,22 @@ class SimpleGrid {
     // ── Column widths string ─────────────────────────────────────────────────
     this._colTemplate = columns.map(c => c.width || '140px').join(' ');
 
+    // Sum every column's pixel width so the absolute-positioned pool rows
+    // and the scroll-sizer element can declare the true content width.
+    // This is what lets the host show a horizontal scrollbar.
+    this._totalWidth = this.columns.reduce((sum, col) => {
+      const raw = (col.width || '140px').replace('px', '');
+      const px  = parseInt(raw, 10);
+      return sum + (isNaN(px) ? 140 : px);
+    }, 0);
+
     // ── Header ──────────────────────────────────────────────────────────────
     const head = document.createElement('div');
     head.className = 'sg-head';
     head.style.cssText =
       `display:grid;grid-template-columns:${this._colTemplate};` +
-      `position:sticky;top:0;z-index:2;`;
+      `position:sticky;top:0;z-index:2;` +
+      `min-width:${this._totalWidth}px;`;
     for (const col of columns) {
       const h = document.createElement('div');
       h.className   = 'sg-hcell';
@@ -610,15 +624,22 @@ class SimpleGrid {
     // We add position:relative so pooled rows can use position:absolute inside.
     this._viewport = document.createElement('div');
     this._viewport.className = 'sg-body';
+    // overflow:hidden clips the pool rows to the viewport so the browser
+    // doesn't double-scroll.  min-width forces the host (.simple-grid, which
+    // has overflow:auto in CSS) to show a horizontal scrollbar when the column
+    // total exceeds the container width.
     this._viewport.style.cssText =
-      'position:relative;overflow:hidden;';   // overflow hidden — host scrolls
+      `position:relative;overflow:hidden;min-width:${this._totalWidth}px;`;
     host.appendChild(this._viewport);
 
     // ── Sizer ────────────────────────────────────────────────────────────────
-    // Invisible element whose sole job is to set the true scroll height.
+    // Sets the true scrollable area: height = totalRows × ROW_H,
+    // width = total column width.  Both dimensions must be declared or the
+    // host scroll container won't know the real content bounds.
     this._sizer = document.createElement('div');
     this._sizer.style.cssText =
-      'position:absolute;top:0;left:0;width:1px;pointer-events:none;';
+      `position:absolute;top:0;left:0;` +
+      `width:${this._totalWidth}px;pointer-events:none;`;
     this._viewport.appendChild(this._sizer);
 
     // ── DOM pool ─────────────────────────────────────────────────────────────
@@ -650,9 +671,14 @@ class SimpleGrid {
   _buildPoolRow() {
     const row = document.createElement('div');
     row.className = 'sg-row';
+    // width is explicit (not right:0) so rows extend to full column width
+    // regardless of the viewport's visible width.  Horizontal scroll is
+    // handled by the host (.simple-grid) — pool rows just need to be
+    // the correct total width and the browser does the rest.
     row.style.cssText =
       `display:grid;grid-template-columns:${this._colTemplate};` +
-      `position:absolute;left:0;right:0;height:${SimpleGrid.ROW_H}px;top:-9999px;`;
+      `position:absolute;left:0;width:${this._totalWidth}px;` +
+      `height:${SimpleGrid.ROW_H}px;top:-9999px;`;
     row.dataset.poolRow = '1';
 
     for (let c = 0; c < this.columns.length; c++) {
@@ -1128,37 +1154,34 @@ movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5, 'mov');
 window._parserWorker = null;
 
 (function initWorker() {
-  if (!window.Worker) return;   // SSR / very old browser
+  if (!window.Worker) return;
 
-  const _gridMap = { fi: fiGrid, el: elGrid, mov: movGrid };
-  const _ind     = document.getElementById('parse-indicator');
+  // ── PJAX re-entry: worker already alive from a previous visit ─────────────
+  // Re-point its onmessage at the freshly created grid instances and exit.
+  if (window._parserWorker) {
+    window._updateWorkerGridMap();
+    console.info('[CIS] Clipboard Worker reused (PJAX re-entry).');
+    return;
+  }
 
+  // ── First load: create the worker ─────────────────────────────────────────
   try {
     const worker = new Worker(
       "{{ url_for('static', filename='parserWorker.js') }}"
     );
 
-    worker.onmessage = function (e) {
-      const { type, matrix, startR, startC, gridId } = e.data;
-      if (type !== 'result') return;
-
-      const grid = _gridMap[gridId];
-      if (grid) grid._applyMatrix(startR, startC, matrix);
-
-      // Hide the indicator regardless of whether the grid was found.
-      if (_ind) _ind.style.display = 'none';
-    };
+    window._parserWorker = worker;
+    // Wire up the initial onmessage via the shared updater.
+    window._updateWorkerGridMap();
 
     worker.onerror = function (err) {
-      // Degrade gracefully: future pastes will hit the sync fallback.
-      console.warn('[CIS] parserWorker error — reverting to sync paste:', err.message);
+      console.warn('[CIS] parserWorker error — falling back to sync paste:', err.message);
       window._parserWorker = null;
-      if (_ind) _ind.style.display = 'none';
+      const ind = document.getElementById('parse-indicator');
+      if (ind) ind.style.display = 'none';
     };
 
-    window._parserWorker = worker;
-    console.info('[CIS] Clipboard Web Worker active.');
-
+    console.info('[CIS] Clipboard Web Worker started.');
   } catch (err) {
     console.warn('[CIS] Could not start parserWorker:', err);
   }
@@ -1170,6 +1193,24 @@ document.getElementById('elAdd5').addEventListener('click',  () => elGrid.addRow
 document.getElementById('elAdd1').addEventListener('click',  () => elGrid.addRows(1));
 document.getElementById('movAdd5').addEventListener('click', () => movGrid.addRows(5));
 document.getElementById('movAdd1').addEventListener('click', () => movGrid.addRows(1));
+
+/**
+ * Called by initWorker (below) and after every PJAX navigation back to the
+ * editor.  Re-points the worker's result handler at the current grid
+ * instances, which are re-created each time the editor body is swapped in.
+ */
+window._updateWorkerGridMap = function () {
+  if (!window._parserWorker) return;
+  const _gridMap = { fi: fiGrid, el: elGrid, mov: movGrid };
+  window._parserWorker.onmessage = function (e) {
+    const { type, matrix, startR, startC, gridId } = e.data;
+    if (type !== 'result') return;
+    const grid = _gridMap[gridId];
+    if (grid) grid._applyMatrix(startR, startC, matrix);
+    const ind = document.getElementById('parse-indicator');
+    if (ind) ind.style.display = 'none';
+  };
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Row count badges

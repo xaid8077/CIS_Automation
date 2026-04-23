@@ -674,3 +674,21 @@ body {
   will-change: transform;    /* hint GPU layer for smooth scroll */
   contain:     layout style; /* local to each row                */
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PJAX top-of-page progress bar
+   ──────────────────────────────────────────────────────────────────────── */
+#pjax-bar {
+  position:       fixed;
+  top:            0;
+  left:           0;
+  width:          0;
+  height:         2px;
+  background:     var(--accent);
+  z-index:        10000;
+  opacity:        0;
+  transition:     width .25s ease, opacity .28s ease;
+  pointer-events: none;
+  border-radius:  0 2px 2px 0;
+  box-shadow:     0 0 8px var(--accent-glow);
+}
