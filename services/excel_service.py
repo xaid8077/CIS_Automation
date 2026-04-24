@@ -30,51 +30,31 @@ from utils.excel_writer import write_workbook, write_io_workbook
 # Maps doc_type string → writer function.
 # Adding a new document type = adding one entry here.
 
-_WRITERS: Dict[str, Callable[[dict, BytesIO], None]] = {
-    "Instrument List": write_workbook,
-    "IO List":         write_io_workbook,
+_WRITERS: Dict[str, Callable[[dict], BytesIO]] = {
+    "Instrument List": write_instrument_list,
+    "IO List": write_io_workbook,
 }
 
 
 # ─── Public entry point ───────────────────────────────────────────────────────
 
 def generate(doc_type: str, payload: dict) -> BytesIO:
-    """
-    Generate an Excel workbook for the given document type.
-
-    Parameters
-    ----------
-    doc_type : str
-        One of the keys registered in _WRITERS
-        (e.g. "Instrument List", "IO List").
-    payload : dict
-        Clean payload dict — output of PayloadSchema.load().
-        Must contain at minimum the keys expected by the writer:
-          "header", "fi_meta" / "io_meta", "field_instruments",
-          "electrical", "mov".
-
-    Returns
-    -------
-    BytesIO
-        In-memory stream positioned at offset 0.
-        Pass directly to Flask's send_file() — no seek() needed.
-
-    Raises
-    ------
-    ValueError
-        doc_type is not registered in _WRITERS.
-    FileNotFoundError
-        The underlying xlsx template is missing from templates/.
-    Exception
-        Any openpyxl error during workbook generation propagates as-is.
-    """
     writer = _WRITERS.get(doc_type)
+
     if writer is None:
         raise ValueError(
             f"No Excel writer registered for document type '{doc_type}'. "
             f"Supported types: {sorted(_WRITERS)}."
         )
 
+    result = writer(payload)
+
+    # Backward compatibility (handles both styles)
+    if isinstance(result, BytesIO):
+        result.seek(0)
+        return result
+
+    # fallback for legacy writers (if any left)
     output = BytesIO()
     writer(payload, output)
     output.seek(0)
