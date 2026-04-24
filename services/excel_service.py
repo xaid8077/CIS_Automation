@@ -4,61 +4,68 @@ excel_service.py
 ────────────────
 Thin, stateless wrapper over utils/excel_writer.py.
 
-Why a wrapper?
-──────────────
-Routes and document_service must never import excel_writer directly.
-This indirection means:
-  - The heavy openpyxl logic stays isolated in utils/excel_writer.py.
-  - If we ever swap the writer (e.g. xlsxwriter, async Celery task),
-    only this file changes — document_service is untouched.
-  - Unit tests can mock excel_service.generate() without needing a
-    real xlsx template on disk.
+Isolates the heavy XML-manipulation logic from the rest of the
+service layer.  Routes and document_service call generate() here;
+they never import excel_writer directly.
 
-Public API
-──────────
-    stream = excel_service.generate(doc_type, payload)
-    # Returns a BytesIO at offset 0, ready for Flask's send_file().
+Adding a new document type:
+  1. Write a writer function in utils/excel_writer.py.
+  2. Add one entry to _WRITERS below.
+  Nothing else changes.
 """
 
 from io import BytesIO
 from typing import Callable, Dict
 
-from utils.excel_writer import write_workbook, write_io_workbook
+from utils.excel_writer import write_instrument_list, write_io_workbook
 
 
 # ─── Registry ─────────────────────────────────────────────────────────────────
-# Maps doc_type string → writer function.
-# Adding a new document type = adding one entry here.
 
 _WRITERS: Dict[str, Callable[[dict], BytesIO]] = {
     "Instrument List": write_instrument_list,
-    "IO List": write_io_workbook,
+    "IO List":         write_io_workbook,
 }
 
 
 # ─── Public entry point ───────────────────────────────────────────────────────
 
 def generate(doc_type: str, payload: dict) -> BytesIO:
+    """
+    Generate an Excel workbook for the given doc_type.
+
+    Parameters
+    ----------
+    doc_type : str
+        Must be a key in _WRITERS (e.g. "Instrument List", "IO List").
+    payload  : dict
+        Clean payload dict produced by PayloadSchema.load().
+
+    Returns
+    -------
+    BytesIO
+        In-memory stream positioned at offset 0, ready for send_file().
+
+    Raises
+    ------
+    ValueError
+        If doc_type has no registered writer.
+    Any exception from the writer propagates unchanged so the caller
+    (document_service) can roll back the DB transaction before re-raising.
+    """
     writer = _WRITERS.get(doc_type)
 
     if writer is None:
         raise ValueError(
             f"No Excel writer registered for document type '{doc_type}'. "
-            f"Supported types: {sorted(_WRITERS)}."
+            f"Supported: {sorted(_WRITERS)}."
         )
 
-    result = writer(payload)
+    stream: BytesIO = writer(payload)
 
-    # Backward compatibility (handles both styles)
-    if isinstance(result, BytesIO):
-        result.seek(0)
-        return result
-
-    # fallback for legacy writers (if any left)
-    output = BytesIO()
-    writer(payload, output)
-    output.seek(0)
-    return output
+    # All writers must return a BytesIO; rewind just in case.
+    stream.seek(0)
+    return stream
 
 
 def supported_types() -> list:
@@ -68,11 +75,11 @@ def supported_types() -> list:
 
 def register_writer(doc_type: str, writer_fn: Callable) -> None:
     """
-    Register a new writer at runtime (e.g. from a plugin or test).
+    Register an additional writer at runtime (tests / plugins).
 
     Parameters
     ----------
-    doc_type  : str   — The document type key (e.g. "Cable Schedule").
-    writer_fn : callable(payload: dict, destination: BytesIO) -> None
+    doc_type  : str          — e.g. "Cable Schedule"
+    writer_fn : callable     — fn(payload: dict) -> BytesIO
     """
     _WRITERS[doc_type] = writer_fn

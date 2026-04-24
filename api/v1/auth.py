@@ -53,7 +53,6 @@ class LoginSchema(Schema):
         unknown = EXCLUDE
 
     username = fields.Str(required=True)
-    password = fields.Str(required=True, load_default="")
 
     @validates("username")
     def not_blank(self, value):

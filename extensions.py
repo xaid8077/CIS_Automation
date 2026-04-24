@@ -6,20 +6,15 @@ All Flask extension singletons live here.
 
 Import from this module everywhere — never from app.py — to avoid
 circular imports.
-
-New in this version
-───────────────────
-- Flask-Migrate  : Alembic-based schema migration management.
-- Flask-JWT-Extended : JWT authentication for the API layer.
 """
 
-from flask_sqlalchemy       import SQLAlchemy
-from flask_login            import LoginManager
-from flask_wtf.csrf         import CSRFProtect
-from flask_limiter          import Limiter
-from flask_limiter.util     import get_remote_address
-from flask_migrate          import Migrate
-from flask_jwt_extended     import JWTManager
+from flask_sqlalchemy   import SQLAlchemy
+from flask_login        import LoginManager
+from flask_wtf.csrf     import CSRFProtect
+from flask_limiter      import Limiter
+from flask_limiter.util import get_remote_address
+from flask_migrate      import Migrate
+from flask_jwt_extended import JWTManager
 
 db            = SQLAlchemy()
 login_manager = LoginManager()

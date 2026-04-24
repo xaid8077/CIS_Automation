@@ -3,19 +3,6 @@
 app.py
 ──────
 Application factory — wiring only.
-
-All business logic, route handlers, and service code live in their
-own modules.  This file's only job is to create the Flask app,
-attach extensions, register blueprints, and wire error handlers.
-
-Request size override
-─────────────────────
-Werkzeug 3.x enforces form-size limits as class-level attributes on
-the Request object, independent of Flask config.  _BigRequest overrides
-them so large JSON payloads are never rejected with a silent 413.
-(JSON bodies are not subject to MAX_FORM_MEMORY_SIZE, but the override
-is kept here as a defence-in-depth measure for any multipart routes
-added in the future.)
 """
 
 import os
@@ -23,13 +10,14 @@ import os
 from flask import Flask, Request as _FlaskRequest, render_template
 
 from config     import get_config
-from extensions import db, login_manager, csrf, limiter
+from extensions import db, login_manager, csrf, limiter, migrate, jwt
 from models     import User
 
 # ── Blueprints ─────────────────────────────────────────────────────────────────
-from routes.auth  import auth_bp
-from routes.admin import admin_bp
-from routes.cis   import cis_bp
+from routes.auth    import auth_bp
+from routes.admin   import admin_bp
+from routes.cis     import cis_bp
+from api.v1         import api_v1_bp
 
 
 # ─── Request subclass ─────────────────────────────────────────────────────────
@@ -48,14 +36,14 @@ def create_app() -> Flask:
     app.request_class = _BigRequest
     app.config.from_object(get_config())
 
-    # Belt-and-suspenders: set size limits in config too so anything
-    # reading from app.config (e.g. older Werkzeug middleware) agrees.
     app.config.setdefault("MAX_CONTENT_LENGTH",   16 * 1024 * 1024)
     app.config.setdefault("MAX_FORM_MEMORY_SIZE", 16 * 1024 * 1024)
     app.config.setdefault("MAX_FORM_PARTS",       10_000)
 
     # ── Extensions ────────────────────────────────────────────────────────────
     db.init_app(app)
+    migrate.init_app(app, db)       # Flask-Migrate (Alembic)
+    jwt.init_app(app)               # Flask-JWT-Extended
     login_manager.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
@@ -68,6 +56,10 @@ def create_app() -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(cis_bp)
+    app.register_blueprint(api_v1_bp)   # /api/v1/*
+
+    # CSRF: exempt JSON API routes (JWT-authenticated, not cookie-based)
+    csrf.exempt(api_v1_bp)
 
     # ── Database ───────────────────────────────────────────────────────────────
     with app.app_context():
