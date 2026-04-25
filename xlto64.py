@@ -18,6 +18,7 @@ from pathlib import Path
 TEMPLATES = {
     "IL": "templates/IL.xlsx",
     "IO": "templates/IO.xlsx",
+    "CS": "templates/CS.xlsx"
 }
 
 output_lines = [
@@ -44,3 +45,4 @@ out_path.write_text("".join(output_lines))
 print(f"✅  Embedded templates written to {out_path}")
 print(f"    IL: {Path(TEMPLATES['IL']).stat().st_size:,} bytes")
 print(f"    IO: {Path(TEMPLATES['IO']).stat().st_size:,} bytes")
+print(f"    CS: {Path(TEMPLATES['CS']).stat().st_size:,} bytes")

@@ -64,6 +64,7 @@ import math
 import os
 import re
 import zipfile
+from copy import deepcopy
 from datetime import datetime, date
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
@@ -125,6 +126,9 @@ _URI_TO_PREFIX = {
 # Every XML file inside an xlsx must start with this declaration.
 # ET.tostring strips it — we prepend it manually after serialisation.
 _XML_DECL = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n'
+_WRITTEN_CELL_FONT_NAME = "Aptos"
+_WRITTEN_CELL_FONT_SIZE = "18"
+_WRITTEN_ROW_HEIGHT = "35"
 
 
 def _ns(tag: str) -> str:
@@ -354,6 +358,143 @@ def _get_shared_idx(root: ET.Element, strings: List[str], val: str) -> int:
     root.set("count",       str(int(root.get("count",       "0")) + 1))
     root.set("uniqueCount", str(int(root.get("uniqueCount", "0")) + 1))
     return idx
+
+
+def _load_styles(zipf: zipfile.ZipFile) -> Optional[ET.Element]:
+    """Parse xl/styles.xml and return its root element when present."""
+    try:
+        return ET.fromstring(zipf.read("xl/styles.xml"))
+    except KeyError:
+        return None
+
+
+def _ensure_written_cell_font(styles_root: ET.Element) -> int:
+    """Return the fontId for the workbook's Aptos 18 normal font."""
+    fonts = styles_root.find(_ns("fonts"))
+    if fonts is None:
+        fonts = ET.SubElement(styles_root, _ns("fonts"), {"count": "0"})
+
+    for idx, font in enumerate(fonts.findall(_ns("font"))):
+        name = font.find(_ns("name"))
+        size = font.find(_ns("sz"))
+        if (
+            name is not None
+            and size is not None
+            and name.attrib.get("val") == _WRITTEN_CELL_FONT_NAME
+            and size.attrib.get("val") == _WRITTEN_CELL_FONT_SIZE
+            and font.find(_ns("b")) is None
+            and font.find(_ns("i")) is None
+            and font.find(_ns("u")) is None
+        ):
+            return idx
+
+    font = ET.SubElement(fonts, _ns("font"))
+    ET.SubElement(font, _ns("sz"), {"val": _WRITTEN_CELL_FONT_SIZE})
+    ET.SubElement(font, _ns("name"), {"val": _WRITTEN_CELL_FONT_NAME})
+    ET.SubElement(font, _ns("family"), {"val": "2"})
+    fonts.set("count", str(len(fonts.findall(_ns("font")))))
+    return len(fonts.findall(_ns("font"))) - 1
+
+
+def _ensure_written_cell_border(styles_root: ET.Element) -> int:
+    """Return the borderId for a thin border on all four cell sides."""
+    borders = styles_root.find(_ns("borders"))
+    if borders is None:
+        borders = ET.SubElement(styles_root, _ns("borders"), {"count": "0"})
+
+    for idx, border in enumerate(borders.findall(_ns("border"))):
+        left = border.find(_ns("left"))
+        right = border.find(_ns("right"))
+        top = border.find(_ns("top"))
+        bottom = border.find(_ns("bottom"))
+        if not all((left, right, top, bottom)):
+            continue
+        if (
+            left.attrib.get("style") == "thin"
+            and right.attrib.get("style") == "thin"
+            and top.attrib.get("style") == "thin"
+            and bottom.attrib.get("style") == "thin"
+        ):
+            return idx
+
+    border = ET.SubElement(borders, _ns("border"))
+    for side in ("left", "right", "top", "bottom"):
+        side_elem = ET.SubElement(border, _ns(side), {"style": "thin"})
+        ET.SubElement(side_elem, _ns("color"), {"indexed": "64"})
+    ET.SubElement(border, _ns("diagonal"))
+    borders.set("count", str(len(borders.findall(_ns("border")))))
+    return len(borders.findall(_ns("border"))) - 1
+
+
+def _get_cell_style_index(cell: ET.Element, row: ET.Element) -> int:
+    """Return the base style index inherited by a cell."""
+    cell_style = cell.attrib.get("s")
+    if cell_style is not None:
+        try:
+            return int(cell_style)
+        except ValueError:
+            pass
+
+    row_style = row.attrib.get("s")
+    if row_style is not None and row.attrib.get("customFormat") == "1":
+        try:
+            return int(row_style)
+        except ValueError:
+            pass
+
+    return 0
+
+
+def _get_written_cell_style_index(
+    styles_root: ET.Element,
+    base_style_idx: int,
+    written_font_id: int,
+    written_border_id: int,
+    style_cache: Dict[int, int],
+) -> int:
+    """
+    Clone the base cell style and swap only its font to the Aptos 18 font.
+    """
+    cached_idx = style_cache.get(base_style_idx)
+    if cached_idx is not None:
+        return cached_idx
+
+    cell_xfs = styles_root.find(_ns("cellXfs"))
+    if cell_xfs is None:
+        cell_xfs = ET.SubElement(styles_root, _ns("cellXfs"), {"count": "0"})
+
+    xfs = cell_xfs.findall(_ns("xf"))
+    if not xfs:
+        xfs = [ET.SubElement(cell_xfs, _ns("xf"), {
+            "numFmtId": "0",
+            "fontId": "0",
+            "fillId": "0",
+            "borderId": "0",
+            "xfId": "0",
+        })]
+
+    if base_style_idx < 0 or base_style_idx >= len(xfs):
+        base_style_idx = 0
+
+    new_xf = deepcopy(xfs[base_style_idx])
+    new_xf.set("fontId", str(written_font_id))
+    new_xf.set("borderId", str(written_border_id))
+    new_xf.set("applyFont", "1")
+    new_xf.set("applyBorder", "1")
+
+    alignment = new_xf.find(_ns("alignment"))
+    if alignment is None:
+        alignment = ET.SubElement(new_xf, _ns("alignment"))
+    alignment.set("horizontal", "center")
+    alignment.set("vertical", "center")
+    new_xf.set("applyAlignment", "1")
+
+    cell_xfs.append(new_xf)
+    cell_xfs.set("count", str(len(cell_xfs.findall(_ns("xf")))))
+
+    new_idx = len(cell_xfs.findall(_ns("xf"))) - 1
+    style_cache[base_style_idx] = new_idx
+    return new_idx
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -595,6 +736,10 @@ def _set_cell(
     val: Any,
     shared_root: ET.Element,
     shared_strings: List[str],
+    styles_root: Optional[ET.Element],
+    written_font_id: Optional[int],
+    written_border_id: Optional[int],
+    style_cache: Dict[int, int],
 ) -> None:
     """
     Write *val* to cell *ref* in *sheet_root*.
@@ -659,6 +804,24 @@ def _set_cell(
     # ── Write new value ───────────────────────────────────────────────────────
     if val == "" or val is None:
         return
+
+    target_row.set("ht", _WRITTEN_ROW_HEIGHT)
+    target_row.set("customHeight", "1")
+
+    if (
+        styles_root is not None
+        and written_font_id is not None
+        and written_border_id is not None
+    ):
+        base_style_idx = _get_cell_style_index(target_cell, target_row)
+        style_idx = _get_written_cell_style_index(
+            styles_root,
+            base_style_idx,
+            written_font_id,
+            written_border_id,
+            style_cache,
+        )
+        target_cell.set("s", str(style_idx))
 
     if isinstance(val, str):
         val = _sanitize_excel_text(val)
@@ -1030,9 +1193,27 @@ def _process(
 
     # Parse shared strings once — all sheet writers share the same pool.
     shared_root, shared_strings = _load_shared_strings(zin)
+    styles_root = _load_styles(zin)
+    written_font_id = (
+        _ensure_written_cell_font(styles_root)
+        if styles_root is not None
+        else None
+    )
+    written_border_id = (
+        _ensure_written_cell_border(styles_root)
+        if styles_root is not None
+        else None
+    )
+    written_style_cache: Dict[int, int] = {}
 
     for item in zin.infolist():
         if item.filename == "xl/calcChain.xml":
+            continue
+
+        if item.filename == "xl/sharedStrings.xml":
+            continue
+
+        if item.filename == "xl/styles.xml":
             continue
 
         data = zin.read(item.filename)
@@ -1045,16 +1226,22 @@ def _process(
             sheet_merges  = merges_by_sheet.get(item.filename, [])
 
             for ref, val in sheet_updates.items():
-                _set_cell(root, ref, val, shared_root, shared_strings)
+                _set_cell(
+                    root,
+                    ref,
+                    val,
+                    shared_root,
+                    shared_strings,
+                    styles_root,
+                    written_font_id,
+                    written_border_id,
+                    written_style_cache,
+                )
 
             if sheet_merges:
                 _apply_merges(root, sheet_merges)
 
             data = _serialize_xml(root)
-
-        elif item.filename == "xl/sharedStrings.xml" and shared_root is not None:
-            # Rewrite shared strings with the accumulated new entries.
-            data = _serialize_xml(shared_root)
 
         elif item.filename == "[Content_Types].xml":
             data = _remove_calc_chain_content_type(data)
@@ -1065,6 +1252,12 @@ def _process(
         # All other files (styles, workbook, relationships, images, …) are
         # copied unchanged — do NOT re-parse or re-serialise them.
         zout.writestr(item, data)
+
+    if shared_root is not None:
+        zout.writestr("xl/sharedStrings.xml", _serialize_xml(shared_root))
+
+    if styles_root is not None:
+        zout.writestr("xl/styles.xml", _serialize_xml(styles_root))
 
     zin.close()
     zout.close()
