@@ -70,7 +70,8 @@ from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
 from xml.etree import ElementTree as ET
 
-from utils.embedded_templates import IL_TEMPLATE_B64, IO_TEMPLATE_B64
+# Change the import line near the top:
+from utils.embedded_templates import IL_TEMPLATE_B64, IO_TEMPLATE_B64, CS_TEMPLATE_B64
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Namespace constants
@@ -1159,6 +1160,113 @@ def _build_io_data_updates(
                 merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
 
     return updates, merges
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CS data builder
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# CS column layout (data sheet named "CS")
+# ─────────────────────────────────────────────────────────────────────────────
+#   A  = S.No
+#   B  = Tag No
+#   C  = Cable Type          (deferred — left blank for now)
+#   D  = Service Description
+#   E  = Instrument Name
+#   F  = From                (deferred)
+#   G  = To                  (deferred)
+#   H  = Run                 (deferred)
+#   I  = Route Length        (deferred)
+#   J  = Total Length        (deferred)
+
+_CS_DATA_START_ROW = 6   # first data row — adjust if template differs
+
+
+def _build_cs_data_updates(
+    payload: Dict[str, Any],
+) -> Tuple[Dict[str, Any], List[Tuple[str, str]]]:
+    """
+    Build cell updates for the Cable Schedule data sheet.
+
+    All three sections (field instruments, electrical, MOVs) contribute
+    rows — every tagged instrument corresponds to at least one cable entry.
+
+    Columns C and F-J are deferred and left blank until their logic is
+    finalised.
+
+    Returns
+    -------
+    (updates, merges)
+      updates : {cell_ref: value}
+      merges  : [(start_ref, end_ref)]   — empty for now
+    """
+    updates: Dict[str, Any]       = {}
+    merges: List[Tuple[str, str]] = []
+
+    row    = _CS_DATA_START_ROW
+    serial = 1
+
+    sections = [
+        payload.get("field_instruments", []),
+        payload.get("electrical",        []),
+        payload.get("mov",               []),
+    ]
+
+    for section_rows in sections:
+        for rd in section_rows:
+            tag   = rd.get("Tag No",              "").strip()
+            svc   = rd.get("Service Description", "").strip()
+            instr = rd.get("Instrument Name",     "").strip()
+
+            # Skip completely empty rows (schema already filters most,
+            # but guard here in case a section has stale blanks).
+            if not any((tag, svc, instr)):
+                continue
+
+            updates[f"A{row}"] = serial
+            updates[f"B{row}"] = tag
+            # Column C (Cable Type) — deferred, left blank intentionally
+            updates[f"D{row}"] = svc
+            updates[f"E{row}"] = instr
+            # Columns F-J — deferred, left blank intentionally
+
+            row    += 1
+            serial += 1
+
+    return updates, merges
+
+
+def write_cable_schedule(payload: Dict[str, Any]) -> BytesIO:
+    """
+    Generate a Cable Schedule workbook from *payload*.
+
+    Cover sheet  → header metadata (AI6–AI15), same mapping as IL and IO.
+    CS data sheet → all tagged instruments, columns A B D E populated.
+
+    Returns a BytesIO ready for send_file().
+    """
+    zin_tmp   = zipfile.ZipFile(BytesIO(base64.b64decode(CS_TEMPLATE_B64)), "r")
+    sheet_map = _map_sheets(zin_tmp)
+    zin_tmp.close()
+
+    cover_path = sheet_map.get("Cover",          "xl/worksheets/sheet1.xml")
+    data_path  = sheet_map.get("CS",             "xl/worksheets/sheet2.xml")
+
+    doc_number = (payload.get("cs_meta") or {}).get("docNumber", "")
+
+    cover_updates         = _build_cover_updates(payload, doc_number)
+    cs_updates, cs_merges = _build_cs_data_updates(payload)
+
+    return _process(
+        CS_TEMPLATE_B64,
+        updates_by_sheet={
+            cover_path: cover_updates,
+            data_path:  cs_updates,
+        },
+        merges_by_sheet={
+            data_path: cs_merges,
+        },
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

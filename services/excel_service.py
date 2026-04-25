@@ -17,7 +17,7 @@ Adding a new document type:
 from io import BytesIO
 from typing import Callable, Dict
 
-from utils.excel_writer import write_instrument_list, write_io_workbook
+from utils.excel_writer import write_instrument_list, write_io_workbook, write_cable_schedule
 
 
 # ─── Registry ─────────────────────────────────────────────────────────────────
@@ -25,6 +25,7 @@ from utils.excel_writer import write_instrument_list, write_io_workbook
 _WRITERS: Dict[str, Callable[[dict], BytesIO]] = {
     "Instrument List": write_instrument_list,
     "IO List":         write_io_workbook,
+    "Cable Schedule": write_cable_schedule,
 }
 
 

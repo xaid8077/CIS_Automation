@@ -408,9 +408,9 @@
           </div>
           <div class="dl-gate-hint" id="cs-hint">Enter a document number to enable download.</div>
           <button type="button" class="dl-btn" id="cs-btn"
-                  data-endpoint="#"
+                  data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Cable Schedule') }}"
                   style="--dl-color:#f5a623;--dl-dim:rgba(245,166,35,.12)" disabled>
-            ⬇ Download Cable Schedule
+            ⬇ Save &amp; Download Cable Schedule
           </button>
         </div>
 
@@ -1300,6 +1300,7 @@ function buildPayload() {
     el_meta:           { docNumber: '' },
     mov_meta:          { docNumber: '' },
     io_meta:           { docNumber: (document.getElementById('ioDocNumber')?.value || '').trim() },
+    cs_meta:           { docNumber: (document.getElementById('csDocNumber')?.value || '').trim() },
     field_instruments: buildFiRows(),
     electrical:        buildFlatRows(elGrid),
     mov:               buildFlatRows(movGrid),
@@ -1521,10 +1522,13 @@ document.addEventListener('click', async (e) => {
   // Pre-fill doc numbers so user doesn't retype them for a new revision
   const fiDocNum = (raw.fi_meta || {}).docNumber || '';
   const ioDocNum = (raw.io_meta || {}).docNumber || '';
+  const csDocNum = (raw.cs_meta || {}).docNumber || '';
   const fiInput  = document.getElementById('fiDocNumber');
   const ioInput  = document.getElementById('ioDocNumber');
+  const csInput  = document.getElementById('csDocNumber');
   if (fiInput && fiDocNum) { fiInput.value = fiDocNum; checkDocGate('il'); }
   if (ioInput && ioDocNum) { ioInput.value = ioDocNum; checkDocGate('io'); }
+  if (csInput && csDocNum) { csInput.value = csDocNum; checkDocGate('cs'); }
 
   updateCounts();
   console.info(

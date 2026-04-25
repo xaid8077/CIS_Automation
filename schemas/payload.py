@@ -236,6 +236,7 @@ class PayloadSchema(Schema):
     el_meta           = fields.Nested(MetaSchema,    load_default=dict)
     mov_meta          = fields.Nested(MetaSchema,    load_default=dict)
     io_meta           = fields.Nested(MetaSchema,    load_default=dict)
+    cs_meta           = fields.Nested(MetaSchema,    load_default=dict)   # ← NEW
     field_instruments = fields.List(
         fields.Nested(FieldInstrumentRowSchema), load_default=list
     )

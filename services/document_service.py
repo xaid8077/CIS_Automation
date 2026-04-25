@@ -39,6 +39,7 @@ from services import excel_service
 SUPPORTED_DOC_TYPES = {
     "Instrument List",
     "IO List",
+    "Cable Schedule",   # ← NEW
 }
 
 

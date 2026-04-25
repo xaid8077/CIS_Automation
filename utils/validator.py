@@ -19,6 +19,7 @@ def validate_payload(
             # ── Per-document doc number required ──────────────────────────────────
             fi_doc = payload.get("fi_meta", {}).get("docNumber", "").strip()
             io_doc = payload.get("io_meta", {}).get("docNumber", "").strip()
+            cs_doc = payload.get("cs_meta", {}).get("docNumber", "").strip()
             
             if not fi_doc and not io_doc:
                 errors.append("A Document Number is required to generate files.")

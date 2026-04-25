@@ -215,6 +215,14 @@
                     {{ rev.data_payload.get('io_meta', {}).get('docNumber') or 'N/A' }}
                   </div>
                 </div>
+              {% elif rev.doc_type == 'Cable Schedule' %}
+                <span style="font-size:15px">&#128268;</span>
+                <div>
+                  <div style="font-weight:600;font-size:12.5px">Cable Schedule</div>
+                  <div style="font-size:10.5px;color:var(--text-3)">
+                    {{ rev.data_payload.get('cs_meta', {}).get('docNumber') or 'N/A' }}
+                  </div>
+                </div>
               {% else %}
                 <span style="font-size:15px">&#128450;</span>
                 <div style="font-weight:600;font-size:12.5px">{{ rev.doc_type }}</div>
