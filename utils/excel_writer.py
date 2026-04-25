@@ -19,9 +19,33 @@ Public API
     stream = write_instrument_list(payload)   → BytesIO
     stream = write_io_workbook(payload)        → BytesIO
 
-Template cell conventions (Cover / sheet1)
+IL column layout (data sheet)
+──────────────────────────────
+    A  = S.No
+    B  = Instrument Code  (auto-generated from Instrument Name)
+    C  = Tag No
+    D  = Instrument Name
+    E  = Service Description
+    F  = Line Size
+    G  = Medium
+    H  = Specification
+    I  = Process Conn
+    J  = Working Pressure
+    K  = Working Flow
+    L  = Working Level
+    M  = Design Pressure
+    N  = Design Flow
+    O  = Design Level
+    P  = Set-point
+    Q  = Range
+    R  = UOM
+    S  = Signal Type
+    T  = Velocity          (flowmeters only — FM instruments)
+    U  = FM Size / NB      (flowmeters only)
+
+Cover / sheet1 input cells
 ──────────────────────────────────────────
-    AI6  = date (written as Excel date serial so TEXT() formulas work)
+    AI6  = date (Excel date serial so TEXT() formulas work)
     AI7  = prepared by
     AI8  = checked by
     AI9  = approved by
@@ -34,6 +58,11 @@ Template cell conventions (Cover / sheet1)
 """
 
 import base64
+import functools
+import json
+import math
+import os
+import re
 import zipfile
 from datetime import datetime, date
 from io import BytesIO
@@ -46,40 +75,236 @@ from utils.embedded_templates import IL_TEMPLATE_B64, IO_TEMPLATE_B64
 # Namespace constants
 # ─────────────────────────────────────────────────────────────────────────────
 
-_NSMAP = {
-    "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
-    "r":    "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+# ─────────────────────────────────────────────────────────────────────────────
+# Namespace constants  — ALL namespaces found in xlsx XML must be registered
+# so ElementTree preserves their prefixes on serialisation.
+# Missing registrations cause ns0:/ns1: mangling which corrupts the file.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ALL_NS = {
+    "":      "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    "r":     "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "mc":    "http://schemas.openxmlformats.org/markup-compatibility/2006",
+    "x14ac": "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac",
+    "xr":    "http://schemas.microsoft.com/office/spreadsheetml/2014/revision",
+    "xr2":   "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2",
+    "xr3":   "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3",
+    "x14":   "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main",
+    "x15":   "http://schemas.microsoft.com/office/spreadsheetml/2010/11/main",
+    "x15ac": "http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac",
+    "xr6":   "http://schemas.microsoft.com/office/spreadsheetml/2016/revision6",
+    "xr10":  "http://schemas.microsoft.com/office/spreadsheetml/2016/revision10",
+    "a":     "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "xdr":   "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing",
+    "a14":   "http://schemas.microsoft.com/office/drawing/2010/main",
+    "a16":   "http://schemas.microsoft.com/office/drawing/2014/main",
+    "cp":    "http://schemas.openxmlformats.org/package/2006/metadata/core-properties",
+    "dc":    "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "vt":    "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes",
+    "xcalcf": "http://schemas.microsoft.com/office/spreadsheetml/2018/calcfeatures",
 }
 
-# Register so ET.tostring() keeps prefixes intact
-for _prefix, _uri in _NSMAP.items():
+for _prefix, _uri in _ALL_NS.items():
     ET.register_namespace(_prefix, _uri)
-ET.register_namespace("", _NSMAP["main"])   # default namespace
 
-_MAIN_NS = _NSMAP["main"]
-_REL_NS  = _NSMAP["r"]
+_MAIN_NS = _ALL_NS[""]
+_REL_NS  = _ALL_NS["r"]
+_MC_NS   = _ALL_NS["mc"]
+_PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+_CONTENT_TYPES_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
+_CALC_CHAIN_REL_TYPE = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain"
+)
+_URI_TO_PREFIX = {
+    uri: prefix
+    for prefix, uri in _ALL_NS.items()
+    if prefix
+}
+
+# Every XML file inside an xlsx must start with this declaration.
+# ET.tostring strips it — we prepend it manually after serialisation.
+_XML_DECL = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n'
 
 
 def _ns(tag: str) -> str:
     return f"{{{_MAIN_NS}}}{tag}"
 
 
+def _pkg_rel_ns(tag: str) -> str:
+    return f"{{{_PKG_REL_NS}}}{tag}"
+
+
+def _content_types_ns(tag: str) -> str:
+    return f"{{{_CONTENT_TYPES_NS}}}{tag}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Instrument code map loader
+# ─────────────────────────────────────────────────────────────────────────────
+
+@functools.lru_cache(maxsize=1)
+def _load_code_map() -> dict:
+    """
+    Load instrument_code_map.json once and cache it for the process lifetime.
+
+    Searches in templates/ relative to this file's location, then relative
+    to the current working directory.  Returns an empty dict on any error
+    so the writer degrades gracefully (empty code column) rather than
+    crashing document generation.
+    """
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "templates", "instrument_code_map.json"),
+        os.path.join("templates", "instrument_code_map.json"),
+    ]
+    for path in candidates:
+        try:
+            with open(os.path.normpath(path), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+    return {}
+
+
+def _get_instrument_code(instrument_name: str) -> str:
+    """
+    Derive the instrument code (e.g. "FM", "PT", "LT") from a free-text
+    instrument name string.
+
+    Lookup order
+    ─────────────
+    1. Exact match on the full lowercased name.
+    2. Exact match after removing stop-words.
+    3. First matching contains-rule (order-sensitive — longer/more specific
+       patterns must appear first in the JSON, which they do).
+
+    Returns an empty string when no match is found.
+    """
+    if not instrument_name or not instrument_name.strip():
+        return ""
+
+    code_map   = _load_code_map()
+    exact_map  = code_map.get("exact_map",     {})
+    stop_words = set(code_map.get("stop_words", []))
+    rules      = code_map.get("contains_rules", [])
+
+    name_lower = instrument_name.lower().strip()
+
+    # 1. Exact match
+    if name_lower in exact_map:
+        return exact_map[name_lower]
+
+    # 2. Exact match after stop-word removal
+    filtered = " ".join(w for w in name_lower.split() if w not in stop_words)
+    if filtered and filtered in exact_map:
+        return exact_map[filtered]
+
+    # 3. Contains rules (first match wins)
+    for pattern, code in rules:
+        if pattern in name_lower:
+            return code
+
+    return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Flowmeter velocity / NB helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Common nominal-bore sizes in mm (DN series) used for snapping.
+_NB_SERIES = [
+    15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250,
+    300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 1200,
+]
+
+
+def _snap_to_nb(diameter_mm: float) -> int:
+    """Return the closest standard NB size for a computed pipe diameter."""
+    return min(_NB_SERIES, key=lambda nb: abs(nb - diameter_mm))
+
+
+def _parse_number(text: str) -> Optional[float]:
+    """
+    Extract the first numeric value from a free-text string.
+    Returns None when no number can be found.
+    Examples: "100 m³/h" → 100.0 ; "DN150" → 150.0 ; "0.5 bar" → 0.5
+    """
+    m = re.search(r"[-+]?\d+(?:\.\d+)?", str(text))
+    return float(m.group()) if m else None
+
+
+def _compute_fm_velocity_and_nb(
+    work_flow: str,
+    line_size: str,
+) -> Tuple[str, str]:
+    """
+    Compute the flow velocity and snap to the nearest nominal bore (NB) for a
+    flowmeter row.
+
+    Parameters
+    ----------
+    work_flow : str   Working flow value (e.g. "100 m³/h", "27.8 l/s")
+    line_size : str   Pipe size string  (e.g. "150 mm", "6 inch", "DN200")
+
+    Returns
+    -------
+    (velocity_str, nb_str)
+        velocity_str — formatted as "X.XX m/s" or "" on failure
+        nb_str       — formatted as "DN XXX" or "" on failure
+
+    Notes
+    ─────
+    - Flow is assumed to be in m³/h if the unit string contains "m³" or "m3"
+      or no recognisable unit; in l/s if "l/s" or "lps"; in l/min if "l/min".
+    - Pipe size is assumed mm unless "inch" or '"' is present (converted
+      to mm: 1 inch = 25.4 mm).
+    - Velocity = Q / A  where A = π/4 × D²  (D in metres, Q in m³/s).
+    """
+    q_raw = _parse_number(work_flow)
+    d_raw = _parse_number(line_size)
+
+    if q_raw is None or d_raw is None or q_raw <= 0 or d_raw <= 0:
+        return "", ""
+
+    # ── Unit normalisation: flow → m³/s ──────────────────────────────────────
+    wf_lower = work_flow.lower()
+    if "l/s" in wf_lower or "lps" in wf_lower:
+        q_m3s = q_raw / 1000.0
+    elif "l/min" in wf_lower or "lpm" in wf_lower:
+        q_m3s = q_raw / 60_000.0
+    elif "l/h" in wf_lower or "lph" in wf_lower:
+        q_m3s = q_raw / 3_600_000.0
+    else:
+        # Default: m³/h
+        q_m3s = q_raw / 3600.0
+
+    # ── Unit normalisation: diameter → mm ────────────────────────────────────
+    ls_lower = line_size.lower()
+    if "inch" in ls_lower or '"' in ls_lower:
+        d_mm = d_raw * 25.4
+    else:
+        d_mm = d_raw          # assume mm
+
+    nb = _snap_to_nb(d_mm)
+    d_m = d_mm / 1000.0
+
+    area = math.pi / 4 * d_m ** 2
+    if area <= 0:
+        return "", ""
+
+    velocity = q_m3s / area
+    return f"{velocity:.2f} m/s", f"DN {nb}"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Date helper
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Excel epoch: day 1 = 1900-01-01.
-# Python's date(1899, 12, 30) acts as day 0 because Excel incorrectly
-# treats 1900 as a leap year (Lotus 1-2-3 compatibility bug).
 _EXCEL_EPOCH = date(1899, 12, 30)
 
 
 def _to_excel_date(date_str: str) -> Optional[int]:
     """
     Convert an ISO date string (YYYY-MM-DD) to an Excel date serial.
-
-    Returns None when the string cannot be parsed so callers can fall back
-    to writing the raw string.
+    Returns None when the string cannot be parsed.
     """
     for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d"):
         try:
@@ -103,12 +328,10 @@ def _load_shared_strings(zipf: zipfile.ZipFile) -> Tuple[Optional[ET.Element], L
         root = ET.fromstring(zipf.read("xl/sharedStrings.xml"))
         strings: List[str] = []
         for si in root.findall(_ns("si")):
-            # Simple <t> element
             t = si.find(_ns("t"))
             if t is not None:
                 strings.append(t.text or "")
                 continue
-            # Rich-text <r><t> elements — concatenate all runs
             parts = [r.text or "" for r in si.findall(f".//{_ns('t')}")]
             strings.append("".join(parts))
         return root, strings
@@ -128,7 +351,6 @@ def _get_shared_idx(root: ET.Element, strings: List[str], val: str) -> int:
     si = ET.SubElement(root, _ns("si"))
     t  = ET.SubElement(si, _ns("t"))
     t.text = val
-    # Keep the count attribute accurate
     root.set("count",       str(int(root.get("count",       "0")) + 1))
     root.set("uniqueCount", str(int(root.get("uniqueCount", "0")) + 1))
     return idx
@@ -152,11 +374,10 @@ def _map_sheets(zipf: zipfile.ZipFile) -> Dict[str, str]:
 
     mapping: Dict[str, str] = {}
     for s in wb.findall(f".//{_ns('sheet')}"):
-        name = s.attrib["name"]
-        rid  = s.attrib[f"{{{_REL_NS}}}id"]
+        name   = s.attrib["name"]
+        rid    = s.attrib[f"{{{_REL_NS}}}id"]
         target = rel_map[rid]
-        # Target may already start with "worksheets/"
-        path = f"xl/{target}" if not target.startswith("xl/") else target
+        path   = f"xl/{target}" if not target.startswith("xl/") else target
         mapping[name] = path
 
     return mapping
@@ -181,6 +402,193 @@ def _parse_ref(ref: str) -> Tuple[str, int]:
     return col, row
 
 
+def _col_index_to_letter(idx: int) -> str:
+    """Convert a 1-based integer to Excel column letters."""
+    result = []
+    while idx > 0:
+        idx, remainder = divmod(idx - 1, 26)
+        result.append(chr(ord("A") + remainder))
+    return "".join(reversed(result))
+
+
+def _sanitize_excel_text(value: str) -> str:
+    """
+    Remove characters that are invalid in XML 1.0 and can make Excel repair
+    the workbook on open.
+    """
+    if not value:
+        return ""
+
+    cleaned: List[str] = []
+    for ch in value:
+        code = ord(ch)
+        if (
+            code in (0x09, 0x0A, 0x0D)
+            or 0x20 <= code <= 0xD7FF
+            or 0xE000 <= code <= 0xFFFD
+            or 0x10000 <= code <= 0x10FFFF
+        ):
+            cleaned.append(ch)
+    return "".join(cleaned)
+
+
+def _row_text(row: Dict[str, Any], *keys: str) -> str:
+    """Return the first non-empty row value among the provided keys."""
+    for key in keys:
+        if key not in row:
+            continue
+        value = row.get(key)
+        if value is None:
+            continue
+        text = _sanitize_excel_text(str(value)).strip()
+        if text:
+            return text
+    return ""
+
+
+def _is_il_section_1_row(row: Dict[str, Any]) -> bool:
+    """
+    Restrict the IL sheet to explicit Section 1 rows when section metadata is
+    present. If no section marker exists, keep the row.
+    """
+    markers = (
+        "Section",
+        "Section Name",
+        "Section Type",
+        "section",
+        "section_name",
+        "section_type",
+        "Category",
+        "category",
+    )
+    section_value = _row_text(row, *markers).lower()
+    if not section_value:
+        return True
+    normalized = section_value.replace("_", " ").replace("-", " ")
+    if normalized in {"1", "section 1", "field instrument", "field instruments"}:
+        return True
+    return "section 1" in normalized or "field instrument" in normalized
+
+
+def _get_existing_cell(sheet_root: ET.Element, ref: str) -> Optional[ET.Element]:
+    """Return the existing cell for *ref* without creating rows/cells."""
+    _, row_num = _parse_ref(ref)
+    sheet_data = sheet_root.find(_ns("sheetData"))
+    if sheet_data is None:
+        return None
+
+    for row in sheet_data.findall(_ns("row")):
+        if int(row.attrib.get("r", 0)) != row_num:
+            continue
+        for cell in row.findall(_ns("c")):
+            if cell.attrib.get("r") == ref:
+                return cell
+        return None
+    return None
+
+
+def _clear_existing_cell_value(sheet_root: ET.Element, ref: str) -> None:
+    """Clear only the value/formula payload of an existing cell."""
+    target_cell = _get_existing_cell(sheet_root, ref)
+    if target_cell is None:
+        return
+
+    for child_tag in (_ns("f"), _ns("v"), _ns("is")):
+        for child in target_cell.findall(child_tag):
+            target_cell.remove(child)
+    target_cell.attrib.pop("t", None)
+
+
+def _iter_merge_covered_refs(start_ref: str, end_ref: str) -> List[str]:
+    """Return all covered cell refs except the top-left merge anchor."""
+    start_col, start_row = _parse_ref(start_ref)
+    end_col, end_row = _parse_ref(end_ref)
+    start_idx = _col_letter_to_index(start_col)
+    end_idx = _col_letter_to_index(end_col)
+
+    refs: List[str] = []
+    for row_num in range(start_row, end_row + 1):
+        for col_idx in range(start_idx, end_idx + 1):
+            ref = f"{_col_index_to_letter(col_idx)}{row_num}"
+            if ref != start_ref:
+                refs.append(ref)
+    return refs
+
+
+def _collect_used_namespace_prefixes(root: ET.Element) -> set[str]:
+    """Collect namespace prefixes actually used in element/attribute names."""
+    used: set[str] = set()
+
+    for elem in root.iter():
+        if elem.tag.startswith("{"):
+            uri = elem.tag[1:].split("}", 1)[0]
+            prefix = _URI_TO_PREFIX.get(uri)
+            if prefix:
+                used.add(prefix)
+
+        for attr_name in elem.attrib:
+            if not attr_name.startswith("{"):
+                continue
+            uri = attr_name[1:].split("}", 1)[0]
+            prefix = _URI_TO_PREFIX.get(uri)
+            if prefix:
+                used.add(prefix)
+
+    return used
+
+
+def _normalize_ignorable_prefixes(root: ET.Element) -> None:
+    """
+    ElementTree drops unused namespace declarations on serialisation. Remove
+    any now-undeclared prefixes from mc:Ignorable so Excel does not reject the
+    worksheet/workbook root element.
+    """
+    ignorable_attr = f"{{{_MC_NS}}}Ignorable"
+    ignorable = root.attrib.get(ignorable_attr)
+    if not ignorable:
+        return
+
+    used_prefixes = _collect_used_namespace_prefixes(root)
+    kept_prefixes = [prefix for prefix in ignorable.split() if prefix in used_prefixes]
+
+    if kept_prefixes:
+        root.set(ignorable_attr, " ".join(kept_prefixes))
+    else:
+        root.attrib.pop(ignorable_attr, None)
+
+
+def _serialize_xml(root: ET.Element) -> bytes:
+    """Serialise an XML root with workbook-safe namespace cleanup."""
+    _normalize_ignorable_prefixes(root)
+    body = ET.tostring(root, encoding="unicode", xml_declaration=False)
+    return _XML_DECL + body.encode("utf-8")
+
+
+def _remove_calc_chain_content_type(data: bytes) -> bytes:
+    """Remove the calcChain content-type override from [Content_Types].xml."""
+    root = ET.fromstring(data)
+
+    for override in list(root.findall(_content_types_ns("Override"))):
+        if override.attrib.get("PartName") == "/xl/calcChain.xml":
+            root.remove(override)
+
+    return _serialize_xml(root)
+
+
+def _remove_calc_chain_relationship(data: bytes) -> bytes:
+    """Remove the workbook relationship pointing to calcChain.xml."""
+    root = ET.fromstring(data)
+
+    for rel in list(root.findall(_pkg_rel_ns("Relationship"))):
+        if (
+            rel.attrib.get("Type") == _CALC_CHAIN_REL_TYPE
+            or rel.attrib.get("Target") == "calcChain.xml"
+        ):
+            root.remove(rel)
+
+    return _serialize_xml(root)
+
+
 def _set_cell(
     sheet_root: ET.Element,
     ref: str,
@@ -191,14 +599,9 @@ def _set_cell(
     """
     Write *val* to cell *ref* in *sheet_root*.
 
-    Behaviour
-    ─────────
-    - If the cell already exists: replaces its value and removes any formula.
-    - If the cell does not exist: creates it in the correct row, creating the
-      row itself if necessary.
-    - Strings are stored as shared strings (t="s").
-    - Integers / floats are stored as inline numbers.
-    - Empty string → cell is cleared (value element removed, t removed).
+    - Strings  → shared strings (t="s")
+    - int/float → inline number
+    - Empty string / None → cell cleared
     """
     col_str, row_num = _parse_ref(ref)
     col_idx = _col_letter_to_index(col_str)
@@ -222,7 +625,10 @@ def _set_cell(
             break
 
     if target_row is None:
-        target_row = ET.Element(_ns("row"), {"r": str(row_num), "spans": f"{col_idx}:{col_idx}"})
+        target_row = ET.Element(
+            _ns("row"),
+            {"r": str(row_num), "spans": f"{col_idx}:{col_idx}"},
+        )
         sheet_data.insert(insert_pos, target_row)
 
     # ── Find or create the cell ───────────────────────────────────────────────
@@ -252,16 +658,17 @@ def _set_cell(
 
     # ── Write new value ───────────────────────────────────────────────────────
     if val == "" or val is None:
-        # Empty cell — leave it value-less (just the element)
         return
 
     if isinstance(val, str):
+        val = _sanitize_excel_text(val)
+        if not val:
+            return
         idx = _get_shared_idx(shared_root, shared_strings, val)
         target_cell.set("t", "s")
         v = ET.SubElement(target_cell, _ns("v"))
         v.text = str(idx)
     elif isinstance(val, bool):
-        # bool must come before int (bool subclasses int in Python)
         target_cell.set("t", "b")
         v = ET.SubElement(target_cell, _ns("v"))
         v.text = "1" if val else "0"
@@ -284,7 +691,6 @@ def _apply_merges(sheet_root: ET.Element, merges: List[Tuple[str, str]]) -> None
 
     merge_cells = sheet_root.find(_ns("mergeCells"))
     if merge_cells is None:
-        # Insert after <sheetData> if present
         sheet_data = sheet_root.find(_ns("sheetData"))
         idx = list(sheet_root).index(sheet_data) + 1 if sheet_data is not None else len(sheet_root)
         merge_cells = ET.Element(_ns("mergeCells"))
@@ -295,6 +701,8 @@ def _apply_merges(sheet_root: ET.Element, merges: List[Tuple[str, str]]) -> None
     for start, end in merges:
         ref = f"{start}:{end}"
         if ref not in existing_refs:
+            for covered_ref in _iter_merge_covered_refs(start, end):
+                _clear_existing_cell_value(sheet_root, covered_ref)
             ET.SubElement(merge_cells, _ns("mergeCell"), {"ref": ref})
             existing_refs.add(ref)
 
@@ -308,17 +716,13 @@ def _apply_merges(sheet_root: ET.Element, merges: List[Tuple[str, str]]) -> None
 def _build_cover_updates(payload: Dict[str, Any], doc_number: str) -> Dict[str, Any]:
     """
     Return a dict of {cell_ref: value} for the Cover sheet header area.
-
-    All callers pass the full payload; the relevant doc_number key (fi_meta
-    or io_meta) is resolved before calling.
     """
     hdr = payload.get("header", {})
 
-    date_str = hdr.get("date", "")
+    date_str   = hdr.get("date", "")
     excel_date = _to_excel_date(date_str)
 
     return {
-        # Input column — formulas in visible cells reference these
         "AI6":  excel_date if excel_date is not None else date_str,
         "AI7":  hdr.get("preparedBy",  ""),
         "AI8":  hdr.get("checkedBy",   ""),
@@ -333,26 +737,56 @@ def _build_cover_updates(payload: Dict[str, Any], doc_number: str) -> Dict[str, 
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# IL data builder
+# IL data builder  — Section 1 (Field Instruments) ONLY
 # ─────────────────────────────────────────────────────────────────────────────
-
-# Instrument List column layout (data sheet)
-# A  = S.No         B  = Tag No       C  = Instrument Description
-# D  = Service Desc E  = Line Size     F  = Medium
-# G  = Specification H = Process Conn  I  = Working Pressure
-# J  = Working Flow  K = Working Level L  = Design Pressure
-# M  = Design Flow   N = Design Level  O  = Set-point
-# P  = Range         Q = UOM           R  = Signal Type
-# S  = Source        T = Destination   U  = Signal
+#
+# IL column layout
+# ────────────────
+#   A  = S.No
+#   B  = Instrument Code  (auto-generated)
+#   C  = Tag No
+#   D  = Instrument Name
+#   E  = Service Description
+#   F  = Line Size
+#   G  = Medium
+#   H  = Specification
+#   I  = Process Conn
+#   J  = Working Pressure
+#   K  = Working Flow
+#   L  = Working Level
+#   M  = Design Pressure
+#   N  = Design Flow
+#   O  = Design Level
+#   P  = Set-point
+#   Q  = Range
+#   R  = UOM
+#   S  = Signal Type
+#   T  = Velocity          (FM instruments only)
+#   U  = FM Size / NB      (FM instruments only)
 
 _IL_DATA_START_ROW = 6   # first data row in the IL data sheet
+
+# Columns that are tag-stable and should be merged within a tag group.
+# (Tag No and Instrument Name stay the same across multi-signal rows.)
+_IL_TAG_STABLE_COLS = ("C", "D")
 
 
 def _build_il_data_updates(
     payload: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], List[Tuple[str, str]]]:
     """
-    Build cell updates and merge ranges for all three IL sections.
+    Build cell updates and merge ranges for the Instrument List data sheet.
+
+    Only Section 1 (field_instruments) is written.
+    Electrical equipment and MOVs do NOT appear in the IL.
+
+    Column mapping
+    ──────────────
+    A  S.No  |  B  Code  |  C  Tag No  |  D  Instrument Name
+    E  Service Desc  |  F  Line Size  |  G  Medium  |  H  Specification
+    I  Process Conn  |  J  Work Press  |  K  Work Flow  |  L  Work Level
+    M  Des Press  |  N  Des Flow  |  O  Des Level  |  P  Set-point
+    Q  Range  |  R  UOM  |  S  Signal Type  |  T  Velocity  |  U  FM NB
 
     Returns
     -------
@@ -360,100 +794,86 @@ def _build_il_data_updates(
       updates : {cell_ref: value}
       merges  : [(start_ref, end_ref)]
     """
-    updates: Dict[str, Any]          = {}
+    updates: Dict[str, Any]         = {}
     merges:  List[Tuple[str, str]]  = []
+
+    fi_rows = [
+        row_data
+        for row_data in payload.get("field_instruments", [])
+        if _is_il_section_1_row(row_data)
+    ]
+    if not fi_rows:
+        return updates, merges
+
     row    = _IL_DATA_START_ROW
     serial = 1
 
-    # Each section is (label, rows, extra_cols_from_payload)
-    sections = [
-        (
-            "Section 1 — Field Instruments",
-            payload.get("field_instruments", []),
-            "fi",
-        ),
-        (
-            "Section 2 — Electrical Equipment",
-            payload.get("electrical", []),
-            "el",
-        ),
-        (
-            "Section 3 — Motor Operated Valves",
-            payload.get("mov", []),
-            "mov",
-        ),
-    ]
+    # Track tag-group runs for merging tag-stable columns
+    run_start = row
+    prev_tag  = None
 
-    for label, rows, section_type in sections:
-        if not rows:
-            continue
+    for rd in fi_rows:
+        tag = _row_text(rd, "Tag No", "Tag Number", "Tag Numbers")
+        instr = _row_text(rd, "Instrument Name", "Instrument Names")
+        svc = _row_text(rd, "Service Description", "Description")
 
-        # Section-header row (merged A→U)
-        updates[f"A{row}"] = label
-        merges.append((f"A{row}", f"U{row}"))
-        row += 1
+        # ── Instrument code (column B) ────────────────────────────────────────
+        code = _get_instrument_code(instr) or _row_text(rd, "Instrument Code", "Code")
 
-        run_start = row
-        prev_tag  = None
+        # ── Flowmeter velocity + NB (columns T, U) ───────────────────────────
+        # Only computed when the instrument resolves to the "FM" code.
+        velocity_str = ""
+        nb_str       = ""
+        if code == "FM":
+            work_flow = _row_text(rd, "Working Flow", "Work Flow")
+            line_size = _row_text(rd, "Line Size")
+            velocity_str, nb_str = _compute_fm_velocity_and_nb(work_flow, line_size)
 
-        for rd in rows:
-            tag   = rd.get("Tag No",              "")
-            instr = rd.get("Instrument Name",     "")
-            svc   = rd.get("Service Description", "")
+        if not velocity_str:
+            velocity_str = _row_text(rd, "Velocity")
+        if not nb_str:
+            nb_str = _row_text(rd, "FM Size", "FM Sizes", "FM NB", "NB", "NB Size")
 
-            updates[f"A{row}"] = serial
-            updates[f"B{row}"] = tag
-            updates[f"C{row}"] = instr
-            updates[f"D{row}"] = svc
+        # ── Tag-group merge tracking (flush completed run) ────────────────────
+        if tag != prev_tag and prev_tag is not None:
+            if row - run_start > 1:
+                for col in _IL_TAG_STABLE_COLS:
+                    merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
+            run_start = row
 
-            if section_type == "fi":
-                updates[f"E{row}"] = rd.get("Line Size",       "")
-                updates[f"F{row}"] = rd.get("Medium",          "")
-                updates[f"G{row}"] = rd.get("Specification",   "")
-                updates[f"H{row}"] = rd.get("Process Conn",    "")
-                updates[f"I{row}"] = rd.get("Work Press",      "")
-                updates[f"J{row}"] = rd.get("Work Flow",       "")
-                updates[f"K{row}"] = rd.get("Work Level",      "")
-                updates[f"L{row}"] = rd.get("Design Press",    "")
-                updates[f"M{row}"] = rd.get("Design Flow",     "")
-                updates[f"N{row}"] = rd.get("Design Level",    "")
-                updates[f"O{row}"] = rd.get("Set-point",       "")
-                updates[f"P{row}"] = rd.get("Range",           "")
-                updates[f"Q{row}"] = rd.get("UOM",             "")
-                updates[f"R{row}"] = rd.get("Signal Type",     "")
-                updates[f"S{row}"] = rd.get("Source",          "")
-                updates[f"T{row}"] = rd.get("Destination",     "")
-                updates[f"U{row}"] = rd.get("Signal",          "")
-            else:
-                # Electrical / MOV — fewer process columns
-                sig_desc = rd.get("Signal Description", "")
-                if sig_desc:
-                    svc_full = f"{svc} — {sig_desc}" if svc else sig_desc
-                    updates[f"D{row}"] = svc_full
-                updates[f"R{row}"] = rd.get("Signal Type",  "")
-                updates[f"S{row}"] = rd.get("Source",       "")
-                updates[f"T{row}"] = rd.get("Destination",  "")
-                updates[f"U{row}"] = rd.get("Signal",       "")
+        # ── Write cells ───────────────────────────────────────────────────────
+        updates[f"A{row}"] = serial
+        updates[f"B{row}"] = code
+        updates[f"C{row}"] = tag
+        updates[f"D{row}"] = instr
+        updates[f"E{row}"] = svc
+        updates[f"F{row}"] = _row_text(rd, "Line Size")
+        updates[f"G{row}"] = _row_text(rd, "Medium")
+        updates[f"H{row}"] = _row_text(rd, "Specification")
+        updates[f"I{row}"] = _row_text(rd, "Process connection", "Process Connection", "Process Conn")
+        updates[f"J{row}"] = _row_text(rd, "Working Pressure", "Work Press")
+        updates[f"K{row}"] = _row_text(rd, "Working Flow", "Work Flow")
+        updates[f"L{row}"] = _row_text(rd, "Working Level", "Work Level")
+        updates[f"M{row}"] = _row_text(rd, "Design Pressure", "Design Press")
+        updates[f"N{row}"] = _row_text(rd, "Design Flow")
+        updates[f"O{row}"] = _row_text(rd, "Design Level")
+        updates[f"P{row}"] = _row_text(rd, "Setpoint", "Set-point")
+        updates[f"Q{row}"] = _row_text(rd, "Instrument Range", "Range")
+        updates[f"R{row}"] = _row_text(rd, "UOM")
+        updates[f"S{row}"] = _row_text(rd, "Signal Type")
+        updates[f"T{row}"] = velocity_str
+        updates[f"U{row}"] = nb_str
 
-            # Tag-group merge tracking
-            if tag != prev_tag and prev_tag is not None:
-                if row - run_start > 1:
-                    # Merge tag-stable columns for the completed run
-                    for col in ("B", "C"):
-                        merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
-                run_start = row
+        prev_tag = tag or None
+        row     += 1
+        serial  += 1
 
-            prev_tag = tag or None
-            row     += 1
-            serial  += 1
-
-        # Flush final run
-        if row - run_start > 1:
-            for col in ("B", "C"):
-                merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
+    # Flush the final tag-group run
+    if prev_tag is not None and row - run_start > 1:
+        for col in _IL_TAG_STABLE_COLS:
+            merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
 
     return updates, merges
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IO data builder
@@ -467,29 +887,60 @@ def _build_il_data_updates(
 
 _IO_DATA_START_ROW = 6
 
+# Columns that are tag-stable within a tag group in the IO sheet
+_IO_TAG_STABLE_COLS = ("B", "C", "F", "G")
+
 
 def _build_io_data_updates(
     payload: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], List[Tuple[str, str]]]:
     """
     Build cell updates and merge ranges for the IO List data sheet.
+
+    All three sections (field instruments, electrical, MOVs) appear in the
+    IO List — unlike the IL which only shows field instruments.
+
+    Column mapping
+    ──────────────
+    A  S.No  |  B  Tag No  |  C  Instrument Name  |  D  Service Description
+    E  Signal Type  |  F  Source  |  G  Destination
+    H  DI  |  I  DO  |  J  AI  |  K  AO
+    M  Trip flag  |  N  Remarks
+
+    Returns
+    -------
+    (updates, merges)
+      updates : {cell_ref: value}
+      merges  : [(start_ref, end_ref)]
     """
-    updates: Dict[str, Any]         = {}
-    merges: List[Tuple[str, str]]   = []
+    updates: Dict[str, Any]        = {}
+    merges: List[Tuple[str, str]]  = []
     row    = _IO_DATA_START_ROW
     serial = 1
 
     sections = [
-        ("Section 1 — Field Instruments",       payload.get("field_instruments", []), False),
-        ("Section 2 — Electrical Equipment",     payload.get("electrical",        []), True),
-        ("Section 3 — Motor Operated Valves",    payload.get("mov",               []), True),
+        (
+            "Section 1 — Field Instruments",
+            payload.get("field_instruments", []),
+            False,   # concat_sig_desc
+        ),
+        (
+            "Section 2 — Electrical Equipment",
+            payload.get("electrical", []),
+            True,
+        ),
+        (
+            "Section 3 — Motor Operated Valves",
+            payload.get("mov", []),
+            True,
+        ),
     ]
 
     for label, rows, concat_sig_desc in sections:
         if not rows:
             continue
 
-        # Section header merged across all columns
+        # Section header row — merged across all IO columns (A→N)
         updates[f"A{row}"] = label
         merges.append((f"A{row}", f"N{row}"))
         row += 1
@@ -498,17 +949,25 @@ def _build_io_data_updates(
         prev_tag  = None
 
         for rd in rows:
-            tag      = rd.get("Tag No",              "")
-            instr    = rd.get("Instrument Name",     "")
-            svc      = rd.get("Service Description", "")
-            sig_desc = rd.get("Signal Description",  "")
-            sig_type = rd.get("Signal Type",         "")
-            source   = rd.get("Source",              "")
-            dest     = rd.get("Destination",         "")
+            tag      = rd.get("Tag No",              "").strip()
+            instr    = rd.get("Instrument Name",     "").strip()
+            svc      = rd.get("Service Description", "").strip()
+            sig_desc = rd.get("Signal Description",  "").strip()
+            sig_type = rd.get("Signal Type",         "").strip()
+            source   = rd.get("Source",              "").strip()
+            dest     = rd.get("Destination",         "").strip()
             signal   = (rd.get("Signal") or "").strip().upper()
 
+            # For electrical / MOV rows, append signal description to service
             if concat_sig_desc and sig_desc:
                 svc = f"{svc} — {sig_desc}" if svc else sig_desc
+
+            # Tag-group merge tracking (flush completed run)
+            if tag != prev_tag and prev_tag is not None:
+                if row - run_start > 1:
+                    for col in _IO_TAG_STABLE_COLS:
+                        merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
+                run_start = row
 
             updates[f"A{row}"] = serial
             updates[f"B{row}"] = tag
@@ -518,27 +977,22 @@ def _build_io_data_updates(
             updates[f"F{row}"] = source
             updates[f"G{row}"] = dest
 
+            # Signal tick marks
             updates[f"H{row}"] = 1 if signal == "DI" else ""
             updates[f"I{row}"] = 1 if signal == "DO" else ""
             updates[f"J{row}"] = 1 if signal == "AI" else ""
             updates[f"K{row}"] = 1 if signal == "AO" else ""
 
+            # Trip flag
             updates[f"M{row}"] = "TRIP" if "trip" in svc.lower() else ""
-
-            # Tag-group merge tracking
-            if tag != prev_tag and prev_tag is not None:
-                if row - run_start > 1:
-                    for col in ("B", "C", "F", "G"):
-                        merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
-                run_start = row
 
             prev_tag = tag or None
             row     += 1
             serial  += 1
 
-        # Flush final run
-        if row - run_start > 1:
-            for col in ("B", "C", "F", "G"):
+        # Flush the final tag-group run for this section
+        if prev_tag is not None and row - run_start > 1:
+            for col in _IO_TAG_STABLE_COLS:
                 merges.append((f"{col}{run_start}", f"{col}{row - 1}"))
 
     return updates, merges
@@ -557,11 +1011,16 @@ def _process(
     Decode the base-64 template, apply all cell updates and merges, and
     return the finished workbook as a BytesIO stream.
 
-    Parameters
-    ----------
-    template_b64      : base-64-encoded bytes of the xlsx template.
-    updates_by_sheet  : {"xl/worksheets/sheetN.xml": {"A1": value, …}}
-    merges_by_sheet   : {"xl/worksheets/sheetN.xml": [("A1","B2"), …]}
+    Key correctness requirements
+    ────────────────────────────
+    1. Every XML file written back into the zip MUST start with the XML
+       declaration (<?xml version="1.0" encoding="UTF-8" standalone="yes"?>).
+       Excel marks files without it as damaged.
+    2. All namespace prefixes must be registered before parsing so ET
+       preserves them on serialisation.  Unregistered namespaces get
+       renamed to ns0:/ns1: which also corrupts the file.
+    3. Zip entries that we do NOT modify are copied byte-for-byte from
+       the template — no re-compression, no re-serialisation.
     """
     template_bytes = base64.b64decode(template_b64)
 
@@ -569,14 +1028,17 @@ def _process(
     zout_buffer = BytesIO()
     zout        = zipfile.ZipFile(zout_buffer, "w", zipfile.ZIP_DEFLATED)
 
-    # Parse shared strings once — all sheet writers share the same pool
+    # Parse shared strings once — all sheet writers share the same pool.
     shared_root, shared_strings = _load_shared_strings(zin)
 
     for item in zin.infolist():
+        if item.filename == "xl/calcChain.xml":
+            continue
+
         data = zin.read(item.filename)
 
         if item.filename in updates_by_sheet:
-            # Register namespace so it survives round-trip serialisation
+            # ── Parse → mutate → serialise ────────────────────────────────────
             root = ET.fromstring(data)
 
             sheet_updates = updates_by_sheet[item.filename]
@@ -588,19 +1050,26 @@ def _process(
             if sheet_merges:
                 _apply_merges(root, sheet_merges)
 
-            data = ET.tostring(root, encoding="unicode", xml_declaration=False).encode("utf-8")
+            data = _serialize_xml(root)
 
         elif item.filename == "xl/sharedStrings.xml" and shared_root is not None:
-            # Rewrite with accumulated strings
-            data = ET.tostring(shared_root, encoding="unicode", xml_declaration=False).encode("utf-8")
+            # Rewrite shared strings with the accumulated new entries.
+            data = _serialize_xml(shared_root)
 
+        elif item.filename == "[Content_Types].xml":
+            data = _remove_calc_chain_content_type(data)
+
+        elif item.filename == "xl/_rels/workbook.xml.rels":
+            data = _remove_calc_chain_relationship(data)
+
+        # All other files (styles, workbook, relationships, images, …) are
+        # copied unchanged — do NOT re-parse or re-serialise them.
         zout.writestr(item, data)
 
     zin.close()
     zout.close()
     zout_buffer.seek(0)
     return zout_buffer
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Public writers
@@ -610,12 +1079,18 @@ def write_instrument_list(payload: Dict[str, Any]) -> BytesIO:
     """
     Generate an Instrument List workbook from *payload*.
 
-    Writes header data to the Cover sheet (sheet1.xml / "Cover") and
-    instrument-list data to the IL data sheet (sheet2.xml).
+    - Cover sheet  → header metadata (AI6–AI15)
+    - IL data sheet → Section 1 field instruments ONLY
+                      (Sections 2 & 3 are NOT written to the IL)
+
+    Column layout: A=S.No, B=Code, C=Tag, D=Name, E=Desc, F=Line Size,
+    G=Medium, H=Spec, I=Proc Conn, J=Work Press, K=Work Flow, L=Work Level,
+    M=Des Press, N=Des Flow, O=Des Level, P=Set-point, Q=Range, R=UOM,
+    S=Signal Type, T=Velocity (FM only), U=NB size (FM only)
 
     Returns a BytesIO ready for send_file().
     """
-    zin_tmp = zipfile.ZipFile(BytesIO(base64.b64decode(IL_TEMPLATE_B64)), "r")
+    zin_tmp   = zipfile.ZipFile(BytesIO(base64.b64decode(IL_TEMPLATE_B64)), "r")
     sheet_map = _map_sheets(zin_tmp)
     zin_tmp.close()
 
@@ -624,8 +1099,8 @@ def write_instrument_list(payload: Dict[str, Any]) -> BytesIO:
 
     doc_number = (payload.get("fi_meta") or {}).get("docNumber", "")
 
-    cover_updates              = _build_cover_updates(payload, doc_number)
-    il_updates, il_merges      = _build_il_data_updates(payload)
+    cover_updates         = _build_cover_updates(payload, doc_number)
+    il_updates, il_merges = _build_il_data_updates(payload)
 
     return _process(
         IL_TEMPLATE_B64,
@@ -643,11 +1118,15 @@ def write_io_workbook(payload: Dict[str, Any]) -> BytesIO:
     """
     Generate an IO List workbook from *payload*.
 
-    Writes header data to the Cover sheet and IO data to the IO List sheet.
+    - Cover sheet    → header metadata (AI6–AI15)
+    - IO List sheet  → all three sections (FI + Electrical + MOV)
+
+    Column layout: A=S.No, B=Tag, C=Name, D=Desc, E=Signal Type,
+    F=Source, G=Dest, H=DI, I=DO, J=AI, K=AO, M=Trip flag, N=Remarks
 
     Returns a BytesIO ready for send_file().
     """
-    zin_tmp = zipfile.ZipFile(BytesIO(base64.b64decode(IO_TEMPLATE_B64)), "r")
+    zin_tmp   = zipfile.ZipFile(BytesIO(base64.b64decode(IO_TEMPLATE_B64)), "r")
     sheet_map = _map_sheets(zin_tmp)
     zin_tmp.close()
 
@@ -656,8 +1135,8 @@ def write_io_workbook(payload: Dict[str, Any]) -> BytesIO:
 
     doc_number = (payload.get("io_meta") or {}).get("docNumber", "")
 
-    cover_updates              = _build_cover_updates(payload, doc_number)
-    io_updates, io_merges      = _build_io_data_updates(payload)
+    cover_updates         = _build_cover_updates(payload, doc_number)
+    io_updates, io_merges = _build_io_data_updates(payload)
 
     return _process(
         IO_TEMPLATE_B64,
