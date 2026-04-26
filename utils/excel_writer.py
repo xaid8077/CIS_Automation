@@ -1181,6 +1181,11 @@ def _build_io_data_updates(
 
 _CS_DATA_START_ROW = 6   # first data row — adjust if template differs
 
+# Signals that require a pair (analog) cable
+_ANALOG_SIGNALS  = {"AI", "AO"}
+# Signals that require a core (digital) cable
+_DIGITAL_SIGNALS = {"DI", "DO"}
+
 
 def _build_cs_data_updates(
     payload: Dict[str, Any],
@@ -1188,48 +1193,114 @@ def _build_cs_data_updates(
     """
     Build cell updates for the Cable Schedule data sheet.
 
-    All three sections (field instruments, electrical, MOVs) contribute
-    rows — every tagged instrument corresponds to at least one cable entry.
+    Grouping logic
+    ──────────────
+    One row per cable type per unique Tag Number:
+      - Tags with any AI/AO signal  → one row using the analog  cable spec (column C)
+      - Tags with any DI/DO signal  → one row using the digital cable spec (column C)
+      - Tags with both              → two rows (one analog, one digital)
 
-    Columns C and F-J are deferred and left blank until their logic is
-    finalised.
+    The cable specs come from cs_meta.analogCable / cs_meta.digitalCable,
+    which are selected by the user in the Step 4 UI.
+
+    Column layout
+    ─────────────
+    A = S.No  |  B = Tag No  |  C = Cable Type
+    D = Service Description  |  E = Instrument Name
+    F–J = deferred (blank)
 
     Returns
     -------
-    (updates, merges)
-      updates : {cell_ref: value}
-      merges  : [(start_ref, end_ref)]   — empty for now
+    (updates, merges) — merges is always empty for the CS sheet.
     """
     updates: Dict[str, Any]       = {}
     merges: List[Tuple[str, str]] = []
 
+    cs_meta      = payload.get("cs_meta") or {}
+    analog_cable  = cs_meta.get("analogCable",  "").strip()
+    digital_cable = cs_meta.get("digitalCable", "").strip()
+
+    # ── Collect all rows from every section ───────────────────────────────────
+    all_rows: List[Dict[str, Any]] = []
+    for section_key in ("field_instruments", "electrical", "mov"):
+        all_rows.extend(payload.get(section_key, []))
+
+    # ── Group by Tag Number, preserving first-seen order ─────────────────────
+    # For each tag we track:
+    #   - has_analog  : bool  — any AI or AO signal seen
+    #   - has_digital : bool  — any DI or DO signal seen
+    #   - service     : str   — first non-empty Service Description seen
+    #   - instrument  : str   — first non-empty Instrument Name seen
+
+    seen_order: List[str]              = []   # tag insertion order
+    tag_info:   Dict[str, Dict]        = {}   # tag → {has_analog, has_digital, service, instrument}
+
+    for rd in all_rows:
+        tag   = rd.get("Tag No", "").strip()
+        if not tag:
+            continue
+
+        signal    = (rd.get("Signal") or "").strip().upper()
+        service   = rd.get("Service Description", "").strip()
+        instr     = rd.get("Instrument Name",     "").strip()
+
+        if tag not in tag_info:
+            seen_order.append(tag)
+            tag_info[tag] = {
+                "has_analog":  False,
+                "has_digital": False,
+                "service":     service,
+                "instrument":  instr,
+            }
+        else:
+            # Keep the first non-empty description / name we encountered
+            if not tag_info[tag]["service"]    and service:
+                tag_info[tag]["service"]    = service
+            if not tag_info[tag]["instrument"] and instr:
+                tag_info[tag]["instrument"] = instr
+
+        if signal in _ANALOG_SIGNALS:
+            tag_info[tag]["has_analog"]  = True
+        elif signal in _DIGITAL_SIGNALS:
+            tag_info[tag]["has_digital"] = True
+
+    # ── Emit one CS row per cable type per tag ────────────────────────────────
     row    = _CS_DATA_START_ROW
     serial = 1
 
-    sections = [
-        payload.get("field_instruments", []),
-        payload.get("electrical",        []),
-        payload.get("mov",               []),
-    ]
+    for tag in seen_order:
+        info     = tag_info[tag]
+        service  = info["service"]
+        instr    = info["instrument"]
 
-    for section_rows in sections:
-        for rd in section_rows:
-            tag   = rd.get("Tag No",              "").strip()
-            svc   = rd.get("Service Description", "").strip()
-            instr = rd.get("Instrument Name",     "").strip()
-
-            # Skip completely empty rows (schema already filters most,
-            # but guard here in case a section has stale blanks).
-            if not any((tag, svc, instr)):
-                continue
-
+        # Analog row — written first when the tag has both types
+        if info["has_analog"]:
             updates[f"A{row}"] = serial
             updates[f"B{row}"] = tag
-            # Column C (Cable Type) — deferred, left blank intentionally
-            updates[f"D{row}"] = svc
+            updates[f"C{row}"] = analog_cable   # blank string if user left dropdown empty
+            updates[f"D{row}"] = service
             updates[f"E{row}"] = instr
-            # Columns F-J — deferred, left blank intentionally
+            row    += 1
+            serial += 1
 
+        # Digital row
+        if info["has_digital"]:
+            updates[f"A{row}"] = serial
+            updates[f"B{row}"] = tag
+            updates[f"C{row}"] = digital_cable
+            updates[f"D{row}"] = service
+            updates[f"E{row}"] = instr
+            row    += 1
+            serial += 1
+
+        # Tags with no recognised signal still get one blank-cable row
+        # so they are not silently dropped from the schedule.
+        if not info["has_analog"] and not info["has_digital"]:
+            updates[f"A{row}"] = serial
+            updates[f"B{row}"] = tag
+            updates[f"C{row}"] = ""
+            updates[f"D{row}"] = service
+            updates[f"E{row}"] = instr
             row    += 1
             serial += 1
 
@@ -1240,8 +1311,12 @@ def write_cable_schedule(payload: Dict[str, Any]) -> BytesIO:
     """
     Generate a Cable Schedule workbook from *payload*.
 
-    Cover sheet  → header metadata (AI6–AI15), same mapping as IL and IO.
-    CS data sheet → all tagged instruments, columns A B D E populated.
+    Cover sheet   → header metadata (AI6–AI15), same mapping as IL and IO.
+    CS data sheet → one row per cable type per unique Tag Number.
+                    Column C = cable spec from cs_meta (analog or digital).
+                    Analog  cables (AI/AO signals) → cs_meta.analogCable.
+                    Digital cables (DI/DO signals) → cs_meta.digitalCable.
+                    Tags with both signal types produce two rows.
 
     Returns a BytesIO ready for send_file().
     """

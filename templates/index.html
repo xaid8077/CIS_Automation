@@ -406,6 +406,38 @@
                    placeholder="e.g. PRJ-CS-001"
                    oninput="checkDocGate('cs')" />
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div class="field">
+              <label for="csAnalogCable">Analog Cable <span style="color:var(--text-3)">(AI/AO)</span></label>
+              <select id="csAnalogCable"
+                      style="background:var(--surface-2);border:1px solid var(--border);
+                             border-radius:6px;padding:7px 10px;color:var(--text);
+                             font-family:var(--sans);font-size:12.5px;width:100%">
+                <option value="">— Select —</option>
+                <option value="2P × 1.0 sq.mm">2P × 1.0 sq.mm</option>
+                <option value="2P × 1.5 sq.mm">2P × 1.5 sq.mm</option>
+                <option value="2P × 2.5 sq.mm">2P × 2.5 sq.mm</option>
+                <option value="4P × 1.0 sq.mm">4P × 1.0 sq.mm</option>
+                <option value="4P × 1.5 sq.mm">4P × 1.5 sq.mm</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="csDigitalCable">Digital Cable <span style="color:var(--text-3)">(DI/DO)</span></label>
+              <select id="csDigitalCable"
+                      style="background:var(--surface-2);border:1px solid var(--border);
+                             border-radius:6px;padding:7px 10px;color:var(--text);
+                             font-family:var(--sans);font-size:12.5px;width:100%">
+                <option value="">— Select —</option>
+                <option value="10C × 1.0 sq.mm">10C × 1.0 sq.mm</option>
+                <option value="12C × 1.0 sq.mm">12C × 1.0 sq.mm</option>
+                <option value="10C × 1.5 sq.mm">10C × 1.5 sq.mm</option>
+                <option value="12C × 1.5 sq.mm">12C × 1.5 sq.mm</option>
+                <option value="4C × 1.0 sq.mm">4C × 1.0 sq.mm</option>
+                <option value="4C × 1.5 sq.mm">4C × 1.5 sq.mm</option>
+                <option value="2C × 1.0 sq.mm">2C × 1.0 sq.mm</option>
+              </select>
+            </div>
+          </div>
           <div class="dl-gate-hint" id="cs-hint">Enter a document number to enable download.</div>
           <button type="button" class="dl-btn" id="cs-btn"
                   data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Cable Schedule') }}"
@@ -836,13 +868,8 @@ class SimpleGrid {
       if (!text) return;
       e.preventDefault();
 
-      if (window._parserWorker) {
-        const ind = document.getElementById('parse-indicator');
-        if (ind) ind.style.display = 'block';
-        window._parserWorker.postMessage({
-          type: 'parse', text, startR, startC, gridId: this._gridId,
-        });
-      } else {
+      if (!window._queueClipboardParse ||
+          !window._queueClipboardParse(this, text, startR, startC)) {
         const lines  = text.split(/\r?\n|\r/);
         if (lines[lines.length - 1].trim() === '') lines.pop();
         const matrix = lines.map(l =>
@@ -1151,7 +1178,128 @@ movGrid = new SimpleGrid(document.getElementById('movGrid'), movCols, 5, 'mov');
 // Initialised after grid creation so result handler can reference the grid
 // instances directly.  Falls back to synchronous parsing on any error.
 // ═══════════════════════════════════════════════════════════════════════════
-window._parserWorker = null;
+window._parserWorker = window._parserWorker || null;
+window._clipboardParseState = window._clipboardParseState || {
+  nextRequestId: 1,
+  pending: null,
+};
+
+function parseClipboardText(text) {
+  const lines = text.split(/\r?\n|\r/);
+  if (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+  return lines.map(line =>
+    line.includes('\t') ? line.split('\t') : line.split(',')
+  );
+}
+
+function showParseIndicator() {
+  const ind = document.getElementById('parse-indicator');
+  if (ind) ind.style.display = 'block';
+}
+
+function hideParseIndicator() {
+  const ind = document.getElementById('parse-indicator');
+  if (ind) ind.style.display = 'none';
+}
+
+function clearPendingClipboardParse() {
+  const state = window._clipboardParseState;
+  if (state.pending && state.pending.timer) {
+    clearTimeout(state.pending.timer);
+  }
+  state.pending = null;
+  hideParseIndicator();
+}
+
+window._cancelClipboardParse = function (_reason = 'cancelled') {
+  clearPendingClipboardParse();
+};
+
+function recreateClipboardWorker() {
+  if (window._parserWorker) {
+    window._parserWorker.terminate();
+    window._parserWorker = null;
+  }
+
+  if (!window.Worker) return null;
+
+  try {
+    const worker = new Worker(
+      "{{ url_for('static', filename='parserWorker.js') }}"
+    );
+
+    worker.onerror = function (err) {
+      console.warn('[CIS] parserWorker error - falling back to sync paste:', err.message);
+      clearPendingClipboardParse();
+      if (window._parserWorker === worker) window._parserWorker = null;
+    };
+
+    window._parserWorker = worker;
+    if (typeof window._updateWorkerGridMap === 'function') {
+      window._updateWorkerGridMap();
+    }
+
+    return worker;
+  } catch (err) {
+    console.warn('[CIS] Could not start parserWorker:', err);
+    return null;
+  }
+}
+
+window._queueClipboardParse = function (grid, text, startR, startC) {
+  const worker = window._parserWorker || recreateClipboardWorker();
+  if (!worker) return false;
+
+  clearPendingClipboardParse();
+
+  const state = window._clipboardParseState;
+  const requestId = state.nextRequestId++;
+
+  state.pending = {
+    requestId,
+    grid,
+    text,
+    startR,
+    startC,
+    timer: setTimeout(() => {
+      if (!state.pending || state.pending.requestId !== requestId) return;
+      console.warn('[CIS] parserWorker timeout - falling back to sync paste.');
+      const pending = state.pending;
+      clearPendingClipboardParse();
+      recreateClipboardWorker();
+      pending.grid._applyMatrix(
+        pending.startR,
+        pending.startC,
+        parseClipboardText(pending.text)
+      );
+    }, 5000),
+  };
+
+  showParseIndicator();
+
+  try {
+    worker.postMessage({
+      type: 'parse',
+      text,
+      startR,
+      startC,
+      gridId: grid._gridId,
+      requestId,
+    });
+    return true;
+  } catch (err) {
+    console.warn('[CIS] parserWorker postMessage failed - falling back to sync paste:', err);
+    const pending = state.pending;
+    clearPendingClipboardParse();
+    recreateClipboardWorker();
+    pending.grid._applyMatrix(
+      pending.startR,
+      pending.startC,
+      parseClipboardText(pending.text)
+    );
+    return true;
+  }
+};
 
 (function initWorker() {
   if (!window.Worker) return;
@@ -1171,8 +1319,10 @@ window._parserWorker = null;
     );
 
     window._parserWorker = worker;
-    // Wire up the initial onmessage via the shared updater.
-    window._updateWorkerGridMap();
+    // Wire up the initial onmessage via the shared updater when available.
+    if (typeof window._updateWorkerGridMap === 'function') {
+      window._updateWorkerGridMap();
+    }
 
     worker.onerror = function (err) {
       console.warn('[CIS] parserWorker error — falling back to sync paste:', err.message);
@@ -1201,20 +1351,47 @@ document.getElementById('movAdd1').addEventListener('click', () => movGrid.addRo
  */
 window._updateWorkerGridMap = function () {
   if (!window._parserWorker) return;
-  const _gridMap = { fi: fiGrid, el: elGrid, mov: movGrid };
+  const gridMap = { fi: fiGrid, el: elGrid, mov: movGrid };
   window._parserWorker.onmessage = function (e) {
-    const { type, matrix, startR, startC, gridId } = e.data;
+    const { type, matrix, startR, startC, gridId, requestId, message } = e.data || {};
+    const state = window._clipboardParseState;
+    const pending = state.pending;
+
+    if (!pending || requestId !== pending.requestId) return;
+
+    clearPendingClipboardParse();
+
+    if (type === 'error') {
+      console.warn('[CIS] parserWorker parse failed - falling back to sync paste:', message);
+      pending.grid._applyMatrix(
+        pending.startR,
+        pending.startC,
+        parseClipboardText(pending.text)
+      );
+      return;
+    }
+
     if (type !== 'result') return;
-    const grid = _gridMap[gridId];
-    if (grid) grid._applyMatrix(startR, startC, matrix);
-    const ind = document.getElementById('parse-indicator');
-    if (ind) ind.style.display = 'none';
+
+    try {
+      const grid = gridMap[gridId] || pending.grid;
+      if (grid) grid._applyMatrix(startR, startC, matrix);
+    } catch (err) {
+      console.warn('[CIS] Failed applying parsed clipboard data - retrying synchronously:', err);
+      pending.grid._applyMatrix(
+        pending.startR,
+        pending.startC,
+        parseClipboardText(pending.text)
+      );
+    }
   };
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Row count badges
 // ═══════════════════════════════════════════════════════════════════════════
+window._updateWorkerGridMap();
+
 function updateCounts() {
   if (!fiGrid || !elGrid || !movGrid) return;
 
@@ -1300,7 +1477,11 @@ function buildPayload() {
     el_meta:           { docNumber: '' },
     mov_meta:          { docNumber: '' },
     io_meta:           { docNumber: (document.getElementById('ioDocNumber')?.value || '').trim() },
-    cs_meta:           { docNumber: (document.getElementById('csDocNumber')?.value || '').trim() },
+    cs_meta:           {
+      docNumber:    (document.getElementById('csDocNumber')?.value    || '').trim(),
+      analogCable:  (document.getElementById('csAnalogCable')?.value  || '').trim(),
+      digitalCable: (document.getElementById('csDigitalCable')?.value || '').trim(),
+    },
     field_instruments: buildFiRows(),
     electrical:        buildFlatRows(elGrid),
     mov:               buildFlatRows(movGrid),
@@ -1411,6 +1592,67 @@ const GATE_MAP = {
   ci: { inputId: 'ciDocNumber', btnId: 'ci-btn', hintId: 'ci-hint' },
 };
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function buildJobUrl(endpoint, jobId, action) {
+  return `/job/${jobId}/${action}`;
+}
+
+async function waitForDownloadJob(endpoint, jobId, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
+  const statusUrl = buildJobUrl(endpoint, jobId, 'status');
+
+  while (Date.now() < deadline) {
+    const res = await fetch(statusUrl, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' },
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(json.error || json.message || `Job status failed with HTTP ${res.status}.`);
+    }
+
+    if (json.status === 'ready') return;
+    if (json.status === 'error') throw new Error(json.error || 'File generation failed.');
+    if (json.status === 'not_found') throw new Error('Download job was not found.');
+
+    await sleep(750);
+  }
+
+  throw new Error('File generation timed out.');
+}
+
+async function downloadGeneratedJob(endpoint, jobId) {
+  const downloadUrl = buildJobUrl(endpoint, jobId, 'download');
+  const res = await fetch(downloadUrl, {
+    method: 'GET',
+    credentials: 'same-origin',
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || json.message || `Download failed with HTTP ${res.status}.`);
+  }
+
+  const blob = await res.blob();
+  const filename = res.headers.get('content-disposition')
+    ?.match(/filename="?([^";\n]+)"?/)?.[1] || 'download.xlsx';
+  const url = window.URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {
+    href: url,
+    download: filename,
+  });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+  return filename;
+}
+
 function checkDocGate(key) {
   const { inputId, btnId, hintId } = GATE_MAP[key];
   const val  = document.getElementById(inputId)?.value.trim();
@@ -1482,6 +1724,83 @@ document.addEventListener('click', async (e) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.dl-btn');
+  if (!btn || btn.disabled) return;
+
+  e.preventDefault();
+  e.stopImmediatePropagation();
+
+  const endpoint = btn.dataset.endpoint;
+  if (!endpoint || endpoint === '#') {
+    toast('This document type is not yet implemented.', 'warn');
+    return;
+  }
+
+  const origText  = btn.textContent;
+  btn.disabled    = true;
+  btn.textContent = 'Generating...';
+  toast('Generating file - please wait...', 'info', 3000);
+
+  try {
+    const payload = buildPayload();
+    const csrf    = getCsrf();
+    const res     = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken':  csrf,
+        'X-CSRF-Token': csrf,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const ct = res.headers.get('content-type') || '';
+    if (res.ok && ct.includes('application/json')) {
+      const json = await res.json().catch(() => ({}));
+      if (!json.job_id) {
+        toast((json.error || json.message || 'Server error.'), 'error');
+        return;
+      }
+
+      btn.textContent = 'Preparing download...';
+      await waitForDownloadJob(endpoint, json.job_id);
+      const filename = await downloadGeneratedJob(endpoint, json.job_id);
+      markClean();
+      toast(`Downloaded ${filename}.`, 'success', 6000);
+      return;
+    }
+
+    if (res.ok && ct.includes('spreadsheetml')) {
+      const blob     = await res.blob();
+      const filename = res.headers.get('content-disposition')
+        ?.match(/filename="?([^";\n]+)"?/)?.[1] || 'download.xlsx';
+      const url = window.URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: filename,
+      });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      markClean();
+      toast(`Downloaded ${filename}.`, 'success', 6000);
+      return;
+    }
+
+    const json = await res.json().catch(() => ({}));
+    toast((json.error || json.message || 'Server error.'), 'error');
+  } catch (err) {
+    console.error(err);
+    toast(err?.message || 'Network error. Please try again.', 'error');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = origText;
+  }
+}, true);
+
 // Pre-fill grids from last saved revision
 // ═══════════════════════════════════════════════════════════════════════════
 (function preloadGrids() {
@@ -1529,6 +1848,10 @@ document.addEventListener('click', async (e) => {
   if (fiInput && fiDocNum) { fiInput.value = fiDocNum; checkDocGate('il'); }
   if (ioInput && ioDocNum) { ioInput.value = ioDocNum; checkDocGate('io'); }
   if (csInput && csDocNum) { csInput.value = csDocNum; checkDocGate('cs'); }
+  const analogSel  = document.getElementById('csAnalogCable');
+  const digitalSel = document.getElementById('csDigitalCable');
+  if (analogSel  && (raw.cs_meta || {}).analogCable)  analogSel.value  = raw.cs_meta.analogCable;
+  if (digitalSel && (raw.cs_meta || {}).digitalCable) digitalSel.value = raw.cs_meta.digitalCable;
 
   updateCounts();
   console.info(

@@ -118,6 +118,10 @@ window._pjaxInit = true;
    * avoid double-registration of global event handlers.
    */
   function _swapBody(newDoc) {
+    if (typeof window._cancelClipboardParse === 'function') {
+      window._cancelClipboardParse('body-swap');
+    }
+
     // Collect external src values already loaded in this session.
     const alreadyLoaded = new Set(
       Array.from(document.querySelectorAll('script[src]'))

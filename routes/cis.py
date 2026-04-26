@@ -28,7 +28,7 @@ from marshmallow import ValidationError
 
 from models import Project, ProjectLocation, DocumentRevision
 from schemas.payload import load_payload
-from services import revision_service, document_service
+from services import revision_service, document_service, excel_service
 from utils.validator import validate_payload
 
 cis_bp = Blueprint("cis", __name__)
@@ -270,8 +270,8 @@ def save_draft(project_id, loc_id):
 @login_required
 def submit_and_save(project_id, loc_id, doc_type):
     """
-    Validate payload, queue Excel generation in a background thread, and
-    return 202 Accepted with a job_id for the client to poll.
+    Validate payload, generate the Excel workbook, save a published revision,
+    and stream the finished file in the same request.
 
     The revision record is NOT created here — it is created in job_download()
     once the file is ready and the user actually downloads it.  This keeps
@@ -309,35 +309,31 @@ def submit_and_save(project_id, loc_id, doc_type):
         return jsonify({"ok": False, "errors": errors}), 422
 
     # ── Create job entry and spawn worker thread ───────────────────────────────
-    job_id = uuid.uuid4().hex
+    try:
+        stream = excel_service.generate(doc_type, payload)
 
-    with _job_lock:
-        _sweep_old_jobs()
-        _job_store[job_id] = {
-            "status":     "pending",
-            "stream":     None,
-            "error":      None,
-            "project_id": project.id,
-            "loc_id":     location.id,
-            "user_id":    current_user.id,
-            "doc_type":   doc_type,
-            "payload":    payload,
-            "created_at": datetime.now(timezone.utc),
-        }
+        rev = revision_service.create_published_revision(
+            project  = project,
+            location = location,
+            user_id  = current_user.id,
+            doc_type = doc_type,
+            payload  = payload,
+        )
 
-    thread = threading.Thread(
-        target  = _worker_generate_excel,
-        args    = (job_id, doc_type, payload),
-        daemon  = True,           # thread dies when the process exits
-        name    = f"xlsx-{job_id[:8]}",
+        filename = document_service._build_filename(
+            project, location, doc_type, rev.revision_number
+        )
+    except Exception as exc:
+        traceback.print_exc()
+        return jsonify({"error": str(exc)}), 500
+
+    stream.seek(0)
+    return send_file(
+        stream,
+        as_attachment = True,
+        download_name = filename,
+        mimetype      = _XLSX_MIME,
     )
-    thread.start()
-
-    return jsonify({
-        "ok":       True,
-        "job_id":   job_id,
-        "doc_type": doc_type,
-    }), 202
 
 
 @cis_bp.route("/job/<job_id>/status", methods=["GET"])

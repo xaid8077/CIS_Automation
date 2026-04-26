@@ -82,12 +82,29 @@ class HeaderSchema(Schema):
 
 
 class MetaSchema(Schema):
-    """Per-document metadata (currently just docNumber)."""
+    """Per-document metadata for IL, IO, EL, MOV documents."""
 
     class Meta:
         unknown = EXCLUDE
 
     docNumber = fields.Str(load_default="")
+
+    @pre_load
+    def coerce_none(self, data, **kwargs):
+        if data is None:
+            return {}
+        return {k: _strip_str(v) for k, v in data.items()}
+
+
+class CsMetaSchema(Schema):
+    """Per-document metadata for the Cable Schedule — includes cable specs."""
+
+    class Meta:
+        unknown = EXCLUDE
+
+    docNumber    = fields.Str(load_default="")
+    analogCable  = fields.Str(load_default="")   # e.g. "2P × 1.0 sq.mm"
+    digitalCable = fields.Str(load_default="")   # e.g. "10C × 1.0 sq.mm"
 
     @pre_load
     def coerce_none(self, data, **kwargs):
@@ -236,7 +253,7 @@ class PayloadSchema(Schema):
     el_meta           = fields.Nested(MetaSchema,    load_default=dict)
     mov_meta          = fields.Nested(MetaSchema,    load_default=dict)
     io_meta           = fields.Nested(MetaSchema,    load_default=dict)
-    cs_meta           = fields.Nested(MetaSchema,    load_default=dict)   # ← NEW
+    cs_meta           = fields.Nested(CsMetaSchema,  load_default=dict)   # ← NEW
     field_instruments = fields.List(
         fields.Nested(FieldInstrumentRowSchema), load_default=list
     )
