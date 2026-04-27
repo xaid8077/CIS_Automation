@@ -438,6 +438,17 @@
               </select>
             </div>
           </div>
+          <div class="field" style="margin-bottom:10px">
+            <label for="csAjbCapacity">AJB Capacity <span style="color:var(--text-3)">(Analog FI only)</span></label>
+            <select id="csAjbCapacity"
+                    style="background:var(--surface-2);border:1px solid var(--border);
+                           border-radius:6px;padding:7px 10px;color:var(--text);
+                           font-family:var(--sans);font-size:12.5px;width:100%">
+              <option value="4">4-way AJB</option>
+              <option value="8">8-way AJB</option>
+              <option value="16" selected>16-way AJB</option>
+            </select>
+          </div>
           <div class="dl-gate-hint" id="cs-hint">Enter a document number to enable download.</div>
           <button type="button" class="dl-btn" id="cs-btn"
                   data-endpoint="{{ url_for('cis.submit_and_save', project_id=project.id, loc_id=location.id, doc_type='Cable Schedule') }}"
@@ -1481,6 +1492,7 @@ function buildPayload() {
       docNumber:    (document.getElementById('csDocNumber')?.value    || '').trim(),
       analogCable:  (document.getElementById('csAnalogCable')?.value  || '').trim(),
       digitalCable: (document.getElementById('csDigitalCable')?.value || '').trim(),
+      ajbCapacity:  parseInt(document.getElementById('csAjbCapacity')?.value || '16', 10),
     },
     field_instruments: buildFiRows(),
     electrical:        buildFlatRows(elGrid),
@@ -1850,8 +1862,10 @@ document.addEventListener('click', async (e) => {
   if (csInput && csDocNum) { csInput.value = csDocNum; checkDocGate('cs'); }
   const analogSel  = document.getElementById('csAnalogCable');
   const digitalSel = document.getElementById('csDigitalCable');
-  if (analogSel  && (raw.cs_meta || {}).analogCable)  analogSel.value  = raw.cs_meta.analogCable;
-  if (digitalSel && (raw.cs_meta || {}).digitalCable) digitalSel.value = raw.cs_meta.digitalCable;
+  const ajbSel     = document.getElementById('csAjbCapacity');
+  if (analogSel  && (raw.cs_meta || {}).analogCable)   analogSel.value  = raw.cs_meta.analogCable;
+  if (digitalSel && (raw.cs_meta || {}).digitalCable)  digitalSel.value = raw.cs_meta.digitalCable;
+  if (ajbSel     && (raw.cs_meta || {}).ajbCapacity)   ajbSel.value     = raw.cs_meta.ajbCapacity;
 
   updateCounts();
   console.info(

@@ -218,7 +218,7 @@ def _get_instrument_code(instrument_name: str) -> str:
 # Common nominal-bore sizes in mm (DN series) used for snapping.
 _NB_SERIES = [
     15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250,
-    300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 1200,
+    300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 1200, 1500, 2000, 2500
 ]
 
 
@@ -1179,12 +1179,91 @@ def _build_io_data_updates(
 #   I  = Route Length        (deferred)
 #   J  = Total Length        (deferred)
 
-_CS_DATA_START_ROW = 6   # first data row — adjust if template differs
+_CS_DATA_START_ROW = 6
 
-# Signals that require a pair (analog) cable
 _ANALOG_SIGNALS  = {"AI", "AO"}
-# Signals that require a core (digital) cable
 _DIGITAL_SIGNALS = {"DI", "DO"}
+_ANALOG_SIGNAL_TYPES = {"4-20MA"}
+_DIGITAL_SIGNAL_TYPES = {"POTENTIAL FREE CONTACT", "24V DC"}
+_VALID_AJB_CAPACITIES = {4, 8, 16}
+
+
+def _normalise_ajb_capacity(value: Any) -> int:
+    """Return a supported AJB capacity. Cable Schedule defaults to 16-way AJBs."""
+    try:
+        capacity = int(value or 0)
+    except (TypeError, ValueError):
+        return 16
+    return capacity if capacity in _VALID_AJB_CAPACITIES else 16
+
+
+def _normalise_signal_type(value: str) -> str:
+    """Normalise signal type text for CS analog/digital inference."""
+    return re.sub(r"\s+", " ", (value or "").strip().upper()).replace("–", "-")
+
+
+def _cs_signal_kind(row_data: Dict[str, Any]) -> str:
+    """
+    Classify a Cable Schedule row as analog, digital, or unknown.
+
+    The explicit Signal column wins. If it is blank, infer from Signal Type so
+    4-20mA field instruments still route through AJBs.
+    """
+    signal = (row_data.get("Signal") or "").strip().upper()
+    if signal in _ANALOG_SIGNALS:
+        return "analog"
+    if signal in _DIGITAL_SIGNALS:
+        return "digital"
+
+    signal_type = _normalise_signal_type(row_data.get("Signal Type") or "")
+    if signal_type in _ANALOG_SIGNAL_TYPES:
+        return "analog"
+    if signal_type in _DIGITAL_SIGNAL_TYPES:
+        return "digital"
+    return "unknown"
+
+
+def _append_cs_tag_merges(
+    updates: Dict[str, Any],
+    merges: List[Tuple[str, str]],
+    first_row: int,
+    last_row: int,
+) -> None:
+    """Merge adjacent repeated tag-number cells in the CS sheet."""
+    run_start = first_row
+    prev_tag: Optional[str] = None
+
+    for current_row in range(first_row, last_row + 1):
+        tag = str(updates.get(f"B{current_row}") or "").strip()
+        tag_key = None if not tag or tag.upper().startswith("AJB-") else tag
+
+        if tag_key != prev_tag:
+            if prev_tag is not None and current_row - run_start > 1:
+                merges.append((f"B{run_start}", f"B{current_row - 1}"))
+            run_start = current_row
+            prev_tag = tag_key
+
+    if prev_tag is not None and last_row - run_start + 1 > 1:
+        merges.append((f"B{run_start}", f"B{last_row}"))
+
+
+def _cs_source(row_data: Dict[str, Any]) -> str:
+    """Return the source endpoint for a Cable Schedule row."""
+    return (row_data.get("Source") or "").strip()
+
+
+def _cs_destination(row_data: Dict[str, Any]) -> str:
+    """Return the destination endpoint for a Cable Schedule row."""
+    return (row_data.get("Destination") or "").strip()
+
+
+def _first_cs_destination(rows: List[Dict[str, Any]]) -> str:
+    """Return the first non-empty destination in a group of CS rows."""
+    for row_data in rows:
+        destination = _cs_destination(row_data)
+        if destination:
+            return destination
+    return ""
 
 
 def _build_cs_data_updates(
@@ -1193,25 +1272,32 @@ def _build_cs_data_updates(
     """
     Build cell updates for the Cable Schedule data sheet.
 
-    Grouping logic
-    ──────────────
-    One row per cable type per unique Tag Number:
-      - Tags with any AI/AO signal  → one row using the analog  cable spec (column C)
-      - Tags with any DI/DO signal  → one row using the digital cable spec (column C)
-      - Tags with both              → two rows (one analog, one digital)
+    Structure
+    ─────────
+    Block 1 — Analog FI instruments (Section 1 only, AI/AO signals):
+        Analog instruments are grouped into AJBs using the selected capacity.
+        Each instrument row: F=Source, G=AJB-xx.
+        After each AJB group: one AJB summary row (B=AJB-xx, F=AJB-xx, G=Destination).
+        AI and AO signals counted separately (one row each).
 
-    The cable specs come from cs_meta.analogCable / cs_meta.digitalCable,
-    which are selected by the user in the Step 4 UI.
+    Block 2 — Digital FI instruments (Section 1 only, DI/DO signals):
+        One row per unique Tag Number.
+        F=Source, G=Destination.
+
+    Block 3 — Electrical Equipment (Section 2):
+        One row per cable type per unique Tag Number.
+        No AJB assignment. F=Source, G=Destination.
+
+    Block 4 — MOVs (Section 3):
+        Same as Block 3.
+
+    Adjacent repeated tag-number cells are merged so tags with more than one
+    cable row are displayed once while keeping cable-type rows separate.
 
     Column layout
     ─────────────
-    A = S.No  |  B = Tag No  |  C = Cable Type
-    D = Service Description  |  E = Instrument Name
-    F–J = deferred (blank)
-
-    Returns
-    -------
-    (updates, merges) — merges is always empty for the CS sheet.
+    A=S.No | B=Tag No | C=Cable Type | D=Service Desc | E=Instrument Name
+    F=From | G=To
     """
     updates: Dict[str, Any]       = {}
     merges: List[Tuple[str, str]] = []
@@ -1219,91 +1305,198 @@ def _build_cs_data_updates(
     cs_meta      = payload.get("cs_meta") or {}
     analog_cable  = cs_meta.get("analogCable",  "").strip()
     digital_cable = cs_meta.get("digitalCable", "").strip()
+    ajb_capacity  = _normalise_ajb_capacity(cs_meta.get("ajbCapacity", 16))
 
-    # ── Collect all rows from every section ───────────────────────────────────
-    all_rows: List[Dict[str, Any]] = []
-    for section_key in ("field_instruments", "electrical", "mov"):
-        all_rows.extend(payload.get(section_key, []))
-
-    # ── Group by Tag Number, preserving first-seen order ─────────────────────
-    # For each tag we track:
-    #   - has_analog  : bool  — any AI or AO signal seen
-    #   - has_digital : bool  — any DI or DO signal seen
-    #   - service     : str   — first non-empty Service Description seen
-    #   - instrument  : str   — first non-empty Instrument Name seen
-
-    seen_order: List[str]              = []   # tag insertion order
-    tag_info:   Dict[str, Dict]        = {}   # tag → {has_analog, has_digital, service, instrument}
-
-    for rd in all_rows:
-        tag   = rd.get("Tag No", "").strip()
-        if not tag:
-            continue
-
-        signal    = (rd.get("Signal") or "").strip().upper()
-        service   = rd.get("Service Description", "").strip()
-        instr     = rd.get("Instrument Name",     "").strip()
-
-        if tag not in tag_info:
-            seen_order.append(tag)
-            tag_info[tag] = {
-                "has_analog":  False,
-                "has_digital": False,
-                "service":     service,
-                "instrument":  instr,
-            }
-        else:
-            # Keep the first non-empty description / name we encountered
-            if not tag_info[tag]["service"]    and service:
-                tag_info[tag]["service"]    = service
-            if not tag_info[tag]["instrument"] and instr:
-                tag_info[tag]["instrument"] = instr
-
-        if signal in _ANALOG_SIGNALS:
-            tag_info[tag]["has_analog"]  = True
-        elif signal in _DIGITAL_SIGNALS:
-            tag_info[tag]["has_digital"] = True
-
-    # ── Emit one CS row per cable type per tag ────────────────────────────────
     row    = _CS_DATA_START_ROW
     serial = 1
 
-    for tag in seen_order:
-        info     = tag_info[tag]
-        service  = info["service"]
-        instr    = info["instrument"]
+    fi_rows = payload.get("field_instruments", [])
 
-        # Analog row — written first when the tag has both types
-        if info["has_analog"]:
-            updates[f"A{row}"] = serial
-            updates[f"B{row}"] = tag
-            updates[f"C{row}"] = analog_cable   # blank string if user left dropdown empty
-            updates[f"D{row}"] = service
-            updates[f"E{row}"] = instr
-            row    += 1
-            serial += 1
+    # ── Collect analog signal rows from Section 1 only ────────────────────────
+    # AI and AO are treated as separate connections (separate rows, separate
+    # AJB slots) per domain requirement.
+    analog_fi: List[Dict[str, Any]] = [
+        rd for rd in fi_rows
+        if _cs_signal_kind(rd) == "analog"
+    ]
 
-        # Digital row
-        if info["has_digital"]:
-            updates[f"A{row}"] = serial
-            updates[f"B{row}"] = tag
-            updates[f"C{row}"] = digital_cable
-            updates[f"D{row}"] = service
-            updates[f"E{row}"] = instr
-            row    += 1
-            serial += 1
+    # ── Collect digital tags from Section 1 only (one row per unique tag) ─────
+    # Multiple DI/DO rows for the same tag share one core cable → one CS row.
+    digital_fi_seen: List[str]       = []
+    digital_fi_info: Dict[str, Dict] = {}
 
-        # Tags with no recognised signal still get one blank-cable row
-        # so they are not silently dropped from the schedule.
-        if not info["has_analog"] and not info["has_digital"]:
+    for rd in fi_rows:
+        if _cs_signal_kind(rd) != "digital":
+            continue
+        tag   = rd.get("Tag No",              "").strip()
+        instr = rd.get("Instrument Name",     "").strip()
+        svc   = rd.get("Service Description", "").strip()
+        source = _cs_source(rd)
+        dest   = _cs_destination(rd)
+        if not tag:
+            continue
+        if tag not in digital_fi_info:
+            digital_fi_seen.append(tag)
+            digital_fi_info[tag] = {
+                "instrument": instr,
+                "service": svc,
+                "source": source,
+                "destination": dest,
+            }
+        else:
+            if not digital_fi_info[tag]["instrument"] and instr:
+                digital_fi_info[tag]["instrument"] = instr
+            if not digital_fi_info[tag]["service"]    and svc:
+                digital_fi_info[tag]["service"]    = svc
+            if not digital_fi_info[tag]["source"] and source:
+                digital_fi_info[tag]["source"] = source
+            if not digital_fi_info[tag]["destination"] and dest:
+                digital_fi_info[tag]["destination"] = dest
+
+    # ── Block 1: Analog FI with optional AJB assignment ───────────────────────
+    if analog_fi:
+        num_ajbs = math.ceil(len(analog_fi) / ajb_capacity)
+
+        for ajb_idx in range(num_ajbs):
+            ajb_name = f"AJB-{ajb_idx + 1:02d}"
+            group    = analog_fi[
+                ajb_idx * ajb_capacity : (ajb_idx + 1) * ajb_capacity
+            ]
+            ajb_destination = _first_cs_destination(group)
+
+            # One row per instrument in this AJB
+            for rd in group:
+                tag   = rd.get("Tag No",              "").strip()
+                instr = rd.get("Instrument Name",     "").strip()
+                svc   = rd.get("Service Description", "").strip()
+                source = _cs_source(rd)
+
+                updates[f"A{row}"] = serial
+                updates[f"B{row}"] = tag
+                updates[f"C{row}"] = analog_cable
+                updates[f"D{row}"] = svc
+                updates[f"E{row}"] = instr
+                updates[f"F{row}"] = source      # From: row Source
+                updates[f"G{row}"] = ajb_name    # To:   AJB-xx
+                row    += 1
+                serial += 1
+
+            # AJB summary row — appears after its group of instruments
             updates[f"A{row}"] = serial
-            updates[f"B{row}"] = tag
+            updates[f"B{row}"] = ajb_name
             updates[f"C{row}"] = ""
-            updates[f"D{row}"] = service
-            updates[f"E{row}"] = instr
+            updates[f"D{row}"] = ""
+            updates[f"E{row}"] = ""
+            updates[f"F{row}"] = ajb_name    # From: AJB-xx (onward connection)
+            updates[f"G{row}"] = ajb_destination
             row    += 1
             serial += 1
 
+    # ── Block 2: Digital FI (one row per unique tag) ──────────────────────────
+    for tag in digital_fi_seen:
+        info  = digital_fi_info[tag]
+        instr = info["instrument"]
+        svc   = info["service"]
+        source = info["source"]
+        dest   = info["destination"]
+
+        updates[f"A{row}"] = serial
+        updates[f"B{row}"] = tag
+        updates[f"C{row}"] = digital_cable
+        updates[f"D{row}"] = svc
+        updates[f"E{row}"] = instr
+        updates[f"F{row}"] = source
+        updates[f"G{row}"] = dest
+        row    += 1
+        serial += 1
+
+    # ── Blocks 3 & 4: Electrical and MOV (one row per cable type per tag) ─────
+    # No AJB assignment for Sections 2 and 3.
+    for section_key in ("electrical", "mov"):
+        section_rows = payload.get(section_key, [])
+        if not section_rows:
+            continue
+
+        seen_order: List[str]      = []
+        tag_info:   Dict[str, Dict] = {}
+
+        for rd in section_rows:
+            tag    = rd.get("Tag No", "").strip()
+            if not tag:
+                continue
+            signal_kind = _cs_signal_kind(rd)
+            instr  = rd.get("Instrument Name",     "").strip()
+            svc    = rd.get("Service Description", "").strip()
+            source = _cs_source(rd)
+            dest   = _cs_destination(rd)
+
+            if tag not in tag_info:
+                seen_order.append(tag)
+                tag_info[tag] = {
+                    "has_analog":  False,
+                    "has_digital": False,
+                    "instrument":  instr,
+                    "service":     svc,
+                    "source":      source,
+                    "destination": dest,
+                }
+            else:
+                if not tag_info[tag]["instrument"] and instr:
+                    tag_info[tag]["instrument"] = instr
+                if not tag_info[tag]["service"]    and svc:
+                    tag_info[tag]["service"]    = svc
+                if not tag_info[tag]["source"] and source:
+                    tag_info[tag]["source"] = source
+                if not tag_info[tag]["destination"] and dest:
+                    tag_info[tag]["destination"] = dest
+
+            if signal_kind == "analog":
+                tag_info[tag]["has_analog"]  = True
+            elif signal_kind == "digital":
+                tag_info[tag]["has_digital"] = True
+
+        for tag in seen_order:
+            info  = tag_info[tag]
+            instr = info["instrument"]
+            svc   = info["service"]
+            source = info["source"]
+            dest   = info["destination"]
+
+            if info["has_analog"]:
+                updates[f"A{row}"] = serial
+                updates[f"B{row}"] = tag
+                updates[f"C{row}"] = analog_cable
+                updates[f"D{row}"] = svc
+                updates[f"E{row}"] = instr
+                updates[f"F{row}"] = source
+                updates[f"G{row}"] = dest
+                row    += 1
+                serial += 1
+
+            if info["has_digital"]:
+                updates[f"A{row}"] = serial
+                updates[f"B{row}"] = tag
+                updates[f"C{row}"] = digital_cable
+                updates[f"D{row}"] = svc
+                updates[f"E{row}"] = instr
+                updates[f"F{row}"] = source
+                updates[f"G{row}"] = dest
+                row    += 1
+                serial += 1
+
+            # Tags with no recognised signal — one blank-cable row
+            if not info["has_analog"] and not info["has_digital"]:
+                updates[f"A{row}"] = serial
+                updates[f"B{row}"] = tag
+                updates[f"C{row}"] = ""
+                updates[f"D{row}"] = svc
+                updates[f"E{row}"] = instr
+                updates[f"F{row}"] = source
+                updates[f"G{row}"] = dest
+                row    += 1
+                serial += 1
+
+    _append_cs_tag_merges(updates, merges, _CS_DATA_START_ROW, row - 1)
     return updates, merges
 
 

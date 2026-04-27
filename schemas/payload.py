@@ -97,7 +97,7 @@ class MetaSchema(Schema):
 
 
 class CsMetaSchema(Schema):
-    """Per-document metadata for the Cable Schedule — includes cable specs."""
+    """Per-document metadata for the Cable Schedule — cable specs and AJB config."""
 
     class Meta:
         unknown = EXCLUDE
@@ -105,12 +105,23 @@ class CsMetaSchema(Schema):
     docNumber    = fields.Str(load_default="")
     analogCable  = fields.Str(load_default="")   # e.g. "2P × 1.0 sq.mm"
     digitalCable = fields.Str(load_default="")   # e.g. "10C × 1.0 sq.mm"
+    ajbCapacity  = fields.Int(load_default=16)   # 4, 8, or 16 — defaults to 16-way
 
     @pre_load
     def coerce_none(self, data, **kwargs):
         if data is None:
             return {}
-        return {k: _strip_str(v) for k, v in data.items()}
+        out = {}
+        for k, v in data.items():
+            if k == "ajbCapacity":
+                try:
+                    capacity = int(v) if v else 16
+                except (ValueError, TypeError):
+                    capacity = 16
+                out[k] = capacity if capacity in {4, 8, 16} else 16
+            else:
+                out[k] = _strip_str(v) if isinstance(v, str) else (v or "")
+        return out
 
 
 class FieldInstrumentRowSchema(_BaseRowSchema):
